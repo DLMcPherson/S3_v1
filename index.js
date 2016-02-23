@@ -1,41 +1,32 @@
 "use strict"
 
-// Setup objects
-  // Setup the window
+// ======================= SETUP PHASE ========================== //
+  // Setup the renderer
 var renderer = PIXI.autoDetectRenderer(640, 640)
 var stage = new PIXI.Container()
 renderer.backgroundColor = 0xffffff
 renderer.roundPixels = true
-  // Setup the Firebase
+  // Connect to my Firebase
 var firebase = new Firebase("https://ancaticipation.firebaseio.com")
+  // Graphics object for my stage
 var graphics = new PIXI.Graphics();
 stage.addChild(graphics)
-var data = []
-$.getJSON("TrajDataC.json",data, function( data ) {
-  var items = [];
-  $.each( data, function( key, val ) {
-    items.push( "<li id='" + key + "'>" + val + "</li>" );
-  });
 
-  $( "<ul/>", {
-    "class": "my-new-list",
-    html: items.join( "" )
-  }).appendTo( "body" );
-});
-console.log(data)
-
-
+// Setup screens
+  // Win screen
 var yay = new PIXI.Container()
 var yup = new PIXI.Text('Correct!',{font : '60px Roboto', fill : 0x077f4d});
 yup.x = 300
 yup.y = 300
 yay.addChild(yup)
+  // Lose screen
 var nay = new PIXI.Container()
 var nope = new PIXI.Text('WRONG!',{font : '60px Roboto', fill : 0xcf4c34});
 nope.x = 300
 nope.y = 300
 nay.addChild(nope)
 
+// Globals
 var tick = 0
 var traj = 0
 
@@ -52,9 +43,8 @@ class Robot extends PIXI.Sprite {
     if(tick>=100){
       // Increment trajectory counter
       traj+=1
-      if(traj>9){
+      if(traj>9)
         traj=0
-      }
       // Print the trajectory counter descriptor
       if(traj>=0 && traj<5){
         console.log(traj,"Rightwards : ")
