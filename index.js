@@ -6,294 +6,247 @@ renderer.backgroundColor = 0xffffff
 renderer.roundPixels = true
 
 // Connect to my Firebase
-var firebase = new Firebase("https://ancaticipation.firebaseio.com")
+//var firebase = new Firebase("https://ancaticipation.firebaseio.com")
 
-// ===================== SETUP SCREENS ================== //
+const ObX = 300
+const ObY = 300
+const ObW = 70
+const ObH = 70
+
+// ===================== CLASSES ======================== //
+// Robot class
+class Robot extends PIXI.Sprite {
+  constructor(x0,y0){
+    // Image
+    super(PIXI.Texture.fromImage("QuadcopterSide.png"))
+    this.pivot.x = 100 ; this.pivot.y = 50
+    this.width = 100 ; this.height = 50
+    // State
+    this.x = x0 ; this.y = y0
+    this.vx = 0 ; this.vy = 0
+  }
+  update(delT,ux,uy){
+    // Double Integrator Dynamics
+    this.x += this.vx * delT
+    this.y += this.vy * delT
+    this.vx += ux * delT
+    this.vy += uy * delT
+  }
+}
+
+class Controller {
+  constructor(_robot){
+    this.robot = _robot
+  }
+  ux(){
+    return 0;
+  }
+  uy(){
+    return 0;
+  }
+}
+
+class PID_Contr extends Controller {
+  constructor(_robot,_setX,_setY){
+    super(_robot)
+    this.setX = _setX
+    this.setY = _setY
+  }
+  PID(z,gz,vz){
+    var P = -0.000001*(z-gz)
+    var I = 0;
+    var D = -0.001*(vz-0);
+    return P+I+D;
+  }
+  ux(){
+    return this.PID(this.robot.x,this.setX,this.robot.vx);
+  }
+  uy(){
+    return this.PID(this.robot.y,this.setY,this.robot.vy);
+  }
+}
+
+class Safe_Contr extends Controller {
+  constructor(_robot,_maxU){
+    super(_robot)
+    this.maxU = _maxU
+  }
+  ux(){
+    if(this.robot.x > ObX){
+      return this.maxU;
+    }
+    else{
+      return -this.maxU;
+    }
+  }
+  uy(){
+    if(this.robot.y > ObY){
+      return this.maxU;
+    }
+    else{
+      return -this.maxU;
+    }
+  }
+}
+
+class Intervention_Contr extends Controller {
+  constructor(_robot,_setX,_setY,_maxU,_maxD){
+    super(_robot)
+    this.tracker = new PID_Contr(_robot,_setX,_setY)
+    this.safer = new Safe_Contr(_robot,_maxU)
+    this.leeway = _maxU - _maxD // Should be positive, otherwise system will always crash
+    this.xalpha = 0 // Intervention level set along X-direction
+    this.yalpha = 0 // Intervention level set along Y-direction
+  }
+  DubIntSafeSet(obP,obL,p,v,l){
+    if(v*(obP-p)<0){
+      return Math.abs(p-obP)-obL;
+    }
+    else{
+      return Math.abs(p-obP)-obL-Math.pow(v,2)/(2.0*l)
+    }
+  }
+  DubIntSafeSetX(){
+    return this.DubIntSafeSet(ObX,ObW,this.robot.x,this.robot.vx,this.leeway)
+  }
+  DubIntSafeSetY(){
+    return this.DubIntSafeSet(ObY,ObH,this.robot.y,this.robot.vy,this.leeway)
+  }
+  ux(){
+    if( this.DubIntSafeSetX() < this.xalpha && this.DubIntSafeSetY() < this.yalpha ){
+      graphics.drawRect(this.robot.x,this.robot.y,10,10)
+      return this.safer.ux();
+    }
+    else{
+      return this.tracker.ux();
+    }
+  }
+  uy(){
+    if( this.DubIntSafeSetX() < this.xalpha && this.DubIntSafeSetY() < this.yalpha ){
+      return this.safer.uy();
+    }
+    else{
+      return this.tracker.uy();
+    }
+  }
+}
+
+// ===================== SETUP ================== //
 
 // Standard Screen
 var stage = new PIXI.Container()
   // Graphics object for lines and squares and such...
 var graphics = new PIXI.Graphics();
 stage.addChild(graphics)
-  // Text
-var instr1 = new PIXI.Text('Press \'Q\' to guess Goal on Left',{font : '12px Roboto', fill : 0x077f4d});
-instr1.x = 0
-instr1.y = 500
-stage.addChild(instr1)
-var instr2 = new PIXI.Text('Press \'P\' to guess Goal on Right',{font : '12px Roboto', fill : 0x077f4d});
-instr2.x = 400
-instr2.y = 500
-stage.addChild(instr2)
-var timer = new PIXI.Text('+100',{font : '48px Roboto', fill : 0x077f4d, align: 'ceneter'});
-timer.x = 250
-timer.y = 550
-stage.addChild(timer)
-var text = new PIXI.Text('Time left :',{font : '24px Roboto', fill : 0x077f4d, align: 'ceneter'});
-text.x = 0
-text.y = 550
-stage.addChild(text)
 
-  // Win screen
-var yay = new PIXI.Container()
-var yup = new PIXI.Text('Correct!',{font : '60px Roboto', fill : 0x077f4d, align: 'center'});
-yup.x = 220
-yup.y = 200
-yay.addChild(yup)
+// Goal point Marker
+var goal = new PIXI.Text('X',{font : '24px Gill Sans', fill : 0x077f4d});
+goal.x = 450
+goal.y = 50
+goal.pivot.x = 10
+goal.pivot.y = 12
+stage.addChild(goal)
 
-  // Lose screen
-var nay = new PIXI.Container()
-var nope = new PIXI.Text('WRONG!',{font : '60px Roboto', fill : 0xcf4c34, align: 'center'});
-nope.x = 220
-nope.y = 200
-nay.addChild(nope)
-
-// Starting screen
-var helpStart = new PIXI.Container()
-var help = new PIXI.Text('The robot wants you to guess correctly, so it\'s going to try \ngiving different hints in different ways. Guess as soon as \nyou feel confident you know which goal it\'s heading for!',{font : '24px Roboto', fill : 0x077f4d, align: 'center'});
-help.x = 0
-help.y = 0
-helpStart.addChild(help)
-var next = new PIXI.Text('Ready? Press any key to continue.',{font : '24px Roboto', fill : 0xcf4c34, align: 'center'});
-next.x = 200
-next.y = 400
-helpStart.addChild(next)
-
-var tLindex = 0
-var trajList = [3,2,7,6,8,1]
-//var trajList = [3,3,2,3,7,6,8,1]
-// Robot class
-class Robot extends PIXI.Sprite {
-  constructor(){
-    super(PIXI.Texture.fromImage("blueRobot.png"))
-    this.x = 50 ; this.y = 50
-    this.pivot.x = 1000 ; this.pivot.y = 1000
-    this.width = 100 ; this.height = 100
-  }
-  update(){
-    tick += 1
-    if(tick>=100){
-      // Increment trajectory counter
-      if(mode==-4){
-        if(traj==0){
-          traj=5
-        }
-        else{
-          traj=0
-        }
-      }
-      if(mode==0){
-        tLindex+=1
-        if(tLindex>=6){
-          tLindex=0
-        }
-        traj=trajList[tLindex]
-      }
-      // Print the trajectory counter descriptor
-      if(traj>=0 && traj<5){
-        console.log(traj,"Rightwards : ")
-      }
-      else{
-        console.log(traj,"Leftwards : ")
-      }
-      if(traj%5 == 0) {console.log("Standard")}
-      if(traj%5 == 1) {console.log("Avg. Offset")}
-      if(traj%5 == 2) {console.log("Keyframe")}
-      if(traj%5 == 3) {traj+=1}
-      if(traj%5 == 4) {console.log("Baseline")}
-      tick=0
-    }
-    // Update robot position to stay on track
-    this.x = 320+(myData.q[traj][0][tick]-5)*53
-    this.y = 430-myData.q[traj][1][tick]*53
-  }
-}
-
-
-// Globals
-var tick = 0
-var traj = 0
-var mode = -1
-var modeExit = 10
-
-var robot = new Robot()
+// Robot Object
+var robot = new Robot(0,440)
 stage.addChild(robot)
+var tracker = new PID_Contr(robot,goal.x,goal.y)
+var intervener = new Intervention_Contr(robot,goal.x,goal.y,0.0004,0)
 
-// Render Loop
+// Obstacle
+//graphics.beginFill(0x077f4d)
+graphics.lineStyle(0,0x000000)
+graphics.beginFill(0xcf4c34)
+intervener.xalpha = robot.width/2
+intervener.yalpha = robot.height/2
+graphics.drawRect(ObX-ObW-intervener.xalpha,ObY-ObH-intervener.yalpha,(ObW+intervener.xalpha)*2,(ObH+intervener.yalpha)*2)
+graphics.lineStyle(5,0x000000)
+graphics.beginFill(0x4C1C13)
+graphics.drawRect(ObX-ObW,ObY-ObH,ObW*2,ObH*2)
+
+
+// ===================== THE MAIN EVENT ================== //
+
+// Main Loop
 var clock =  0 ; var now = Date.now()
 window.setInterval(function() {
   // Time management
-  clock += Date.now() - now
+  var delT = Date.now() - now
+  clock += delT
   now = Date.now()
-  // Trajectory screen
-  if(mode==-1){
-    // Sprite management
-    //robot.update()
-    // Decrease timer
-    timer.text = ''
-    text.text = 'This is our robot'
-    instr1.text = 'Press any key to advance'
-    instr2.text = 'Press any key to advance'
-    tick=-1
+  // Robot dynamics
+  var ux = 0
+  var uy = 0
+  ux = intervener.ux()
+  uy = intervener.uy()
+  //console.log(clock,ux,uy)
+  robot.update(delT,ux,uy)
+  // Path Drawing
+  /*
+  graphics.clear()
+  graphics.lineStyle(5, 0x077f4d);
+  graphics.moveTo(320,300)
+  var i = 0
+  for(i=1; i<tick; i++){
+    graphics.lineTo(320+(robot.traj[i][0])*53,300-robot.traj[i][1]*9)
   }
-  if(mode==-2){
-    text.text = 'It will either: move to the goal on the left...'
-    traj=5
-  }
-  if(mode==-3){
-    text.text = '...or move to the goal on the right'
-    traj=0
-  }
-  if(mode==-4){
-    text.text = 'Guess which goal it\'s heading for ahead \n of time to gain points!'
-    instr1.text = 'Press \'Q\' key to guess Goal on Left'
-    instr2.text = 'Press \'P\' key to guess Goal on Right'
+  */
+  // Rendering the stage
+  renderer.render(stage)
+},2)
 
-    instr1.style = {font : '14px Roboto', fill : 0xcf4c34}
-    instr2.style = {font : '14px Roboto', fill : 0xcf4c34}
-    if(correctQ==1 && correctP==1){
-      mode=3
-    }
-  }
-  if(mode==0){
-    // Decrease timer
-    var temp = 100 - tick
-    text.text = 'Time left : '
-    timer.text = temp.toString()
-  }
-  if(mode<1){
-    // Sprite management
-    robot.update()
-    // Path Drawing
-    graphics.clear()
-    graphics.lineStyle(5, 0x077f4d);
-    graphics.moveTo(320,430)
-    var i = 0
-    for(i=1; i<tick; i++){
-      graphics.lineTo(320+(myData.q[traj][0][i]-5)*53,430-myData.q[traj][1][i]*53)
-    }
-    // Rendering the stage
-    renderer.render(stage)
-  }
-  if(mode==1){
-    // Rendering the stage
-    renderer.render(yay)
-    modeExit+=-1
-    if(modeExit==0){
-      mode=0
-    }
-  }
-  if(mode==2){
-    // Rendering the stage
-    renderer.render(nay)
-    modeExit+=-1
-    if(modeExit==0){
-      mode=0
-    }
-  }
-  if(mode==3){
-    // Rendering the stage
-    instr1.style = {font : '12px Roboto', fill : 0x077f4d}
-    instr2.style = {font : '12px Roboto', fill : 0x077f4d}
-    renderer.render(helpStart)
-  }
-  if(mode==4){
-    // Rendering the stage
-    renderer.render(yay)
-    modeExit+=-1
-    if(modeExit==0){
-      mode=-4
-    }
-  }
-  if(mode==5){
-    // Rendering the stage
-    renderer.render(nay)
-    modeExit+=-1
-    if(modeExit==0){
-      mode=-4
-    }
-  }
-},50)
-
-// Keyboard Listener Loop
+// ====================== Keyboard Listener Loop ========================= //
 var key = null
-var correctP = 0
-var correctQ = 0
 document.addEventListener("keydown",function(event) {
   // Log time and key
   key = event.keyCode
-  console.log(clock,tick,key)
-  var correct = 0
-  if(mode<0 && mode>-4){
-    mode-=1
-    tick=0
+  // Update level set
+  if(intervener.xalpha < intervener.DubIntSafeSetX()){
+    intervener.xalpha = intervener.DubIntSafeSetX()
   }
-  if(mode == 3){
-    mode=0
-    tick=0
-    tLindex=0
-    traj=trajList[tLindex]
+  if(intervener.yalpha < intervener.DubIntSafeSetY()){
+    intervener.yalpha = intervener.DubIntSafeSetY()
   }
-  if(mode==0){
-    if(key==81){
-      if(traj>=5){
-        correct=1
-        mode=1
-      }
-      else {
-        correct=0
-        mode=2
-      }
-    }
-    else if(key==80){
-      if(traj<5){
-        correct=1
-        mode=1
-      }
-      else {
-        correct=0
-        mode=2
-      }
-    }
-    // Record time and key to Firebase
-    if(key==80 || key==81){
-      modeExit=10
-      tick=100
-      firebase.push({
-        date : Date.now(),
-        correctness : correct,
-        ip : userip,
-        keystroke : key,
-        tlength : tick,
-      })
-    }
+  // Debugging report
+  console.log(clock,key,intervener.xalpha,intervener.yalpha)
+  // Render new safety bubble
+  graphics.lineStyle(0,0x000000)
+  graphics.beginFill(0xcf4c34)
+  graphics.drawRect(ObX-ObW-intervener.xalpha,ObY-ObH-intervener.yalpha,(ObW+intervener.xalpha)*2,(ObH+intervener.yalpha)*2)
+
+  graphics.lineStyle(5,0x000000)
+  graphics.beginFill(0x4C1C13)
+  graphics.drawRect(ObX-ObW,ObY-ObH,ObW*2,ObH*2)
+  /*
+  if(key==80 || key==81){
+    firebase.push({
+      date : Date.now(),
+      correctness : correct,
+      ip : userip,
+      keystroke : key,
+    })
   }
-  if(mode==-4){
-    if(key==80 || key==81){
-      modeExit=10
-      tick=100
-      console.log(correctQ,correctP)
-    }
-    if(key==81){
-      if(traj>=5){
-        correctQ=1
-        mode=4
-      }
-      else {
-        correctQ=0
-        mode=5
-      }
-    }
-    else if(key==80){
-      if(traj<5){
-        correctP=1
-        mode=4
-      }
-      else {
-        correctP=0
-        mode=5
-      }
-    }
+  */
+  // End
+})
+
+// ====================== Mouse Listener Loop ========================= //
+document.addEventListener("mousedown",function(event) {
+  var mousePosition = renderer.plugins.interaction.mouse.global;
+  goal.x = mousePosition.x
+  goal.y = mousePosition.y
+  intervener.tracker.setX = goal.x
+  intervener.tracker.setY = goal.y
+  /*
+  if(key==80 || key==81){
+    firebase.push({
+      date : Date.now(),
+      correctness : correct,
+      ip : userip,
+      keystroke : key,
+    })
   }
+  */
   // End
 })
 
