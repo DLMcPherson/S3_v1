@@ -113,7 +113,7 @@ class Intervention_Contr extends Controller {
     return this.DubIntSafeSet(ObY,ObH,this.robot.y,this.robot.vy,this.leeway)
   }
   ux(){
-    if( this.DubIntSafeSetX() < this.xalpha && this.DubIntSafeSetY() < this.yalpha && this.DubIntSafeSetY() < this.DubIntSafeSetX() ){
+    if( this.DubIntSafeSetX() < this.xalpha && this.DubIntSafeSetY() < this.yalpha && this.DubIntSafeSetY() - this.yalpha < this.DubIntSafeSetX() - this.xalpha ){
       graphics.drawRect(this.robot.x,this.robot.y,10,10)
       return this.safer.ux();
     }
@@ -122,7 +122,7 @@ class Intervention_Contr extends Controller {
     }
   }
   uy(){
-    if( this.DubIntSafeSetX() < this.xalpha && this.DubIntSafeSetY() < this.yalpha && this.DubIntSafeSetX() < this.DubIntSafeSetY() ){
+    if( this.DubIntSafeSetX() < this.xalpha && this.DubIntSafeSetY() < this.yalpha && this.DubIntSafeSetX() - this.xalpha < this.DubIntSafeSetY() - this.yalpha ){
       return this.safer.uy();
     }
     else{
