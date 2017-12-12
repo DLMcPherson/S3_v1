@@ -1,15 +1,15 @@
 "use strict"
 
-// Setup the renderer
-var renderer = PIXI.autoDetectRenderer(640, 640)
+// Setup the PIXI renderer that handles interactive display and input inside the browser
+var renderer = PIXI.autoDetectRenderer(1400, 768)
 renderer.backgroundColor = 0xffffff
 renderer.roundPixels = true
 
 // Connect to my Firebase
 //var firebase = new Firebase("https://ancaticipation.firebaseio.com")
 
-const ObX = 300
-const ObY = 300
+const ObX = 600
+const ObY = 350
 const ObW = 70
 const ObH = 70
 
@@ -33,7 +33,7 @@ class Robot extends PIXI.Sprite {
     this.vy += uy * delT
   }
 }
-
+// Controller 'virtual' class
 class Controller {
   constructor(_robot){
     this.robot = _robot
@@ -45,7 +45,7 @@ class Controller {
     return 0;
   }
 }
-
+// PD Controller class
 class PID_Contr extends Controller {
   constructor(_robot,_setX,_setY){
     super(_robot)
@@ -65,7 +65,7 @@ class PID_Contr extends Controller {
     return this.PID(this.robot.y,this.setY,this.robot.vy);
   }
 }
-
+// Optimally safe controller class
 class Safe_Contr extends Controller {
   constructor(_robot,_maxU){
     super(_robot)
@@ -88,7 +88,7 @@ class Safe_Contr extends Controller {
     }
   }
 }
-
+// Intervention controller that swaps between PD and Safe controls
 class Intervention_Contr extends Controller {
   constructor(_robot,_setX,_setY,_maxU,_maxD){
     super(_robot)
@@ -98,6 +98,9 @@ class Intervention_Contr extends Controller {
     this.xalpha = 0 // Intervention level set along X-direction
     this.yalpha = 0 // Intervention level set along Y-direction
   }
+  // Method for calculating the current value function for the reachable set
+  // Currently implemented through analytic solution to constant acceleration problem,
+  // but should be replaced by reading a computed reachable from LSToolbox
   DubIntSafeSet(obP,obL,p,v,l){
     if(v*(obP-p)<0){
       return Math.abs(p-obP)-obL;
@@ -106,14 +109,17 @@ class Intervention_Contr extends Controller {
       return Math.abs(p-obP)-obL-Math.pow(v,2)/(2.0*l)
     }
   }
+  // Methods for applying reachable set in both decoupled axes
   DubIntSafeSetX(){
     return this.DubIntSafeSet(ObX,ObW,this.robot.x,this.robot.vx,this.leeway)
   }
   DubIntSafeSetY(){
     return this.DubIntSafeSet(ObY,ObH,this.robot.y,this.robot.vy,this.leeway)
   }
+  // Methods that return the current input corresponding to the current state
+  // Two methods exist due to decoupling this problem along x- and y-axes
   ux(){
-    if( this.DubIntSafeSetX() < this.xalpha && this.DubIntSafeSetY() < this.yalpha && this.DubIntSafeSetY() - this.yalpha < this.DubIntSafeSetX() - this.xalpha ){
+    if( this.DubIntSafeSetX() < this.xalpha && this.DubIntSafeSetY() < this.yalpha && this.DubIntSafeSetY() < this.DubIntSafeSetX() ){
       graphics.drawRect(this.robot.x,this.robot.y,10,10)
       return this.safer.ux();
     }
@@ -122,7 +128,7 @@ class Intervention_Contr extends Controller {
     }
   }
   uy(){
-    if( this.DubIntSafeSetX() < this.xalpha && this.DubIntSafeSetY() < this.yalpha && this.DubIntSafeSetX() - this.xalpha < this.DubIntSafeSetY() - this.yalpha ){
+    if( this.DubIntSafeSetX() < this.xalpha && this.DubIntSafeSetY() < this.yalpha && this.DubIntSafeSetX() < this.DubIntSafeSetY() ){
       return this.safer.uy();
     }
     else{
@@ -141,25 +147,31 @@ stage.addChild(graphics)
 
 // Goal point Marker
 var goal = new PIXI.Text('X',{font : '24px Gill Sans', fill : 0x077f4d});
-goal.x = 450
+goal.x = 700
 goal.y = 50
 goal.pivot.x = 10
 goal.pivot.y = 12
 stage.addChild(goal)
 
 // Robot Object
-var robot = new Robot(0,440)
+var robot = new Robot(200,670)
 stage.addChild(robot)
-var tracker = new PID_Contr(robot,goal.x,goal.y)
 var intervener = new Intervention_Contr(robot,goal.x,goal.y,0.0004,0)
+var leeway = 0.0004 - 0
 
 // Obstacle
-//graphics.beginFill(0x077f4d)
-graphics.lineStyle(0,0x000000)
-graphics.beginFill(0xcf4c34)
+  // Calculations
 intervener.xalpha = robot.width/2
 intervener.yalpha = robot.height/2
+  // Draw Velocity-dependent safe set
+graphics.lineStyle(0,0x000000)
+graphics.beginFill(0xff745a)
 graphics.drawRect(ObX-ObW-intervener.xalpha,ObY-ObH-intervener.yalpha,(ObW+intervener.xalpha)*2,(ObH+intervener.yalpha)*2)
+  // Draw Comfort Augmentation
+graphics.lineStyle(0,0x000000)
+graphics.beginFill(0xcf4c34)
+graphics.drawRect(ObX-ObW-intervener.xalpha,ObY-ObH-intervener.yalpha,(ObW+intervener.xalpha)*2,(ObH+intervener.yalpha)*2)
+  // Draw Obstacle
 graphics.lineStyle(5,0x000000)
 graphics.beginFill(0x4C1C13)
 graphics.drawRect(ObX-ObW,ObY-ObH,ObW*2,ObH*2)
@@ -175,8 +187,8 @@ window.setInterval(function() {
   clock += delT
   now = Date.now()
   // Robot dynamics
-  var ux = 0
-  var uy = 0
+  let ux = 0
+  let uy = 0
   ux = intervener.ux()
   uy = intervener.uy()
   //console.log(clock,ux,uy)
@@ -191,6 +203,28 @@ window.setInterval(function() {
     graphics.lineTo(320+(robot.traj[i][0])*53,300-robot.traj[i][1]*9)
   }
   */
+  // Render the current safe set
+  graphics.clear()
+    // Draw Velocity-dependent safe set
+  let padx = Math.pow(robot.vx,2)/(2.0*leeway)
+  let pady = Math.pow(robot.vy,2)/(2.0*leeway)
+  let offx = 0
+  if(Math.sign(robot.vx)>0)
+    offx = -padx
+  let offy = 0
+  if(Math.sign(robot.vy)>0)
+    offy = -pady
+  graphics.lineStyle(0,0x000000)
+  graphics.beginFill(0xff745a)
+  graphics.drawRect(ObX-ObW-intervener.xalpha+offx,ObY-ObH-intervener.yalpha+offy,(ObW+intervener.xalpha)*2+padx,(ObH+intervener.yalpha)*2+pady )
+    // Draw Comfort Augmentation
+  graphics.lineStyle(0,0x000000)
+  graphics.beginFill(0xcf4c34)
+  graphics.drawRect(ObX-ObW-intervener.xalpha,ObY-ObH-intervener.yalpha,(ObW+intervener.xalpha)*2,(ObH+intervener.yalpha)*2)
+    // Draw Obstacle
+  graphics.lineStyle(5,0x000000)
+  graphics.beginFill(0x4C1C13)
+  graphics.drawRect(ObX-ObW,ObY-ObH,ObW*2,ObH*2)
   // Rendering the stage
   renderer.render(stage)
 },2)
@@ -237,16 +271,6 @@ document.addEventListener("mousedown",function(event) {
   goal.y = mousePosition.y
   intervener.tracker.setX = goal.x
   intervener.tracker.setY = goal.y
-  /*
-  if(key==80 || key==81){
-    firebase.push({
-      date : Date.now(),
-      correctness : correct,
-      ip : userip,
-      keystroke : key,
-    })
-  }
-  */
   // End
 })
 
