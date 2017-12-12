@@ -89,37 +89,26 @@ class Safe_Contr extends Controller {
   }
 }
 // Intervention controller that swaps between PD and Safe controls
-class Intervention_Contr extends Controller {
+class decoupledIntervention_Contr extends Controller {
   constructor(_robot,_setX,_setY,_maxU,_maxD){
     super(_robot)
     this.tracker = new PID_Contr(_robot,_setX,_setY)
     this.safer = new Safe_Contr(_robot,_maxU)
-    this.leeway = _maxU - _maxD // Should be positive, otherwise system will always crash
-    this.xalpha = 0 // Intervention level set along X-direction
-    this.yalpha = 0 // Intervention level set along Y-direction
-  }
-  // Method for calculating the current value function for the reachable set
-  // Currently implemented through analytic solution to constant acceleration problem,
-  // but should be replaced by reading a computed reachable from LSToolbox
-  DubIntSafeSet(obP,obL,p,v,l){
-    if(v*(obP-p)<0){
-      return Math.abs(p-obP)-obL;
-    }
-    else{
-      return Math.abs(p-obP)-obL-Math.pow(v,2)/(2.0*l)
-    }
+    this.intervening_setX = new DoubleIntegrator_SafeSet(_maxU-_maxD,ObX,ObW)
+    this.intervening_setY = new DoubleIntegrator_SafeSet(_maxU-_maxD,ObY,ObH)
+    this.trigger_level = 0
   }
   // Methods for applying reachable set in both decoupled axes
-  DubIntSafeSetX(){
-    return this.DubIntSafeSet(ObX,ObW,this.robot.x,this.robot.vx,this.leeway)
+  SafeSetX(){
+    return this.intervening_setX.value(this.robot.x,this.robot.vx)
   }
-  DubIntSafeSetY(){
-    return this.DubIntSafeSet(ObY,ObH,this.robot.y,this.robot.vy,this.leeway)
+  SafeSetY(){
+    return this.intervening_setY.value(this.robot.y,this.robot.vy)
   }
   // Methods that return the current input corresponding to the current state
   // Two methods exist due to decoupling this problem along x- and y-axes
   ux(){
-    if( this.DubIntSafeSetX() < this.xalpha && this.DubIntSafeSetY() < this.yalpha && this.DubIntSafeSetY() < this.DubIntSafeSetX() ){
+    if( this.SafeSetX() < this.trigger_level && this.SafeSetY() < this.trigger_level && this.SafeSetY() < this.SafeSetX() ){
       graphics.drawRect(this.robot.x,this.robot.y,10,10)
       return this.safer.ux();
     }
@@ -128,11 +117,34 @@ class Intervention_Contr extends Controller {
     }
   }
   uy(){
-    if( this.DubIntSafeSetX() < this.xalpha && this.DubIntSafeSetY() < this.yalpha && this.DubIntSafeSetX() < this.DubIntSafeSetY() ){
+    if( this.SafeSetX() < this.trigger_level && this.SafeSetY() < this.trigger_level && this.SafeSetX() < this.SafeSetY() ){
       return this.safer.uy();
     }
     else{
       return this.tracker.uy();
+    }
+  }
+}
+// Safe set 'virtual' class
+class SafeSet {
+  value(){
+    return 0;
+  }
+}
+class DoubleIntegrator_SafeSet extends SafeSet {
+  constructor(_leeway,_obP,_obL){
+    super()
+    this.leeway = _leeway // Should be positive, otherwise system will always crash
+    this.obP = _obP
+    this.obL = _obL
+  }
+  // Method for calculating the current value function for the reachable set
+  value(p,v){
+    if(v*(this.obP-p)<0){
+      return Math.abs(p-this.obP)-this.obL;
+    }
+    else{
+      return Math.abs(p-this.obP)-this.obL-Math.pow(v,2)/(2.0*this.leeway)
     }
   }
 }
@@ -156,21 +168,21 @@ stage.addChild(goal)
 // Robot Object
 var robot = new Robot(200,670)
 stage.addChild(robot)
-var intervener = new Intervention_Contr(robot,goal.x,goal.y,0.0004,0)
+var intervener = new decoupledIntervention_Contr(robot,goal.x,goal.y,0.0004,0)
 var leeway = 0.0004 - 0
 
 // Obstacle
   // Calculations
-intervener.xalpha = robot.width/2
-intervener.yalpha = robot.height/2
+intervener.level = robot.width/2
+intervener.level = robot.height/2
   // Draw Velocity-dependent safe set
 graphics.lineStyle(0,0x000000)
 graphics.beginFill(0xff745a)
-graphics.drawRect(ObX-ObW-intervener.xalpha,ObY-ObH-intervener.yalpha,(ObW+intervener.xalpha)*2,(ObH+intervener.yalpha)*2)
+graphics.drawRect(ObX-ObW-intervener.trigger_level,ObY-ObH-intervener.trigger_level,(ObW+intervener.trigger_level)*2,(ObH+intervener.trigger_level)*2)
   // Draw Comfort Augmentation
 graphics.lineStyle(0,0x000000)
 graphics.beginFill(0xcf4c34)
-graphics.drawRect(ObX-ObW-intervener.xalpha,ObY-ObH-intervener.yalpha,(ObW+intervener.xalpha)*2,(ObH+intervener.yalpha)*2)
+graphics.drawRect(ObX-ObW-intervener.trigger_level,ObY-ObH-intervener.trigger_level,(ObW+intervener.trigger_level)*2,(ObH+intervener.trigger_level)*2)
   // Draw Obstacle
 graphics.lineStyle(5,0x000000)
 graphics.beginFill(0x4C1C13)
@@ -205,6 +217,7 @@ window.setInterval(function() {
   */
   // Render the current safe set
   graphics.clear()
+  /*
     // Draw Velocity-dependent safe set
   let padx = Math.pow(robot.vx,2)/(2.0*leeway)
   let pady = Math.pow(robot.vy,2)/(2.0*leeway)
@@ -216,11 +229,12 @@ window.setInterval(function() {
     offy = -pady
   graphics.lineStyle(0,0x000000)
   graphics.beginFill(0xff745a)
-  graphics.drawRect(ObX-ObW-intervener.xalpha+offx,ObY-ObH-intervener.yalpha+offy,(ObW+intervener.xalpha)*2+padx,(ObH+intervener.yalpha)*2+pady )
+  graphics.drawRect(ObX-ObW-intervener.trigger_level+offx,ObY-ObH-intervener.trigger_level+offy,(ObW+intervener.trigger_level)*2+padx,(ObH+intervener.trigger_level)*2+pady )
+  */
     // Draw Comfort Augmentation
   graphics.lineStyle(0,0x000000)
   graphics.beginFill(0xcf4c34)
-  graphics.drawRect(ObX-ObW-intervener.xalpha,ObY-ObH-intervener.yalpha,(ObW+intervener.xalpha)*2,(ObH+intervener.yalpha)*2)
+  graphics.drawRect(ObX-ObW-intervener.trigger_level,ObY-ObH-intervener.trigger_level,(ObW+intervener.trigger_level)*2,(ObH+intervener.trigger_level)*2)
     // Draw Obstacle
   graphics.lineStyle(5,0x000000)
   graphics.beginFill(0x4C1C13)
@@ -235,22 +249,14 @@ document.addEventListener("keydown",function(event) {
   // Log time and key
   key = event.keyCode
   // Update level set
-  if(intervener.xalpha < intervener.DubIntSafeSetX()){
-    intervener.xalpha = intervener.DubIntSafeSetX()
+  if(intervener.trigger_level < intervener.DubIntSafeSetX()){
+    intervener.trigger_level = intervener.DubIntSafeSetX()
   }
-  if(intervener.yalpha < intervener.DubIntSafeSetY()){
-    intervener.yalpha = intervener.DubIntSafeSetY()
+  if(intervener.trigger_level < intervener.DubIntSafeSetY()){
+    intervener.trigger_level = intervener.DubIntSafeSetY()
   }
   // Debugging report
-  console.log(clock,key,intervener.xalpha,intervener.yalpha)
-  // Render new safety bubble
-  graphics.lineStyle(0,0x000000)
-  graphics.beginFill(0xcf4c34)
-  graphics.drawRect(ObX-ObW-intervener.xalpha,ObY-ObH-intervener.yalpha,(ObW+intervener.xalpha)*2,(ObH+intervener.yalpha)*2)
-
-  graphics.lineStyle(5,0x000000)
-  graphics.beginFill(0x4C1C13)
-  graphics.drawRect(ObX-ObW,ObY-ObH,ObW*2,ObH*2)
+  console.log(clock,key,intervener.trigger_level,intervener.trigger_level)
   /*
   if(key==80 || key==81){
     firebase.push({
