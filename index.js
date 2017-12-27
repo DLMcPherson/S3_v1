@@ -30,7 +30,7 @@ goal.pivot.y = 12
 stage.addChild(goal)
 
 // Robot Object
-var robot = new Robot(200,670)
+var robot = new QuadrotorRobot(200,670)
 stage.addChild(robot)
 var intervener = new decoupledIntervention_Contr(robot,goal.x,goal.y,0.0004,0)
 var leeway = 0.0004 - 0
@@ -83,13 +83,13 @@ window.setInterval(function() {
   graphics.clear()
   ///*
     // Draw Velocity-dependent safe set
-  let padx = Math.pow(robot.vx,2)/(2.0*leeway)
-  let pady = Math.pow(robot.vy,2)/(2.0*leeway)
+  let padx = Math.pow(robot.states[1],2)/(2.0*leeway)
+  let pady = Math.pow(robot.states[3],2)/(2.0*leeway)
   let offx = 0
-  if(Math.sign(robot.vx)>0)
+  if(Math.sign(robot.states[1])>0)
     offx = -padx
   let offy = 0
-  if(Math.sign(robot.vy)>0)
+  if(Math.sign(robot.states[3])>0)
     offy = -pady
   graphics.lineStyle(0,0x000000)
   graphics.beginFill(0xff745a)

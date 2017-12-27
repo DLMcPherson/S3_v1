@@ -24,10 +24,10 @@ class PID_Contr extends Controller {
     return P+I+D;
   }
   ux(){
-    return this.PID(this.robot.x,this.setX,this.robot.vx);
+    return this.PID(this.robot.states[0],this.setX,this.robot.states[1]);
   }
   uy(){
-    return this.PID(this.robot.y,this.setY,this.robot.vy);
+    return this.PID(this.robot.states[2],this.setY,this.robot.states[3]);
   }
 }
 // Optimally safe controller class
@@ -37,7 +37,7 @@ class Safe_Contr extends Controller {
     this.maxU = _maxU
   }
   ux(){
-    if(this.robot.x > ObX){
+    if(this.robot.states[0] > ObX){
       return this.maxU;
     }
     else{
@@ -45,7 +45,7 @@ class Safe_Contr extends Controller {
     }
   }
   uy(){
-    if(this.robot.y > ObY){
+    if(this.robot.states[2] > ObY){
       return this.maxU;
     }
     else{
@@ -65,16 +65,16 @@ class decoupledIntervention_Contr extends Controller {
   }
   // Methods for applying reachable set in both decoupled axes
   SafeSetX(){
-    return this.intervening_setX.value(this.robot.x,this.robot.vx)
+    return this.intervening_setX.value(this.robot.states[0],this.robot.states[1])
   }
   SafeSetY(){
-    return this.intervening_setY.value(this.robot.y,this.robot.vy)
+    return this.intervening_setY.value(this.robot.states[2],this.robot.states[3])
   }
   // Methods that return the current input corresponding to the current state
   // Two methods exist due to decoupling this problem along x- and y-axes
   ux(){
     if( this.SafeSetX() < this.trigger_level && this.SafeSetY() < this.trigger_level && this.SafeSetY() < this.SafeSetX() ){
-      graphics.drawRect(this.robot.x,this.robot.y,10,10)
+      graphics.drawRect(this.robot.states[0],this.robot.states[2],10,10)
       return this.safer.ux();
     }
     else{
