@@ -43,8 +43,8 @@ class QuadrotorRobot extends Robot {
   // Method that translates states from the state vector into the corresponding
   // position for rendering in the JS
   displayState(){
-    this.x = this.states[0]
-    this.y = this.states[2]
+    this.x = this.states[0] * 70 + 630
+    this.y = this.states[2] * 70 + 350
     this.rotation = 0
   }
   // Constructor initializes PIXI.Sprite members fitting the quadrotor Texture

@@ -8,10 +8,53 @@ renderer.roundPixels = true
 // Connect to my Firebase
 //var firebase = new Firebase("https://ancaticipation.firebaseio.com")
 
-const ObX = 600
-const ObY = 350
-const ObW = 70
-const ObH = 70
+const ObX = 0
+const ObY = 0
+const ObW = 1
+const ObH = 1
+
+const Mxx = 70
+const Mxy = 0
+const Myx = 0
+const Myy = 70
+const bx  = 630
+const by  = 350
+
+function mapStateToPosition(x,y){
+  let x_screen = Mxx * x + Mxy * y + bx
+  let y_screen = Myx * x + Myy * y + by
+  return([x_screen,y_screen])
+}
+
+function mapPositionToState(x_screen,y_screen){
+  let x = (x_screen - bx)
+  let y = (y_screen - by)
+  let determinant = Mxx*Myy - Mxy*Myx
+  let x_state = ( Myy * x - Mxy * y)/determinant
+  let y_state = (-Myx * x + Mxx * y)/determinant
+  return([x_state,y_state])
+}
+
+function drawQuadrilateralFromStateCorners(graphics,linewidth,color, left,top,right,bottom){
+  let topleft = mapStateToPosition(left,top)
+  let bottomright = mapStateToPosition(right,bottom)
+  drawQuadrilateral(graphics,linewidth,color, topleft[0],topleft[1],bottomright[0],bottomright[1])
+  return
+}
+
+function drawQuadrilateral(graphics,linewidth,color, left,top,right,bottom){
+  // Set a fill and line style
+  graphics.beginFill(color);
+  graphics.lineStyle(linewidth, 0x000000);
+
+  // Draw the quadrilateral
+  graphics.moveTo(left,top);
+  graphics.lineTo(right,top);
+  graphics.lineTo(right,bottom);
+  graphics.lineTo(left,bottom);
+  graphics.endFill();
+  return
+}
 
 // ===================== SETUP ================== //
 
@@ -23,35 +66,27 @@ stage.addChild(graphics)
 
 // Goal point Marker
 var goal = new PIXI.Text('X',{font : '24px Gill Sans', fill : 0x077f4d});
-goal.x = 700
-goal.y = 50
+const goalX = 1 ; const goalY = -4
+goal.x = mapStateToPosition(goalX,goalY)[0] ; goal.y = mapStateToPosition(goalX,goalY)[1]
 goal.pivot.x = 10
 goal.pivot.y = 12
 stage.addChild(goal)
 
 // Robot Object
-var robot = new QuadrotorRobot(200,670)
+var robot = new QuadrotorRobot(-6,0)
 stage.addChild(robot)
-var intervener = new decoupledIntervention_Contr(robot,goal.x,goal.y,0.0004,0)
-var leeway = 0.0004 - 0
+let Umax = 4 * Math.pow(10,-6)
+var intervener = new decoupledIntervention_Contr(robot,goalX,goalY,Umax,0)
+var leeway = Umax - 0
 
 // Obstacle
   // Calculations
-intervener.trigger_level = robot.width/2
-intervener.trigger_level = robot.height/2
-  // Draw Velocity-dependent safe set
-graphics.lineStyle(0,0x000000)
-graphics.beginFill(0xff745a)
-graphics.drawRect(ObX-ObW-intervener.trigger_level,ObY-ObH-intervener.trigger_level,(ObW+intervener.trigger_level)*2,(ObH+intervener.trigger_level)*2)
+intervener.trigger_level = robot.height/(2*70.0)
+intervener.trigger_level = robot.width/(2*70.0)
   // Draw Comfort Augmentation
-graphics.lineStyle(0,0x000000)
-graphics.beginFill(0xcf4c34)
-graphics.drawRect(ObX-ObW-intervener.trigger_level,ObY-ObH-intervener.trigger_level,(ObW+intervener.trigger_level)*2,(ObH+intervener.trigger_level)*2)
+drawQuadrilateralFromStateCorners(graphics,0,0xcf4c34, ObX-ObW-intervener.trigger_level,ObY-ObH-intervener.trigger_level,ObX+ObW+intervener.trigger_level,ObY+ObH+intervener.trigger_level)
   // Draw Obstacle
-graphics.lineStyle(5,0x000000)
-graphics.beginFill(0x4C1C13)
-graphics.drawRect(ObX-ObW,ObY-ObH,ObW*2,ObH*2)
-
+drawQuadrilateralFromStateCorners(graphics,5,0x4C1C13, ObX-ObW,ObY-ObH,ObX+ObW,ObY+ObH)
 
 // ===================== THE MAIN EVENT ================== //
 
@@ -67,7 +102,7 @@ window.setInterval(function() {
   let uy = 0
   ux = intervener.ux()
   uy = intervener.uy()
-  //console.log(clock,ux,uy)
+  console.log(clock,ux,uy)
   robot.update(delT,ux,uy)
   // Path Drawing
   /*
@@ -81,28 +116,28 @@ window.setInterval(function() {
   */
   // Render the current safe set
   graphics.clear()
-  ///*
+  let comfortLeftX   = ObX-ObW-intervener.trigger_level
+  let comfortRightX  = ObX+ObW+intervener.trigger_level
+  let comfortTopY    = ObY-ObH-intervener.trigger_level
+  let comfortBottomY = ObY+ObH+intervener.trigger_level
     // Draw Velocity-dependent safe set
-  let padx = Math.pow(robot.states[1],2)/(2.0*leeway)
-  let pady = Math.pow(robot.states[3],2)/(2.0*leeway)
-  let offx = 0
+  let augmentedLeftX   = comfortLeftX
+  let augmentedRightX  = comfortRightX
+  let augmentedTopY    = comfortTopY
+  let augmentedBottomY = comfortBottomY
+  let padX = Math.pow(robot.states[1],2)/(2.0*leeway)
+  let padY = Math.pow(robot.states[3],2)/(2.0*leeway)
   if(Math.sign(robot.states[1])>0)
-    offx = -padx
-  let offy = 0
+    augmentedLeftX  -= padX
+  else
+    augmentedRightX += padX
   if(Math.sign(robot.states[3])>0)
-    offy = -pady
-  graphics.lineStyle(0,0x000000)
-  graphics.beginFill(0xff745a)
-  graphics.drawRect(ObX-ObW-intervener.trigger_level+offx,ObY-ObH-intervener.trigger_level+offy,(ObW+intervener.trigger_level)*2+padx,(ObH+intervener.trigger_level)*2+pady )
-  //*/
-    // Draw Comfort Augmentation
-  graphics.lineStyle(0,0x000000)
-  graphics.beginFill(0xcf4c34)
-  graphics.drawRect(ObX-ObW-intervener.trigger_level,ObY-ObH-intervener.trigger_level,(ObW+intervener.trigger_level)*2,(ObH+intervener.trigger_level)*2)
-    // Draw Obstacle
-  graphics.lineStyle(5,0x000000)
-  graphics.beginFill(0x4C1C13)
-  graphics.drawRect(ObX-ObW,ObY-ObH,ObW*2,ObH*2)
+    augmentedTopY    -= padY
+  else
+    augmentedBottomY += padY
+  drawQuadrilateralFromStateCorners(graphics,0,0xff745a, augmentedLeftX,augmentedTopY,augmentedRightX,augmentedBottomY) // Draw reachable set augmentation
+  drawQuadrilateralFromStateCorners(graphics,0,0xcf4c34, comfortLeftX,comfortTopY,comfortRightX,comfortBottomY) // Draw Comfort Augmentation
+  drawQuadrilateralFromStateCorners(graphics,5,0x4C1C13, ObX-ObW,ObY-ObH,ObX+ObW,ObY+ObH) // Draw Obstacle
   // Rendering the stage
   renderer.render(stage)
 },2)
@@ -139,8 +174,8 @@ document.addEventListener("mousedown",function(event) {
   var mousePosition = renderer.plugins.interaction.mouse.global;
   goal.x = mousePosition.x
   goal.y = mousePosition.y
-  intervener.tracker.setX = goal.x
-  intervener.tracker.setY = goal.y
+  intervener.tracker.setX = mapPositionToState(goal.x,goal.y)[0]
+  intervener.tracker.setY = mapPositionToState(goal.x,goal.y)[1]
   // End
 })
 
