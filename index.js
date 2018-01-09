@@ -8,6 +8,8 @@ renderer.roundPixels = true
 // Connect to my Firebase
 //var firebase = new Firebase("https://ancaticipation.firebaseio.com")
 
+const clearer = 1
+
 const ObX = 0
 const ObY = 0
 const ObW = 1
@@ -107,31 +109,32 @@ window.setInterval(function() {
   delT *= 0.0005
   robot.update(delT,ux,uy)
   // Render the current safe set
-  //graphics.clear()
-  let comfortLeftX   = ObX-ObW-intervener.trigger_level
-  let comfortRightX  = ObX+ObW+intervener.trigger_level
-  let comfortTopY    = ObY-ObH-intervener.trigger_level
-  let comfortBottomY = ObY+ObH+intervener.trigger_level
-    // Draw Velocity-dependent safe set
-    /*
-  let augmentedLeftX   = comfortLeftX
-  let augmentedRightX  = comfortRightX
-  let augmentedTopY    = comfortTopY
-  let augmentedBottomY = comfortBottomY
-  let padX = Math.pow(robot.states[1],2)/(2.0*leeway)
-  let padY = Math.pow(robot.states[3],2)/(2.0*leeway)
-  if(Math.sign(robot.states[1])>0)
-    augmentedLeftX  -= padX
-  else
-    augmentedRightX += padX
-  if(Math.sign(robot.states[3])>0)
-    augmentedTopY    -= padY
-  else
-    augmentedBottomY += padY
-  drawQuadrilateralFromStateCorners(graphics,0,0xff745a, augmentedLeftX,augmentedTopY,augmentedRightX,augmentedBottomY) // Draw reachable set augmentation
-  */
-  drawQuadrilateralFromStateCorners(graphics,0,0xcf4c34, comfortLeftX,comfortTopY,comfortRightX,comfortBottomY) // Draw Comfort Augmentation
-  drawQuadrilateralFromStateCorners(graphics,5,0x4C1C13, ObX-ObW,ObY-ObH,ObX+ObW,ObY+ObH) // Draw Obstacle
+  if(clearer){
+    graphics.clear()
+    let comfortLeftX   = ObX-ObW-intervener.trigger_level
+    let comfortRightX  = ObX+ObW+intervener.trigger_level
+    let comfortTopY    = ObY-ObH-intervener.trigger_level
+    let comfortBottomY = ObY+ObH+intervener.trigger_level
+      // Draw Velocity-dependent safe set
+
+    let augmentedLeftX   = comfortLeftX
+    let augmentedRightX  = comfortRightX
+    let augmentedTopY    = comfortTopY
+    let augmentedBottomY = comfortBottomY
+    let padX = Math.pow(robot.states[1],2)/(2.0*leeway)
+    let padY = Math.pow(robot.states[3],2)/(2.0*leeway)
+    if(Math.sign(robot.states[1])>0)
+      augmentedLeftX  -= padX
+    else
+      augmentedRightX += padX
+    if(Math.sign(robot.states[3])>0)
+      augmentedTopY    -= padY
+    else
+      augmentedBottomY += padY
+    drawQuadrilateralFromStateCorners(graphics,0,0xff745a, augmentedLeftX,augmentedTopY,augmentedRightX,augmentedBottomY) // Draw reachable set augmentation
+    drawQuadrilateralFromStateCorners(graphics,0,0xcf4c34, comfortLeftX,comfortTopY,comfortRightX,comfortBottomY) // Draw Comfort Augmentation
+    drawQuadrilateralFromStateCorners(graphics,5,0x4C1C13, ObX-ObW,ObY-ObH,ObX+ObW,ObY+ObH) // Draw Obstacle
+  }
   // Rendering the stage
   renderer.render(stage)
 },2)

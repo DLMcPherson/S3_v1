@@ -28,6 +28,15 @@ class loaded_SafeSet extends SafeSet {
     super()
   }
   value(states){
+    // If the state is out of the reachset's grid, then round to nearest gridpoint
+    for(var cur_dim=0;cur_dim<states.length;cur_dim++){ // Iterate along each axis in the state space
+      if(states[cur_dim] < reachset.gmin[cur_dim]){
+        states[cur_dim] = reachset.gmin[cur_dim]
+      }
+      if(states[cur_dim] > reachset.gmax[cur_dim]){
+        states[cur_dim] = reachset.gmax[cur_dim]
+      }
+    }
     // Initialize the nearest neighbor index arrays
     let low_index = []
     let high_index = []
@@ -39,22 +48,12 @@ class loaded_SafeSet extends SafeSet {
       // Find the nearest neighbors
       low_index[cur_dim] =  Math.floor( (states[cur_dim]-reachset.gmin[cur_dim])/reachset.gdx[cur_dim] )
       high_index[cur_dim] =  Math.ceil( (states[cur_dim]-reachset.gmin[cur_dim])/reachset.gdx[cur_dim] )
-      // Constrain the high_index to be within referencing bounds
-      if(high_index[cur_dim] < 0)
-        high_index[cur_dim] = 0
-      if(high_index[cur_dim] > reachset.gN-1)
-        high_index[cur_dim] = reachset.gN-1
-      // Constrain the low_index to be within referncing bounds
-      if(low_index[cur_dim] < 0)
-        low_index[cur_dim] = 0
-      if(low_index[cur_dim] > reachset.gN-1)
-        low_index[cur_dim] = reachset.gN-1
       // Calculate the distance to each corner of this axis
       low_distance[cur_dim]  =  states[cur_dim] - (low_index[cur_dim]*reachset.gdx[cur_dim]+reachset.gmin[cur_dim])
       high_distance[cur_dim] = (high_index[cur_dim]*reachset.gdx[cur_dim]+reachset.gmin[cur_dim]) - states[cur_dim]
     }
     // Multilinear interpolation by weighing each corner value by the volume in
-    // the cube between that corner and the interpolation point
+    // the cube between the opposite corner and the interpolation point
     let value = 0
     // Iterate over each corner of the cell represented as a binary string
     // a zero in the dth bit represents the lower corner along the dth axis
@@ -63,11 +62,11 @@ class loaded_SafeSet extends SafeSet {
       let corner_subarray = reachset.data
       for(var cur_dim=0;cur_dim<states.length;cur_dim++){ // Iterate along each axis in the state space
         if(corner & Math.pow(2,cur_dim) ){ // Check the cur_dim-th bit
-          volume *= high_distance[cur_dim] // multiply in this cell's length along the cur_dim axis
+          volume *= low_distance[cur_dim] // multiply in this cell's length along the cur_dim axis
           corner_subarray = corner_subarray[high_index[cur_dim]] // unwrap another layer of referncing the value function
         }
         else{
-          volume *= low_distance[cur_dim] // multiply in this cell's length along the cur_dim axis
+          volume *= high_distance[cur_dim] // multiply in this cell's length along the cur_dim axis
           corner_subarray = corner_subarray[low_index[cur_dim]] // unwrap another layer of referncing the value function
         }
       }
