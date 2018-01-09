@@ -73,9 +73,9 @@ goal.pivot.y = 12
 stage.addChild(goal)
 
 // Robot Object
-var robot = new QuadrotorRobot(-6,0)
+var robot = new QuadrotorRobot(-6,3)
 stage.addChild(robot)
-let Umax = 4 * Math.pow(10,-6)
+let Umax = 1
 var intervener = new decoupledIntervention_Contr(robot,goalX,goalY,Umax,0)
 var leeway = Umax - 0
 
@@ -102,25 +102,18 @@ window.setInterval(function() {
   let uy = 0
   ux = intervener.ux()
   uy = intervener.uy()
-  console.log(clock,ux,uy)
+  //console.log(clock,ux,uy)
+  console.log(intervener.trigger_level,intervener.SafeSetX(),intervener.SafeSetY())
+  delT *= 0.0005
   robot.update(delT,ux,uy)
-  // Path Drawing
-  /*
-  graphics.clear()
-  graphics.lineStyle(5, 0x077f4d);
-  graphics.moveTo(320,300)
-  var i = 0
-  for(i=1; i<tick; i++){
-    graphics.lineTo(320+(robot.traj[i][0])*53,300-robot.traj[i][1]*9)
-  }
-  */
   // Render the current safe set
-  graphics.clear()
+  //graphics.clear()
   let comfortLeftX   = ObX-ObW-intervener.trigger_level
   let comfortRightX  = ObX+ObW+intervener.trigger_level
   let comfortTopY    = ObY-ObH-intervener.trigger_level
   let comfortBottomY = ObY+ObH+intervener.trigger_level
     // Draw Velocity-dependent safe set
+    /*
   let augmentedLeftX   = comfortLeftX
   let augmentedRightX  = comfortRightX
   let augmentedTopY    = comfortTopY
@@ -136,6 +129,7 @@ window.setInterval(function() {
   else
     augmentedBottomY += padY
   drawQuadrilateralFromStateCorners(graphics,0,0xff745a, augmentedLeftX,augmentedTopY,augmentedRightX,augmentedBottomY) // Draw reachable set augmentation
+  */
   drawQuadrilateralFromStateCorners(graphics,0,0xcf4c34, comfortLeftX,comfortTopY,comfortRightX,comfortBottomY) // Draw Comfort Augmentation
   drawQuadrilateralFromStateCorners(graphics,5,0x4C1C13, ObX-ObW,ObY-ObH,ObX+ObW,ObY+ObH) // Draw Obstacle
   // Rendering the stage
