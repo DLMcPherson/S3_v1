@@ -150,8 +150,17 @@ document.addEventListener("keydown",function(event) {
   if(intervener.trigger_level < intervener.SafeSetY()){
     intervener.trigger_level = intervener.SafeSetY()
   }
+  // Draw level set
+  if(clearer==0){
+    let comfortLeftX   = ObX-ObW-intervener.trigger_level
+    let comfortRightX  = ObX+ObW+intervener.trigger_level
+    let comfortTopY    = ObY-ObH-intervener.trigger_level
+    let comfortBottomY = ObY+ObH+intervener.trigger_level
+    drawQuadrilateralFromStateCorners(graphics,0,0xcf4c34, comfortLeftX,comfortTopY,comfortRightX,comfortBottomY) // Draw Comfort Augmentation
+    drawQuadrilateralFromStateCorners(graphics,5,0x4C1C13, ObX-ObW,ObY-ObH,ObX+ObW,ObY+ObH) // Draw Obstacle
+  }
   // Debugging report
-  console.log(clock,key,intervener.trigger_level,intervener.trigger_level)
+  //console.log(clock,key,intervener.trigger_level,intervener.trigger_level)
   /*
   if(key==80 || key==81){
     firebase.push({

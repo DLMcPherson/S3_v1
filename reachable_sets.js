@@ -36,22 +36,18 @@ class loaded_SafeSet extends SafeSet {
       }
   constructor(){
     super()
-    this.reachset = reachset
-    var loadreach = 0
-    /*
-    fetch("reachableSets/dubIntV2_reachset.json").then(function(response) {
+    //this.reachset = reachset
+    fetch("reachableSets/dubIntV2_reachset.json").then((response) => {
             // The fetch operation has returned an HTTP response!
             // You can read more about these under the MDN docs:
             // https://developer.mozilla.org/en-US/docs/Web/API/Response
             return response.json()
-        }).then(function(json) {
-            loadreach = json
-            console.log(loadreach)
-            this.reachset = loadreach
+        }).then((json) => {
+            console.log(json)
+            this.reachset = json
             // TODO: Figure out how to put loaded reachable set into this.reachset
         })
-    */
-    fetch("reachableSets/dubIntV2_reachset.json").then(this.foo).then(this.bar)
+    //fetch("reachableSets/dubIntV2_reachset.json").then(this.foo).then(this.bar)
   }
   value(states){
     // If the state is out of the reachset's grid, then round to nearest gridpoint
