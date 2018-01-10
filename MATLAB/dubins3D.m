@@ -267,6 +267,8 @@ while(tMax - tNow > small * tMax)
   
 end
 
+json_export_reachset(data,g);
+
 endTime = cputime;
 fprintf('Total execution time %g seconds\n', endTime - startTime);
 

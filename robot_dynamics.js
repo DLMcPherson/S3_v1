@@ -45,6 +45,7 @@ class QuadrotorRobot extends Robot {
   displayState(){
     this.x = this.states[0] * 70 + 630
     this.y = this.states[2] * 70 + 350
+    //this.rotation = this.states[1]/15.0
     this.rotation = 0
   }
   // Constructor initializes PIXI.Sprite members fitting the quadrotor Texture

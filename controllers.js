@@ -80,23 +80,23 @@ class decoupledIntervention_Contr extends Controller {
   // Two methods exist due to decoupling this problem along x- and y-axes
   ux(){
     if( this.SafeSetX() < this.trigger_level && this.SafeSetY() < this.trigger_level && this.SafeSetY() <= this.SafeSetX() ){
-      console.log('X Saf')
-      drawQuadrilateralFromStateCorners(graphics,0,0xb5432e,this.robot.states[0]-0.07,this.robot.states[2]-0.07,this.robot.states[0]+0.07,this.robot.states[2]+0.07)
+      //console.log('X Saf')
+      //drawQuadrilateralFromStateCorners(graphics,0,0xb5432e,this.robot.states[0]-0.07,this.robot.states[2]-0.07,this.robot.states[0]+0.07,this.robot.states[2]+0.07)
       return this.safer.ux();
     }
     else{
-      console.log('X Pid')
+      //console.log('X Pid')
       return this.tracker.ux();
     }
   }
   uy(){
     if( this.SafeSetX() < this.trigger_level && this.SafeSetY() < this.trigger_level && this.SafeSetX() <= this.SafeSetY() ){
-      console.log('Y Saf')
-      drawQuadrilateralFromStateCorners(graphics,0,0x077f4d,this.robot.states[0]-0.07,this.robot.states[2]-0.07,this.robot.states[0]+0.07,this.robot.states[2]+0.07)
+      //console.log('Y Saf')
+      //drawQuadrilateralFromStateCorners(graphics,0,0x077f4d,this.robot.states[0]-0.07,this.robot.states[2]-0.07,this.robot.states[0]+0.07,this.robot.states[2]+0.07)
       return this.safer.uy();
     }
     else{
-      console.log('Y Pid')
+      //console.log('Y Pid')
       return this.tracker.uy();
     }
   }

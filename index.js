@@ -8,7 +8,7 @@ renderer.roundPixels = true
 // Connect to my Firebase
 //var firebase = new Firebase("https://ancaticipation.firebaseio.com")
 
-const clearer = 1
+const clearer = 0
 
 const ObX = 0
 const ObY = 0
@@ -105,7 +105,7 @@ window.setInterval(function() {
   ux = intervener.ux()
   uy = intervener.uy()
   //console.log(clock,ux,uy)
-  console.log(intervener.trigger_level,intervener.SafeSetX(),intervener.SafeSetY())
+  //console.log(intervener.trigger_level,intervener.SafeSetX(),intervener.SafeSetY())
   delT *= 0.0005
   robot.update(delT,ux,uy)
   // Render the current safe set
@@ -116,7 +116,6 @@ window.setInterval(function() {
     let comfortTopY    = ObY-ObH-intervener.trigger_level
     let comfortBottomY = ObY+ObH+intervener.trigger_level
       // Draw Velocity-dependent safe set
-
     let augmentedLeftX   = comfortLeftX
     let augmentedRightX  = comfortRightX
     let augmentedTopY    = comfortTopY
