@@ -10,53 +10,89 @@ renderer.roundPixels = true
 
 const clearer = 0
 
-const ObX = 0
-const ObY = 0
-const ObW = 1
-const ObH = 1
-
-const Mxx = 70
-const Mxy = 0
-const Myx = 0
-const Myy = 70
-const bx  = 630
-const by  = 350
-
-function mapStateToPosition(x,y){
-  let x_screen = Mxx * x + Mxy * y + bx
-  let y_screen = Myx * x + Myy * y + by
-  return([x_screen,y_screen])
+class ScreenXYMap {
+  constructor(_Mxx,_Mxy,_Myx,_Myy,_bx,_by){
+    this.Mxx = _Mxx
+    this.Mxy = _Mxy
+    this.Myx = _Myx
+    this.Myy = _Myy
+    this.bx  = _bx
+    this.by  = _by
+  }
+  mapStateToPosition(x,y){
+    let x_screen = this.Mxx * x + this.Mxy * y + this.bx
+    let y_screen = this.Myx * x + this.Myy * y + this.by
+    return([x_screen,y_screen])
+  }
+  mapPositionToState(x_screen,y_screen){
+    let x = (x_screen - this.bx)
+    let y = (y_screen - this.by)
+    let determinant = this.Mxx*this.Myy - this.Mxy*this.Myx
+    let x_state = ( this.Myy * x - this.Mxy * y)/determinant
+    let y_state = (-this.Myx * x + this.Mxx * y)/determinant
+    return([x_state,y_state])
+  }
 }
 
-function mapPositionToState(x_screen,y_screen){
-  let x = (x_screen - bx)
-  let y = (y_screen - by)
-  let determinant = Mxx*Myy - Mxy*Myx
-  let x_state = ( Myy * x - Mxy * y)/determinant
-  let y_state = (-Myx * x + Mxx * y)/determinant
-  return([x_state,y_state])
+class Obstacle {
+  render(){
+    return
+  }
 }
 
-function drawQuadrilateralFromStateCorners(graphics,linewidth,color, left,top,right,bottom){
-  let topleft = mapStateToPosition(left,top)
-  let bottomright = mapStateToPosition(right,bottom)
-  drawQuadrilateral(graphics,linewidth,color, topleft[0],topleft[1],bottomright[0],bottomright[1])
-  return
+class BoxObstacle extends Obstacle{
+  constructor(_ObX,_ObY,_ObW,_ObH){
+    super()
+    this.ObX = _ObX
+    this.ObY = _ObY
+    this.ObW = _ObW
+    this.ObH = _ObH
+  }
+  render(){
+    this.drawQuadrilateralFromStateCorners(graphics,5,0x4C1C13, this.ObX-this.ObW,this.ObY-this.ObH,this.ObX+this.ObW,this.ObY+this.ObH)
+    return
+  }
+  renderAugmented(pad){
+    this.drawQuadrilateralFromStateCorners(graphics,0,0xcf4c34, this.ObX-this.ObW-pad,this.ObY-this.ObH-pad,this.ObX+this.ObW+pad,this.ObY+this.ObH+pad)
+    this.render()
+    return
+  }
+  drawQuadrilateralFromStateCorners(graphics,linewidth,color, left,top,right,bottom){
+    let topleft = graphics.mapper.mapStateToPosition(left,top)
+    let bottomright = graphics.mapper.mapStateToPosition(right,bottom)
+    this.drawQuadrilateral(graphics,linewidth,color, topleft[0],topleft[1],bottomright[0],bottomright[1])
+    return
+  }
+  drawQuadrilateral(graphics,linewidth,color, left,top,right,bottom){
+    // Set a fill and line style
+    graphics.beginFill(color);
+    graphics.lineStyle(linewidth, 0x000000);
+
+    // Draw the quadrilateral
+    graphics.moveTo(left,top);
+    graphics.lineTo(right,top);
+    graphics.lineTo(right,bottom);
+    graphics.lineTo(left,bottom);
+    graphics.endFill();
+    return
+  }
 }
 
-function drawQuadrilateral(graphics,linewidth,color, left,top,right,bottom){
-  // Set a fill and line style
-  graphics.beginFill(color);
-  graphics.lineStyle(linewidth, 0x000000);
-
-  // Draw the quadrilateral
-  graphics.moveTo(left,top);
-  graphics.lineTo(right,top);
-  graphics.lineTo(right,bottom);
-  graphics.lineTo(left,bottom);
-  graphics.endFill();
-  return
+class CircleObstacle extends Obstacle{
+  constructor(_ObX,_ObY,_ObR){
+    super()
+    this.ObX = _ObX
+    this.ObY = _ObY
+    this.ObR = _ObR
+  }
+  render(){
+    let center = graphics.mapper.mapStateToPosition(this.ObX,this.ObY)
+    let rightPoint = graphics.mapper.mapStateToPosition(this.ObX+this.ObR,this.ObY)
+    graphics.drawCircle(center[0],center[1],rightPoint[0]-center[0])
+  }
 }
+
+let obstacle = new BoxObstacle(0,0,1,1)
 
 // ===================== SETUP ================== //
 
@@ -64,12 +100,13 @@ function drawQuadrilateral(graphics,linewidth,color, left,top,right,bottom){
 var stage = new PIXI.Container()
   // Graphics object for lines and squares and such...
 var graphics = new PIXI.Graphics();
+graphics.mapper = new ScreenXYMap(70,0,0,70,630,350)
 stage.addChild(graphics)
 
 // Goal point Marker
 var goal = new PIXI.Text('X',{font : '24px Gill Sans', fill : 0x077f4d});
 const goalX = 1 ; const goalY = -4
-goal.x = mapStateToPosition(goalX,goalY)[0] ; goal.y = mapStateToPosition(goalX,goalY)[1]
+goal.x = graphics.mapper.mapStateToPosition(goalX,goalY)[0] ; goal.y = graphics.mapper.mapStateToPosition(goalX,goalY)[1]
 goal.pivot.x = 10
 goal.pivot.y = 12
 stage.addChild(goal)
@@ -78,17 +115,14 @@ stage.addChild(goal)
 var robot = new QuadrotorRobot(-6,3)
 stage.addChild(robot)
 let Umax = 1
-var intervener = new decoupledIntervention_Contr(robot,goalX,goalY,Umax,0)
+var intervener = new Intervention_Contr(robot,goalX,goalY,Umax,0)
 var leeway = Umax - 0
 
 // Obstacle
   // Calculations
-intervener.trigger_level = robot.height/(2*70.0)
-intervener.trigger_level = robot.width/(2*70.0)
-  // Draw Comfort Augmentation
-drawQuadrilateralFromStateCorners(graphics,0,0xcf4c34, ObX-ObW-intervener.trigger_level,ObY-ObH-intervener.trigger_level,ObX+ObW+intervener.trigger_level,ObY+ObH+intervener.trigger_level)
-  // Draw Obstacle
-drawQuadrilateralFromStateCorners(graphics,5,0x4C1C13, ObX-ObW,ObY-ObH,ObX+ObW,ObY+ObH)
+intervener.trigger_level = robot.height/(2*graphics.mapper.Mxx)
+intervener.trigger_level = robot.width/(2*graphics.mapper.Myy)
+obstacle.renderAugmented(intervener.trigger_level)
 
 // ===================== THE MAIN EVENT ================== //
 
@@ -100,21 +134,18 @@ window.setInterval(function() {
   clock += delT
   now = Date.now()
   // Robot dynamics
-  let ux = 0
-  let uy = 0
-  ux = intervener.ux()
-  uy = intervener.uy()
-  //console.log(clock,ux,uy)
+  let u = intervener.u()
+  console.log(clock,u)
   //console.log(intervener.trigger_level,intervener.SafeSetX(),intervener.SafeSetY())
   delT *= 0.0005
-  robot.update(delT,ux,uy)
+  robot.update(delT,u)
   // Render the current safe set
   if(clearer){
     graphics.clear()
-    let comfortLeftX   = ObX-ObW-intervener.trigger_level
-    let comfortRightX  = ObX+ObW+intervener.trigger_level
-    let comfortTopY    = ObY-ObH-intervener.trigger_level
-    let comfortBottomY = ObY+ObH+intervener.trigger_level
+    let comfortLeftX   = obstacle.ObX-obstacle.ObW-intervener.trigger_level
+    let comfortRightX  = obstacle.ObX+obstacle.ObW+intervener.trigger_level
+    let comfortTopY    = obstacle.ObY-obstacle.ObH-intervener.trigger_level
+    let comfortBottomY = obstacle.ObY+obstacle.ObH+intervener.trigger_level
       // Draw Velocity-dependent safe set
     let augmentedLeftX   = comfortLeftX
     let augmentedRightX  = comfortRightX
@@ -130,9 +161,10 @@ window.setInterval(function() {
       augmentedTopY    -= padY
     else
       augmentedBottomY += padY
-    drawQuadrilateralFromStateCorners(graphics,0,0xff745a, augmentedLeftX,augmentedTopY,augmentedRightX,augmentedBottomY) // Draw reachable set augmentation
-    drawQuadrilateralFromStateCorners(graphics,0,0xcf4c34, comfortLeftX,comfortTopY,comfortRightX,comfortBottomY) // Draw Comfort Augmentation
-    drawQuadrilateralFromStateCorners(graphics,5,0x4C1C13, ObX-ObW,ObY-ObH,ObX+ObW,ObY+ObH) // Draw Obstacle
+    //drawQuadrilateralFromStateCorners(graphics,0,0xff745a, augmentedLeftX,augmentedTopY,augmentedRightX,augmentedBottomY) // Draw reachable set augmentation
+    //drawQuadrilateralFromStateCorners(graphics,0,0xcf4c34, comfortLeftX,comfortTopY,comfortRightX,comfortBottomY) // Draw Comfort Augmentation
+    //drawQuadrilateralFromStateCorners(graphics,5,0x4C1C13, ObX-ObW,ObY-ObH,ObX+ObW,ObY+ObH) // Draw Obstacle
+    obstacle.renderAugmented(intervener.trigger_level)
   }
   // Rendering the stage
   renderer.render(stage)
@@ -152,12 +184,7 @@ document.addEventListener("keydown",function(event) {
   }
   // Draw level set
   if(clearer==0){
-    let comfortLeftX   = ObX-ObW-intervener.trigger_level
-    let comfortRightX  = ObX+ObW+intervener.trigger_level
-    let comfortTopY    = ObY-ObH-intervener.trigger_level
-    let comfortBottomY = ObY+ObH+intervener.trigger_level
-    drawQuadrilateralFromStateCorners(graphics,0,0xcf4c34, comfortLeftX,comfortTopY,comfortRightX,comfortBottomY) // Draw Comfort Augmentation
-    drawQuadrilateralFromStateCorners(graphics,5,0x4C1C13, ObX-ObW,ObY-ObH,ObX+ObW,ObY+ObH) // Draw Obstacle
+    obstacle.renderAugmented(intervener.trigger_level)
   }
   // Debugging report
   //console.log(clock,key,intervener.trigger_level,intervener.trigger_level)
@@ -179,8 +206,8 @@ document.addEventListener("mousedown",function(event) {
   var mousePosition = renderer.plugins.interaction.mouse.global;
   goal.x = mousePosition.x
   goal.y = mousePosition.y
-  intervener.tracker.setX = mapPositionToState(goal.x,goal.y)[0]
-  intervener.tracker.setY = mapPositionToState(goal.x,goal.y)[1]
+  intervener.tracker.setX = graphics.mapper.mapPositionToState(goal.x,goal.y)[0]
+  intervener.tracker.setY = graphics.mapper.mapPositionToState(goal.x,goal.y)[1]
   // End
 })
 

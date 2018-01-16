@@ -1,10 +1,16 @@
 // Abstract robot class : exposes interface for dynamical updates
+// Note that our optimal safety controller can only handle control-affine systems
 class Robot extends PIXI.Sprite {
   // Dynamical update function that realizes the difference equation describing the system
-  dynamics(delT,ux,uy){
+  dynamics(delT,u){
     this.states[0] += (0) * delT
     this.states[1] += (0) * delT
     this.states[2] += (0) * delT
+  }
+  // Control affine function that multiplies the input in the difference equation
+  // Realized as a function to include possible state dependence
+  controlCoefficient(){
+    return(0)
   }
   // Method that translates states from the state vector into the corresponding
   // position for rendering in the JS
@@ -25,8 +31,8 @@ class Robot extends PIXI.Sprite {
     this.displayState()
   }
   // Method to be called each loop
-  update(delT,ux,uy){
-    this.dynamics(delT,ux,uy)
+  update(delT,u){
+    this.dynamics(delT,u)
     this.displayState()
   }
 }
@@ -34,17 +40,22 @@ class Robot extends PIXI.Sprite {
 // Double Integrating simplified Quadrotor
 class QuadrotorRobot extends Robot {
   // Dynamical update function that realizes the double integrator Diff. Eq.
-  dynamics(delT,ux,uy){
+  dynamics(delT,u){
     this.states[0] += this.states[1] * delT
-    this.states[1] += ux * delT
+    this.states[1] += u[0] * delT
     this.states[2] += this.states[3] * delT
-    this.states[3] += uy * delT
+    this.states[3] += u[1] * delT
+  }
+  // Control affine function that multiplies the input in the difference equation
+  controlCoefficient(){
+    return([[0,1,0,0],[0,0,0,1]])
   }
   // Method that translates states from the state vector into the corresponding
   // position for rendering in the JS
   displayState(){
-    this.x = this.states[0] * 70 + 630
-    this.y = this.states[2] * 70 + 350
+    let mappedState = graphics.mapper.mapStateToPosition(this.states[0],this.states[2])
+    this.x =  mappedState[0]
+    this.y =  mappedState[1]
     //this.rotation = this.states[1]/15.0
     this.rotation = 0
   }

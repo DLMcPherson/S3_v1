@@ -3,6 +3,10 @@ class SafeSet {
   value(states){
     return 0;
   }
+  // Method for calculating the gradient
+  gradV(states){
+    return 0;
+  }
 }
 class DoubleIntegrator_SafeSet extends SafeSet {
   constructor(_leeway,_obP,_obL){
@@ -20,20 +24,80 @@ class DoubleIntegrator_SafeSet extends SafeSet {
       return Math.abs(states[0]-this.obP)-this.obL-Math.pow(states[1],2)/(2.0*this.leeway)
     }
   }
+  // Method for calculating the gradient
+  gradV(states){
+    // NOTE: For these computations I am neglecting the impulse term in the
+    // derivatives that arises from differentiating the case structure
+
+    // Compute the gradient with respect to position
+    let dVdp = 0
+    if((states[0]-this.obP) < 0){
+      dVdp = -1
+    }
+    else{
+      dVdp =  1
+    }
+    // Compute the gradient with respect to velocity
+    let dVdv = 0
+    if(states[1]*(this.obP-states[0]) < 0){
+      dVdv = 0
+    }
+    else{
+      dVdv = -states[1]/this.leeway
+    }
+    // Return
+    return([dVdp,dVdv])
+  }
+}
+
+// HACK: Class for combining two safe sets of dimension two
+// into one safe set of dimension 4
+class twoTwo extends SafeSet{
+  constructor(_A,_B){
+    super()
+    this.setA = _A
+    this.setB = _B
+  }
+  statesA(states){
+    return([states[0],states[1]])
+  }
+  statesB(states){
+    return([states[2],states[3]])
+  }
+  // Method for reading the value function at the given decoupled state
+  valueA(states){
+    return this.setA.value(this.statesA(states))
+  }
+  valueB(states){
+    return this.setB.value(this.statesB(states))
+  }
+  // Method for reading the value function at the given joint state
+  value(states){
+    if(this.valueA(states) < this.valueB(states)){
+      return(this.valueB(states))
+    }
+    else{
+      return(this.valueA(states))
+    }
+  }
+  // Method for calculating the gradient
+  gradV(states){
+    let gradient = [0,0,0,0]
+    if(this.valueA(states) < this.valueB(states)){
+      let gradientB = this.setB.gradV(this.statesB(states) )
+      gradient[2] = gradientB[0]
+      gradient[3] = gradientB[1]
+    }
+    else{
+      let gradientA = this.setA.gradV(this.statesA(states) )
+      gradient[0] = gradientA[0]
+      gradient[1] = gradientA[1]
+    }
+    return(gradient)
+  }
 }
 
 class loaded_SafeSet extends SafeSet {
-  foo(response) {
-          // The fetch operation has returned an HTTP response!
-          // You can read more about these under the MDN docs:
-          // https://developer.mozilla.org/en-US/docs/Web/API/Response
-          return response.json()
-      }
-  bar(json) {
-          console.log(json)
-          reachset = json
-          // TODO: Figure out how to put loaded reachable set into this.reachset
-      }
   constructor(){
     super()
     //this.reachset = reachset
@@ -49,7 +113,22 @@ class loaded_SafeSet extends SafeSet {
         })
     //fetch("reachableSets/dubIntV2_reachset.json").then(this.foo).then(this.bar)
   }
-  value(states){
+  // Method for calculating the gradient at the given state
+  gradV(states){
+    // Find the nearest neighbors
+    let indices = this.nearIndices(states)
+    let low_index = indices[0]
+    let high_index  = indices[1]
+    // Calculate the patial along each axis
+    let gradient = []
+    for(var cur_dim=0;cur_dim<states.length;cur_dim++){ // Iterate along each axis in the state space...
+      gradient[cur_dim] =  0
+    }
+    //
+    return(gradient)
+  }
+  // Method for finding the nearest neighboring gridpoints
+  nearIndices(states){
     // If the state is out of the reachset's grid, then round to nearest gridpoint
     for(var cur_dim=0;cur_dim<states.length;cur_dim++){ // Iterate along each axis in the state space
       if(states[cur_dim] < this.reachset.gmin[cur_dim]){
@@ -62,14 +141,24 @@ class loaded_SafeSet extends SafeSet {
     // Initialize the nearest neighbor index arrays
     let low_index = []
     let high_index = []
-    // Initialize the lengths arrays
-    let low_distance = []
-    let high_distance = []
-    // Calculate the hypervolumes between the interpolation point and the nearest neighbors
+    // Find the nearest neighbors by rounding along each axis
     for(var cur_dim=0;cur_dim<states.length;cur_dim++){ // Iterate along each axis in the state space...
       // Find the nearest neighbors
       low_index[cur_dim] =  Math.floor( (states[cur_dim]-this.reachset.gmin[cur_dim])/this.reachset.gdx[cur_dim] )
       high_index[cur_dim] =  Math.ceil( (states[cur_dim]-this.reachset.gmin[cur_dim])/this.reachset.gdx[cur_dim] )
+    }
+    return([low_index,high_index])
+  }
+  // Method for reading the value function at the given state
+  value(states){
+    // Find the nearest neighbors
+    let indices = this.nearIndices(states)
+    let low_index = indices[0]
+    let high_index  = indices[1]
+    // Calculate the hypervolumes between the interpolation point and the nearest neighbors
+    let low_distance = []
+    let high_distance = []
+    for(var cur_dim=0;cur_dim<states.length;cur_dim++){ // Iterate along each axis in the state space...
       // Calculate the distance to each corner of this axis
       low_distance[cur_dim]  =  states[cur_dim] - (low_index[cur_dim]*this.reachset.gdx[cur_dim]+this.reachset.gmin[cur_dim])
       high_distance[cur_dim] = (high_index[cur_dim]*this.reachset.gdx[cur_dim]+this.reachset.gmin[cur_dim]) - states[cur_dim]
