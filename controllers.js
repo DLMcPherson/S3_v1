@@ -48,23 +48,22 @@ class Safe_Contr extends Controller {
   u(momentum){
     let u_out = []
     console.log(momentum)
-    for(var cur_dim=0;cur_dim<this.robot.controlCoefficient().length;cur_dim++){ // Iterate along each axis in the control space
-      //if(this.innerProduct(this.robot.controlCoefficient()[cur_dim] , momentum)  > 0){
-      //if(this.robot.states[cur_dim*2] > 0){
-      if(momentum[1+cur_dim*2]  > 0){
-        u_out[cur_dim] = this.maxU;
+    for(var cur_control=0;cur_control<this.robot.controlCoefficient().length;cur_control++){ // Iterate along each axis in the control space
+      //if(this.robot.states[cur_control*2] > 0){
+      //if(momentum[1+cur_control*2]  > 0){
+      if(this.innerProduct(this.robot.controlCoefficient()[cur_control] , momentum)  > 0){
+        u_out[cur_control] = this.maxU;
       }
       else{
-        u_out[cur_dim] = -this.maxU;
+        u_out[cur_control] = -this.maxU;
       }
-      console.log(cur_dim,momentum[1+cur_dim*2])
     }
     return(u_out);
   }
   // Returns the inner product of two equal length arrays
   innerProduct(a,b){
     let sum = 0
-    for(var i=0;i<a.length;a++){
+    for(var i=0;i<a.length;i++){
       sum += a[i] * b[i]
     }
     return(sum)
@@ -85,6 +84,7 @@ class Intervention_Contr extends Controller {
   // Two methods exist due to decoupling this problem along x- and y-axes
   u(){
     if( this.intervening_set.value(this.robot.states) < this.trigger_level ){
+      console.log(this.intervening_set.valueA(this.robot.states),this.intervening_set.valueB(this.robot.states) )
       return this.safer.u(this.intervening_set.gradV(this.robot.states) );
       //return this.safer.u();
     }

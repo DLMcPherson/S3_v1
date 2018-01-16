@@ -135,7 +135,7 @@ window.setInterval(function() {
   now = Date.now()
   // Robot dynamics
   let u = intervener.u()
-  console.log(clock,u)
+  //console.log(clock,u)
   //console.log(intervener.trigger_level,intervener.SafeSetX(),intervener.SafeSetY())
   delT *= 0.0005
   robot.update(delT,u)
