@@ -76,15 +76,15 @@ class Intervention_Contr extends Controller {
     super(_robot)
     this.tracker = new PID_Contr(_robot,_setX,_setY)
     this.safer   = new Safe_Contr(_robot,_maxU)
-    //this.intervening_set = new twoTwo( new loaded_SafeSet , new loaded_SafeSet )
-    this.intervening_set = new twoTwo( new DoubleIntegrator_SafeSet(_maxU-_maxD,0,1) , new DoubleIntegrator_SafeSet(_maxU-_maxD,0,1) )
+    this.intervening_set = new twoTwo( new loaded_SafeSet , new loaded_SafeSet )
+    //this.intervening_set = new twoTwo( new DoubleIntegrator_SafeSet(_maxU-_maxD,0,1) , new DoubleIntegrator_SafeSet(_maxU-_maxD,0,1) )
     this.trigger_level = 0
   }
   // Methods that return the current input corresponding to the current state
   // Two methods exist due to decoupling this problem along x- and y-axes
   u(){
     if( this.intervening_set.value(this.robot.states) < this.trigger_level ){
-      console.log(this.intervening_set.valueA(this.robot.states),this.intervening_set.valueB(this.robot.states) )
+      //console.log(this.intervening_set.valueA(this.robot.states),this.intervening_set.valueB(this.robot.states) )
       return this.safer.u(this.intervening_set.gradV(this.robot.states) );
       //return this.safer.u();
     }

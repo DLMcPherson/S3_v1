@@ -122,7 +122,14 @@ class loaded_SafeSet extends SafeSet {
     // Calculate the patial along each axis
     let gradient = []
     for(var cur_dim=0;cur_dim<states.length;cur_dim++){ // Iterate along each axis in the state space...
-      gradient[cur_dim] =  0
+      let statesLow = states.slice(0)
+      statesLow[cur_dim] = this.indexToState(low_index[cur_dim],cur_dim)
+      let statesHigh = states.slice(0)
+      statesHigh[cur_dim] = this.indexToState(high_index[cur_dim],cur_dim)
+      //console.log( this.indexToState(low_index[cur_dim],cur_dim),this.indexToState(high_index[cur_dim],cur_dim) )
+      //console.log(statesLow,statesHigh)
+      gradient[cur_dim] =  -(this.value(statesLow) - this.value(statesHigh))/this.reachset.gdx[cur_dim]
+      //console.log(this.value(statesLow),this.value(statesHigh))
     }
     //
     return(gradient)
@@ -149,6 +156,10 @@ class loaded_SafeSet extends SafeSet {
     }
     return([low_index,high_index])
   }
+  //
+  indexToState(index,dim){
+    return(index*this.reachset.gdx[dim]+this.reachset.gmin[dim])
+  }
   // Method for reading the value function at the given state
   value(states){
     // Find the nearest neighbors
@@ -162,6 +173,11 @@ class loaded_SafeSet extends SafeSet {
       // Calculate the distance to each corner of this axis
       low_distance[cur_dim]  =  states[cur_dim] - (low_index[cur_dim]*this.reachset.gdx[cur_dim]+this.reachset.gmin[cur_dim])
       high_distance[cur_dim] = (high_index[cur_dim]*this.reachset.gdx[cur_dim]+this.reachset.gmin[cur_dim]) - states[cur_dim]
+      // Catch /edge/ case where interpolation point is on a gridpoint
+      if(low_index[cur_dim] == high_index[cur_dim]){
+        low_distance[cur_dim] = 1
+        high_distance[cur_dim] = 0
+      }
     }
     // Multilinear interpolation by weighing each corner value by the volume in
     // the cube between the opposite corner and the interpolation point
