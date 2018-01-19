@@ -82,12 +82,18 @@ class Dubins_Contr extends Controller {
     this.setY = _set[1]
   }
   u(){
-    let trackangle = Math.atan2(this.setY - this.robot.states[1],this.setX - this.robot.states[0])
+    let trackAngle = Math.atan2(this.setY - this.robot.states[1],this.setX - this.robot.states[0])
+    if(this.robot.states[2] > Math.PI / +2 && trackAngle < Math.PI / -2) {
+      trackAngle += 2*Math.PI
+    }
+    if(this.robot.states[2] < Math.PI / -2 && trackAngle > Math.PI / +2) {
+      trackAngle -= 2*Math.PI
+    }
     let Uout = 0
-    if(this.robot.states[2]<trackangle){
+    if(this.robot.states[2]<trackAngle){
       Uout = this.Umax
     }
-    if(this.robot.states[2]>trackangle){
+    if(this.robot.states[2]>trackAngle){
       Uout = -this.Umax
     }
     return([Uout])

@@ -1,161 +1,92 @@
 "use strict"
 
-// Setup the PIXI renderer that handles interactive display and input inside the browser
-var renderer = PIXI.autoDetectRenderer(1400, 768)
-renderer.backgroundColor = 0xffffff
-renderer.roundPixels = true
+// Constant flags for quickly modifying script behavior
+const clearer = 0;
 
-// Connect to my Firebase
-//var firebase = new Firebase("https://ancaticipation.firebaseio.com")
-
-const clearer = 0
-
+// Mapper class that scales state space to screen
 class ScreenXYMap {
   constructor(_Mxx,_Mxy,_Myx,_Myy,_bx,_by){
-    this.Mxx = _Mxx
-    this.Mxy = _Mxy
-    this.Myx = _Myx
-    this.Myy = _Myy
-    this.bx  = _bx
-    this.by  = _by
+    // Scaling Matrix
+    this.Mxx = _Mxx;
+    this.Mxy = _Mxy;
+    this.Myx = _Myx;
+    this.Myy = _Myy;
+    // Origin-defining affine term
+    this.bx  = _bx;
+    this.by  = _by;
   }
+  // Return a 2-tuple of the screen coordinates given x-y coordinates on the
+  // state space scale (can be a subset of the state space)
   mapStateToPosition(x,y){
-    let x_screen = this.Mxx * x + this.Mxy * y + this.bx
-    let y_screen = this.Myx * x + this.Myy * y + this.by
-    return([x_screen,y_screen])
+    let x_screen = this.Mxx * x + this.Mxy * y + this.bx;
+    let y_screen = this.Myx * x + this.Myy * y + this.by;
+    return([x_screen,y_screen]);
   }
+  // Returns the equivalent state-space scale coordinates
+  // given the screen coordinates
   mapPositionToState(x_screen,y_screen){
-    let x = (x_screen - this.bx)
-    let y = (y_screen - this.by)
-    let determinant = this.Mxx*this.Myy - this.Mxy*this.Myx
-    let x_state = ( this.Myy * x - this.Mxy * y)/determinant
-    let y_state = (-this.Myx * x + this.Mxx * y)/determinant
-    return([x_state,y_state])
+    let x = (x_screen - this.bx);
+    let y = (y_screen - this.by);
+    let determinant = this.Mxx*this.Myy - this.Mxy*this.Myx;
+    let x_state = ( this.Myy * x - this.Mxy * y)/determinant;
+    let y_state = (-this.Myx * x + this.Mxx * y)/determinant;
+    return([x_state,y_state]);
   }
 }
 
-class Obstacle {
-  render(){
-    return
-  }
-}
-
-class BoxObstacle extends Obstacle{
-  constructor(_ObX,_ObY,_ObW,_ObH){
-    super()
-    this.ObX = _ObX
-    this.ObY = _ObY
-    this.ObW = _ObW
-    this.ObH = _ObH
-  }
-  render(){
-    this.drawQuadrilateralFromStateCorners(graphics,5,0x4C1C13, this.ObX-this.ObW,this.ObY-this.ObH,this.ObX+this.ObW,this.ObY+this.ObH)
-    return
-  }
-  renderAugmented(pad){
-    this.drawQuadrilateralFromStateCorners(graphics,0,0xcf4c34, this.ObX-this.ObW-pad,this.ObY-this.ObH-pad,this.ObX+this.ObW+pad,this.ObY+this.ObH+pad)
-    this.render()
-    return
-  }
-  drawQuadrilateralFromStateCorners(graphics,linewidth,color, left,top,right,bottom){
-    let topleft = graphics.mapper.mapStateToPosition(left,top)
-    let bottomright = graphics.mapper.mapStateToPosition(right,bottom)
-    this.drawQuadrilateral(graphics,linewidth,color, topleft[0],topleft[1],bottomright[0],bottomright[1])
-    return
-  }
-  drawQuadrilateral(graphics,linewidth,color,left,top,right,bottom){
-    // Set a fill and line style
-    graphics.beginFill(color);
-    graphics.lineStyle(linewidth, 0x000000);
-
-    // Draw the quadrilateral
-    graphics.moveTo(left,top);
-    graphics.lineTo(right,top);
-    graphics.lineTo(right,bottom);
-    graphics.lineTo(left,bottom);
-    graphics.endFill();
-    return
-  }
-}
-
-class RoundObstacle extends Obstacle{
-  constructor(_ObX,_ObY,_ObW){
-    super()
-    this.ObX = _ObX
-    this.ObY = _ObY
-    this.ObW = _ObW
-    this.ObH = _ObW
-  }
-  render(){
-    this.drawFromState(graphics,5,0x4C1C13, this.ObX,this.ObY,1)
-    return
-  }
-  renderAugmented(pad){
-    this.drawFromState(graphics,0,0xcf4c34, this.ObX,this.ObY,1+pad)
-    this.render()
-    return
-  }
-  drawFromState(graphics,linewidth,color, left,top,radius){
-    let topleft = graphics.mapper.mapStateToPosition(left,top)
-    this.drawCircle(graphics,linewidth,color, topleft[0],topleft[1],radius*graphics.mapper.Mxx)
-    return
-  }
-  drawCircle(graphics,linewidth,color,left,top,radius){
-    // Set a fill and line style
-    graphics.beginFill(color);
-    graphics.lineStyle(linewidth, 0x000000);
-
-    // Draw the quadrilateral
-    graphics.drawCircle(left,top,radius)
-    graphics.endFill();
-    return
-  }
-}
-
+// Create the object that draws the obstacle
 //let obstacle = new BoxObstacle(0,0,1,1)
-let obstacle = new RoundObstacle(0,0,1)
+let obstacle = new RoundObstacle(0,0,1);
 
-// ===================== SETUP ================== //
+/* ===================== SETUP ================== */
+
+// Setup the PIXI renderer that handles interactive display and input inside the browser
+let renderer = PIXI.autoDetectRenderer(1400, 768);
+renderer.backgroundColor = 0xffffff;
+renderer.roundPixels = true;
+
+// Connect to my Firebase
+//let firebase = new Firebase("https://ancaticipation.firebaseio.com");
 
 // Standard Screen
-var stage = new PIXI.Container()
+let stage = new PIXI.Container();
   // Graphics object for lines and squares and such...
-var graphics = new PIXI.Graphics();
-graphics.mapper = new ScreenXYMap(70,0,0,70,630,350)
-stage.addChild(graphics)
+let graphics = new PIXI.Graphics();
+graphics.mapper = new ScreenXYMap(70,0,0,70,630,350);
+stage.addChild(graphics);
 
 // Goal point Marker
-var goal = new PIXI.Text('X',{font : '24px Gill Sans', fill : 0x077f4d});
-const goalX = 1 ; const goalY = -4
-goal.x = graphics.mapper.mapStateToPosition(goalX,goalY)[0] ; goal.y = graphics.mapper.mapStateToPosition(goalX,goalY)[1]
-goal.pivot.x = 10
-goal.pivot.y = 12
-stage.addChild(goal)
+let goal = new PIXI.Text('X',{font : '24px Gill Sans', fill : 0x077f4d});
+goal.pivot.x = 10; goal.pivot.y = 12;
+const goalX = 1 ; const goalY = -4;
+goal.x = graphics.mapper.mapStateToPosition(goalX,goalY)[0];
+goal.y = graphics.mapper.mapStateToPosition(goalX,goalY)[1];
+stage.addChild(goal);
 
 // Robot Object
 /*
-var robot = new QuadrotorRobot([-6,0,3,0])
+let robot = new QuadrotorRobot([-6,0,3,0])
 stage.addChild(robot)
 let Umax = 1
-var intervener = new Intervention_Contr(robot,new twoTwo( new loaded_SafeSet("dubIntV2") , new loaded_SafeSet("dubIntV2") ),Umax,0,new PID_Contr(robot,goalX,goalY))
+let intervener = new Intervention_Contr(robot,new twoTwo( new loaded_SafeSet("dubIntV2") , new loaded_SafeSet("dubIntV2") ),Umax,0,new PID_Contr(robot,goalX,goalY))
 intervener.trigger_level = robot.width/(2*graphics.mapper.Myy)
 // can replace loaded_SafeSet with new DoubleIntegrator_SafeSet(_maxU-_maxD,0,1)
-var leeway = Umax - 0
+let leeway = Umax - 0
 */
 ///*
-var robot = new DubinsRobot([-4,0,0])
+let robot = new DubinsRobot([-4,0,0])
 stage.addChild(robot)
-var intervener = new Intervention_Contr(robot,new loaded_SafeSet("dubinsV3"),1,0,new Dubins_Contr(robot,1,[goalX,goalY]))
+let intervener = new Intervention_Contr(robot,new loaded_SafeSet("dubinsV3"),1,0,new Dubins_Contr(robot,1,[goalX,goalY]))
 intervener.trigger_level = robot.height/(2*graphics.mapper.Mxx)
 //*/
 /*
-var robot = new VerticalQuadrotorRobot([3,0])
+let robot = new VerticalQuadrotorRobot([3,0])
 stage.addChild(robot)
 let Umax = 1
-var intervener = new Intervention_Contr(robot,new loaded_SafeSet("dubIntV2"),Umax,0,new PD_Contr(robot,goalY))
+let intervener = new Intervention_Contr(robot,new loaded_SafeSet("dubIntV2"),Umax,0,new PD_Contr(robot,goalY))
 intervener.trigger_level = robot.height/(2*graphics.mapper.Mxx)
 // can replace loaded_SafeSet with new DoubleIntegrator_SafeSet(_maxU-_maxD,0,1)
-var leeway = Umax - 0
+let leeway = Umax - 0
 */
 
 // Obstacle
@@ -165,10 +96,10 @@ obstacle.renderAugmented(intervener.trigger_level)
 // ===================== THE MAIN EVENT ================== //
 
 // Main Loop
-var clock =  0 ; var now = Date.now()
+let clock =  0 ; let now = Date.now()
 window.setInterval(function() {
   // Time management
-  var delT = Date.now() - now
+  let delT = Date.now() - now
   clock += delT
   now = Date.now()
   // Robot dynamics
@@ -209,7 +140,7 @@ window.setInterval(function() {
 },2)
 
 // ====================== Keyboard Listener Loop ========================= //
-var key = null
+let key = null
 document.addEventListener("keydown",function(event) {
   // Log time and key
   key = event.keyCode
@@ -241,7 +172,7 @@ document.addEventListener("keydown",function(event) {
 
 // ====================== Mouse Listener Loop ========================= //
 document.addEventListener("mousedown",function(event) {
-  var mousePosition = renderer.plugins.interaction.mouse.global;
+  let mousePosition = renderer.plugins.interaction.mouse.global;
   goal.x = mousePosition.x
   goal.y = mousePosition.y
   intervener.tracker.setX = graphics.mapper.mapPositionToState(goal.x,goal.y)[0]
@@ -251,5 +182,5 @@ document.addEventListener("mousedown",function(event) {
 
 
 // Wrap it up
-var mount = document.getElementById("mount")
+let mount = document.getElementById("mount")
 mount.insertBefore(renderer.view, mount.firstChild)
