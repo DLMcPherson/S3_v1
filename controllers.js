@@ -3,6 +3,9 @@ class Controller {
   constructor(_robot){
     this.robot = _robot
   }
+  u(){
+    return 0
+  }
   ux(){
     return 0;
   }
@@ -39,6 +42,58 @@ class PID_Contr extends Controller {
   }
 }
 
+// PD Controller class
+class PD_Contr extends Controller {
+  constructor(_robot,_set){
+    super(_robot)
+    this.set = _set
+  }
+  PID(z,gz,vz){
+    var P = -3*(z-gz)
+    var I = 0;
+    var D = -2*(vz-0);
+    let value = P+I+D;
+    if(value==NaN){
+      console.log("PID FAIL")
+    }
+    return(value);
+  }
+  u(){
+    return([this.PID(this.robot.states[0],this.set,this.robot.states[1])])
+  }
+}
+
+// Controller that does nothing
+class Zero_Contr extends Controller {
+  constructor(_robot){
+    super(_robot)
+  }
+  u(){
+    return([0])
+  }
+}
+
+// Dubins Car steering class
+class Dubins_Contr extends Controller {
+  constructor(_robot,_Umax,_set){
+    super(_robot)
+    this.Umax = _Umax
+    this.setX = _set[0]
+    this.setY = _set[1]
+  }
+  u(){
+    let trackangle = Math.atan2(this.setY - this.robot.states[1],this.setX - this.robot.states[0])
+    let Uout = 0
+    if(this.robot.states[2]<trackangle){
+      Uout = this.Umax
+    }
+    if(this.robot.states[2]>trackangle){
+      Uout = -this.Umax
+    }
+    return([Uout])
+  }
+}
+
 // Optimally safe controller class
 class Safe_Contr extends Controller {
   constructor(_robot,_maxU){
@@ -49,8 +104,6 @@ class Safe_Contr extends Controller {
     let u_out = []
     console.log(momentum)
     for(var cur_control=0;cur_control<this.robot.controlCoefficient().length;cur_control++){ // Iterate along each axis in the control space
-      //if(this.robot.states[cur_control*2] > 0){
-      //if(momentum[1+cur_control*2]  > 0){
       if(this.innerProduct(this.robot.controlCoefficient()[cur_control] , momentum)  > 0){
         u_out[cur_control] = this.maxU;
       }
@@ -72,21 +125,18 @@ class Safe_Contr extends Controller {
 
 // Intervention controller that swaps between PD and Safe controls
 class Intervention_Contr extends Controller {
-  constructor(_robot,_setX,_setY,_maxU,_maxD){
+  constructor(_robot,_safeset,_maxU,_maxD,_tracker){
     super(_robot)
-    this.tracker = new PID_Contr(_robot,_setX,_setY)
+    this.tracker = _tracker
     this.safer   = new Safe_Contr(_robot,_maxU)
-    this.intervening_set = new twoTwo( new loaded_SafeSet , new loaded_SafeSet )
-    //this.intervening_set = new twoTwo( new DoubleIntegrator_SafeSet(_maxU-_maxD,0,1) , new DoubleIntegrator_SafeSet(_maxU-_maxD,0,1) )
+    this.intervening_set = _safeset
     this.trigger_level = 0
   }
   // Methods that return the current input corresponding to the current state
   // Two methods exist due to decoupling this problem along x- and y-axes
   u(){
     if( this.intervening_set.value(this.robot.states) < this.trigger_level ){
-      //console.log(this.intervening_set.valueA(this.robot.states),this.intervening_set.valueB(this.robot.states) )
       return this.safer.u(this.intervening_set.gradV(this.robot.states) );
-      //return this.safer.u();
     }
     else{
       return this.tracker.u();

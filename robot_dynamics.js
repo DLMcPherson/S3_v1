@@ -61,13 +61,89 @@ class QuadrotorRobot extends Robot {
   }
   // Constructor initializes PIXI.Sprite members fitting the quadrotor Texture
   // and sets initial state data
-  constructor(x0,y0){
+  constructor(initial_state){
     // Image
     super(PIXI.Texture.fromImage("QuadcopterSide.png"))
     this.pivot.x = 100 ; this.pivot.y = 50
     this.width = 100 ; this.height = 50
     // State Vector
-    this.states = [x0,0,y0,0];
+    this.states = initial_state;
+    // Display State
+    this.displayState()
+  }
+}
+
+// Double Integrating simplified Quadrotor
+class VerticalQuadrotorRobot extends Robot {
+  // Dynamical update function that realizes the double integrator Diff. Eq.
+  dynamics(delT,u){
+    this.states[0] += this.states[1] * delT
+    this.states[1] += u[0] * delT
+  }
+  // Control affine function that multiplies the input in the difference equation
+  controlCoefficient(){
+    return([[0,1]])
+  }
+  // Method that translates states from the state vector into the corresponding
+  // position for rendering in the JS
+  displayState(){
+    let mappedState = graphics.mapper.mapStateToPosition(0,this.states[0])
+    this.x =  mappedState[0]
+    this.y =  mappedState[1]
+    //this.rotation = this.states[1]/15.0
+    this.rotation = 0
+  }
+  // Constructor initializes PIXI.Sprite members fitting the quadrotor Texture
+  // and sets initial state data
+  constructor(initial_state){
+    // Image
+    super(PIXI.Texture.fromImage("QuadcopterSide.png"))
+    this.pivot.x = 100 ; this.pivot.y = 50
+    this.width = 100 ; this.height = 50
+    // State Vector
+    this.states = initial_state;
+    // Display State
+    this.displayState()
+  }
+}
+
+// Double Integrating simplified Quadrotor
+class DubinsRobot extends Robot {
+  // Dynamical update function that realizes the double integrator Diff. Eq.
+  dynamics(delT,u){
+    this.states[0] += this.speed * Math.cos(this.states[2]) * delT
+    this.states[1] += this.speed * Math.sin(this.states[2]) * delT
+    this.states[2] += (u[0]) * delT
+    // Wrap around the angle
+    if(this.states[2]>Math.pi){
+      this.states[2] -= 2*Math.pi
+    }
+    if(this.states[2]<-Math.pi){
+      this.states[2] += 2*Math.pi
+    }
+  }
+  // Control affine function that multiplies the input in the difference equation
+  controlCoefficient(){
+    return([[0,0,1]])
+  }
+  // Method that translates states from the state vector into the corresponding
+  // position for rendering in the JS
+  displayState(){
+    let mappedState = graphics.mapper.mapStateToPosition(this.states[0],this.states[1])
+    this.x =  mappedState[0]
+    this.y =  mappedState[1]
+    this.rotation = this.states[2] + 3.1415/2
+  }
+  // Constructor initializes PIXI.Sprite members fitting the quadrotor Texture
+  // and sets initial state data
+  constructor(initial_state){
+    // Image
+    super(PIXI.Texture.fromImage("DubinsCar.png"))
+    this.pivot.x = 60 ; this.pivot.y = 100
+    this.width = 60 ; this.height = 100
+    // State Vector
+    this.states = initial_state.slice(0);
+    this.speed = 1
     // Display State
     this.displayState()
   }

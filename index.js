@@ -63,7 +63,7 @@ class BoxObstacle extends Obstacle{
     this.drawQuadrilateral(graphics,linewidth,color, topleft[0],topleft[1],bottomright[0],bottomright[1])
     return
   }
-  drawQuadrilateral(graphics,linewidth,color, left,top,right,bottom){
+  drawQuadrilateral(graphics,linewidth,color,left,top,right,bottom){
     // Set a fill and line style
     graphics.beginFill(color);
     graphics.lineStyle(linewidth, 0x000000);
@@ -78,21 +78,42 @@ class BoxObstacle extends Obstacle{
   }
 }
 
-class CircleObstacle extends Obstacle{
-  constructor(_ObX,_ObY,_ObR){
+class RoundObstacle extends Obstacle{
+  constructor(_ObX,_ObY,_ObW){
     super()
     this.ObX = _ObX
     this.ObY = _ObY
-    this.ObR = _ObR
+    this.ObW = _ObW
+    this.ObH = _ObW
   }
   render(){
-    let center = graphics.mapper.mapStateToPosition(this.ObX,this.ObY)
-    let rightPoint = graphics.mapper.mapStateToPosition(this.ObX+this.ObR,this.ObY)
-    graphics.drawCircle(center[0],center[1],rightPoint[0]-center[0])
+    this.drawFromState(graphics,5,0x4C1C13, this.ObX,this.ObY,1)
+    return
+  }
+  renderAugmented(pad){
+    this.drawFromState(graphics,0,0xcf4c34, this.ObX,this.ObY,1+pad)
+    this.render()
+    return
+  }
+  drawFromState(graphics,linewidth,color, left,top,radius){
+    let topleft = graphics.mapper.mapStateToPosition(left,top)
+    this.drawCircle(graphics,linewidth,color, topleft[0],topleft[1],radius*graphics.mapper.Mxx)
+    return
+  }
+  drawCircle(graphics,linewidth,color,left,top,radius){
+    // Set a fill and line style
+    graphics.beginFill(color);
+    graphics.lineStyle(linewidth, 0x000000);
+
+    // Draw the quadrilateral
+    graphics.drawCircle(left,top,radius)
+    graphics.endFill();
+    return
   }
 }
 
-let obstacle = new BoxObstacle(0,0,1,1)
+//let obstacle = new BoxObstacle(0,0,1,1)
+let obstacle = new RoundObstacle(0,0,1)
 
 // ===================== SETUP ================== //
 
@@ -112,16 +133,33 @@ goal.pivot.y = 12
 stage.addChild(goal)
 
 // Robot Object
-var robot = new QuadrotorRobot(-6,3)
+/*
+var robot = new QuadrotorRobot([-6,0,3,0])
 stage.addChild(robot)
 let Umax = 1
-var intervener = new Intervention_Contr(robot,goalX,goalY,Umax,0)
+var intervener = new Intervention_Contr(robot,new twoTwo( new loaded_SafeSet("dubIntV2") , new loaded_SafeSet("dubIntV2") ),Umax,0,new PID_Contr(robot,goalX,goalY))
+intervener.trigger_level = robot.width/(2*graphics.mapper.Myy)
+// can replace loaded_SafeSet with new DoubleIntegrator_SafeSet(_maxU-_maxD,0,1)
 var leeway = Umax - 0
+*/
+///*
+var robot = new DubinsRobot([-4,0,0])
+stage.addChild(robot)
+var intervener = new Intervention_Contr(robot,new loaded_SafeSet("dubinsV3"),1,0,new Dubins_Contr(robot,1,[goalX,goalY]))
+intervener.trigger_level = robot.height/(2*graphics.mapper.Mxx)
+//*/
+/*
+var robot = new VerticalQuadrotorRobot([3,0])
+stage.addChild(robot)
+let Umax = 1
+var intervener = new Intervention_Contr(robot,new loaded_SafeSet("dubIntV2"),Umax,0,new PD_Contr(robot,goalY))
+intervener.trigger_level = robot.height/(2*graphics.mapper.Mxx)
+// can replace loaded_SafeSet with new DoubleIntegrator_SafeSet(_maxU-_maxD,0,1)
+var leeway = Umax - 0
+*/
 
 // Obstacle
   // Calculations
-intervener.trigger_level = robot.height/(2*graphics.mapper.Mxx)
-intervener.trigger_level = robot.width/(2*graphics.mapper.Myy)
 obstacle.renderAugmented(intervener.trigger_level)
 
 // ===================== THE MAIN EVENT ================== //

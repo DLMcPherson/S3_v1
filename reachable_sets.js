@@ -97,17 +97,22 @@ class twoTwo extends SafeSet{
   }
 }
 
+// Safe Set loaded from MATLAB-dumped JSON in LSToolbox format
 class loaded_SafeSet extends SafeSet {
-  constructor(){
+  constructor(name){
     super()
-    //this.reachset = reachset
-    fetch("reachableSets/dubIntV2_reachset.json").then((response) => {
+    // Fetch the reachset JSON file from the server
+    fetch("reachableSets/"+name+"_reachset.json").then((response) => {
+    //fetch("reachableSets/dubIntV2_reachset.json").then((response) => {
+    //fetch("reachableSets/dubinsV1_reachset.json").then((response) => {
             // The fetch operation has returned an HTTP response!
             // You can read more about these under the MDN docs:
             // https://developer.mozilla.org/en-US/docs/Web/API/Response
             return response.json()
         }).then((json) => {
+            // Load the JSON into a local data member
             console.log(json)
+            console.log(json.data.length,json.data[0].length,json.data[0][0].length)
             this.reachset = json
             // TODO: Figure out how to put loaded reachable set into this.reachset
         })
@@ -122,20 +127,23 @@ class loaded_SafeSet extends SafeSet {
     // Calculate the patial along each axis
     let gradient = []
     for(var cur_dim=0;cur_dim<states.length;cur_dim++){ // Iterate along each axis in the state space...
+      // Project along the current axis to the hyperplane intersecting the
+      // nearest gridpoints on both sides
+        // Clone the state vector
       let statesLow = states.slice(0)
-      statesLow[cur_dim] = this.indexToState(low_index[cur_dim],cur_dim)
       let statesHigh = states.slice(0)
+      // Replace the cur_dim-th state with the location of the nearest gridpoint
+      statesLow[cur_dim] = this.indexToState(low_index[cur_dim],cur_dim)
       statesHigh[cur_dim] = this.indexToState(high_index[cur_dim],cur_dim)
-      //console.log( this.indexToState(low_index[cur_dim],cur_dim),this.indexToState(high_index[cur_dim],cur_dim) )
-      //console.log(statesLow,statesHigh)
-      gradient[cur_dim] =  -(this.value(statesLow) - this.value(statesHigh))/this.reachset.gdx[cur_dim]
-      //console.log(this.value(statesLow),this.value(statesHigh))
+      // Calculate the slope between the two projected points
+      gradient[cur_dim] =  (this.value(statesHigh) - this.value(statesLow))/this.reachset.gdx[cur_dim]
     }
     //
     return(gradient)
   }
   // Method for finding the nearest neighboring gridpoints
-  nearIndices(states){
+  nearIndices(_states){
+    let states = _states.slice()
     // If the state is out of the reachset's grid, then round to nearest gridpoint
     for(var cur_dim=0;cur_dim<states.length;cur_dim++){ // Iterate along each axis in the state space
       if(states[cur_dim] < this.reachset.gmin[cur_dim]){
@@ -156,7 +164,7 @@ class loaded_SafeSet extends SafeSet {
     }
     return([low_index,high_index])
   }
-  //
+  // Method for taking an index along an axis and mapping it to its position in the state space
   indexToState(index,dim){
     return(index*this.reachset.gdx[dim]+this.reachset.gmin[dim])
   }
@@ -165,7 +173,9 @@ class loaded_SafeSet extends SafeSet {
     // Find the nearest neighbors
     let indices = this.nearIndices(states)
     let low_index = indices[0]
+    //console.log(low_index)
     let high_index  = indices[1]
+    //console.log(high_index)
     // Calculate the hypervolumes between the interpolation point and the nearest neighbors
     let low_distance = []
     let high_distance = []
@@ -173,7 +183,7 @@ class loaded_SafeSet extends SafeSet {
       // Calculate the distance to each corner of this axis
       low_distance[cur_dim]  =  states[cur_dim] - (low_index[cur_dim]*this.reachset.gdx[cur_dim]+this.reachset.gmin[cur_dim])
       high_distance[cur_dim] = (high_index[cur_dim]*this.reachset.gdx[cur_dim]+this.reachset.gmin[cur_dim]) - states[cur_dim]
-      // Catch /edge/ case where interpolation point is on a gridpoint
+      // Catch /edge/ case where interpolation point is on a grid edge
       if(low_index[cur_dim] == high_index[cur_dim]){
         low_distance[cur_dim] = 1
         high_distance[cur_dim] = 0
