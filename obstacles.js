@@ -2,6 +2,9 @@ class Obstacle {
   render(){
     return
   }
+  renderAugmented(pad){
+    return
+  }
 }
 
 class BoxObstacle extends Obstacle{
