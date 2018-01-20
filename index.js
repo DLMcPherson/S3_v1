@@ -64,17 +64,17 @@ stage.addChild(goal);
 
 // Robot Object
 let Umax = 1
-/* // 2D Quadrotor Robot
+///* // 2D Quadrotor Robot
 let robot = new QuadrotorRobot([-6,0,3,0]);
 stage.addChild(robot);
 let intervener = new Intervention_Contr(robot,
     new twoTwo(new loaded_SafeSet("dubIntV2"),new loaded_SafeSet("dubIntV2") ),
     Umax,0,
-    new PID_Contr(robot,goalX,goalY));
+    new Concat_Contr(robot,[new PD_Contr(robot,goalX,0),new PD_Contr(robot,goalY,2)]) );
 intervener.trigger_level = robot.width/(2*graphics.mapper.Myy);
 let obstacle = new BoxObstacle(0,0,1,1);
-*/
-///* // Dubins Car Robot
+//*/
+/* // Dubins Car Robot
 let robot = new DubinsRobot([-4,0,0]);
 stage.addChild(robot);
 let intervener = new Intervention_Contr(robot,
@@ -83,12 +83,12 @@ let intervener = new Intervention_Contr(robot,
     new Dubins_Contr(robot,Umax,[goalX,goalY]));
 intervener.trigger_level = robot.height/(2*graphics.mapper.Mxx);
 let obstacle = new RoundObstacle(0,0,1);
-//*/
+*/
 /* // 1D Quadrotor Robot
 let robot = new VerticalQuadrotorRobot([3,0]);
 stage.addChild(robot);
 let intervener = new Intervention_Contr(robot,
-  new loaded_SafeSet("dubIntV2"),Umax,0,new PD_Contr(robot,goalY));
+  new loaded_SafeSet("dubIntV2"),Umax,0,new PD_Contr(robot,goalY,0) );
 intervener.trigger_level = robot.height/(2*graphics.mapper.Mxx);
 let obstacle = new BoxObstacle(0,0,1,1);
 */

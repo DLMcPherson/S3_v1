@@ -4,49 +4,47 @@ class Controller {
     this.robot = _robot;
   }
   u(){
-    return 0;
+    return [0];
   }
 }
 
-// PD Controller class
-class PID_Contr extends Controller {
-  constructor(_robot,_setX,_setY){
+// Concatenated controllers class
+class Concat_Contr extends Controller {
+  constructor(_robot,_controllerArray){
     super(_robot);
-    this.setX = _setX;
-    this.setY = _setY;
-  }
-  PID(z,gz,vz){
-    var P = -3*(z-gz);
-    var I = 0;
-    var D = -2*(vz-0);
-    let value = P+I+D;
-    return(value);
+    this.robot = _robot;
+    this.controllers = _controllerArray;
   }
   u(){
-    return [this.ux(),this.uy()];
-  }
-  ux(){
-    return this.PID(this.robot.states[0],this.setX,this.robot.states[1]);
-  }
-  uy(){
-    return this.PID(this.robot.states[2],this.setY,this.robot.states[3]);
+    let uResultant = [];
+    for(let uNum = 0; uNum < this.controllers.length; uNum++){
+      uResultant[uNum] = (this.controllers[uNum]).u()[0]
+    }
+    return uResultant;
   }
 }
 
 // PD Controller class
 class PD_Contr extends Controller {
-  constructor(_robot,_set){
+  constructor(_robot,_set,_controlledState){
     super(_robot);
-    this.set = _set;
-  }
-  PID(z,gz,vz){
-    var P = -3*(z-gz);
-    var D = -2*(vz-0);
-    let value = P+D;
-    return(value);
+    this.setpoint = _set;
+    this.K_P = -3; // const
+    this.K_D = -2; // const
+
+    this.controlledState = _controlledState; // const
+
+    this.lastU = 0;
   }
   u(){
-    return([this.PID(this.robot.states[0],this.set,this.robot.states[1])])
+    // Calculate the components of the PD Controller
+    let P = this.K_P * (this.robot.states[this.controlledState] - this.setpoint);
+    let D = this.K_D * (this.robot.dynamics(this.lastU,this.controlledState));
+    let resultU = P + D;
+    // Store and send the resultant control
+    this.lastU = resultU;
+    return [resultU];
+    //return [this.PID(this.robot.states[0],this.set,this.robot.states[1])];
   }
 }
 
