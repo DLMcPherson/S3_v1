@@ -2,15 +2,33 @@
 // NOTE: our optimal safety controller can only handle control-affine systems
 class Robot extends PIXI.Sprite {
   // Update function that realizes the dynamical state equations
-  dynamics(delT,u){
-    this.states[0] += (0) * delT;
-    this.states[1] += (0) * delT;
-    this.states[2] += (0) * delT;
+  dynamicUpdate(delT,u){
+    for(let curDim = 0; curDim < this.states.length; curDim++){
+      this.states[curDim] += this.dynamics(u,curDim) * delT;
+    }
+  }
+  // Function that passes out the dynamical update for the current state
+  dynamics(u,stateNum){
+    let result = this.driftDynamics()[stateNum];
+    // Mix in the control affine term
+    for(let uNum = 0;uNum < u.length;uNum++){
+      result += this.controlCoefficient()[uNum][stateNum] * u[uNum]
+    }
+    return result;
+  }
+  driftDynamics(){
+    return(
+      [
+        0,
+        0,
+        0,
+      ]
+    );
   }
   // Coefficient matrix for the control input in the dynamical equations
   // Realized as a function to include possible state dependence
   controlCoefficient(){
-    return 0;
+    return [0];
   }
   // Method that translates states from the state vector into the corresponding
   // position for rendering in the JS
@@ -32,23 +50,30 @@ class Robot extends PIXI.Sprite {
   }
   // Method to be called each loop
   update(delT,u){
-    this.dynamics(delT,u);
+    this.dynamicUpdate(delT,u);
     this.displayState();
   }
 }
 
 // Double Integrating simplified Quadrotor
 class QuadrotorRobot extends Robot {
-  // Dynamical update function that realizes the double integrator Diff. Eq.
-  dynamics(delT,u){
-    this.states[0] += this.states[1] * delT;
-    this.states[1] += u[0] * delT;
-    this.states[2] += this.states[3] * delT;
-    this.states[3] += u[1] * delT;
+  // Drift dynamics function for the dynamical equations
+  driftDynamics(){
+    return(
+      [
+        this.states[1],
+        0,
+        this.states[3],
+        0,
+      ]
+    );
   }
   // Coefficient matrix for the control input in the dynamical equations
   controlCoefficient(){
-    return [[0,1,0,0],[0,0,0,1]];
+    return(
+      [[0,1,0,0],
+      [0,0,0,1]]
+    );
   }
   // Method that translates states from the state vector into the corresponding
   // position for rendering in the JS
@@ -76,10 +101,14 @@ class QuadrotorRobot extends Robot {
 
 // Double Integrating simplified Quadrotor
 class VerticalQuadrotorRobot extends Robot {
-  // Dynamical update function that realizes the double integrator Diff. Eq.
-  dynamics(delT,u){
-    this.states[0] += this.states[1] * delT;
-    this.states[1] += u[0] * delT;
+  // Drift dynamics function for the dynamical equations
+  driftDynamics(){
+    return(
+      [
+        this.states[1],
+        0,
+      ]
+    );
   }
   // Coefficient matrix for the control input in the dynamical equations
   controlCoefficient(){
@@ -111,10 +140,10 @@ class VerticalQuadrotorRobot extends Robot {
 // Double Integrating simplified Quadrotor
 class DubinsRobot extends Robot {
   // Dynamical update function that realizes the double integrator Diff. Eq.
-  dynamics(delT,u){
-    this.states[0] += this.speed * Math.cos(this.states[2]) * delT;
-    this.states[1] += this.speed * Math.sin(this.states[2]) * delT;
-    this.states[2] += u[0] * delT;
+  dynamicUpdate(delT,u){
+    for(let curDim = 0; curDim < this.states.length; curDim++){
+      this.states[curDim] += this.dynamics(u,curDim) * delT;
+    }
     // Wrap around the angle
     if(this.states[2]>Math.pi){
       this.states[2] -= 2*Math.pi;
@@ -122,6 +151,25 @@ class DubinsRobot extends Robot {
     if(this.states[2]<-Math.pi){
       this.states[2] += 2*Math.pi;
     }
+  }
+  // Function that passes out the dynamical update for the current state
+  dynamics(u,stateNum){
+    let result = this.driftDynamics()[stateNum];
+    // Mix in the control affine term
+    for(let uNum = 0;uNum < u.length;uNum++){
+      result += this.controlCoefficient()[uNum][stateNum] * u[uNum]
+    }
+    return result;
+  }
+  // Drift dynamics function for the dynamical equations
+  driftDynamics(){
+    return(
+      [
+        this.speed * Math.cos(this.states[2]),
+        this.speed * Math.sin(this.states[2]),
+        0,
+      ]
+    );
   }
   // Coefficient matrix for the control input in the dynamical equations
   controlCoefficient(){

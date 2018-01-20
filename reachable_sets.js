@@ -112,7 +112,6 @@ class loaded_SafeSet extends SafeSet {
         }).then((json) => {
             // Load the JSON into a local data member
             console.log(json)
-            console.log(json.data.length,json.data[0].length,json.data[0][0].length)
             this.reachset = json
             // TODO: Figure out how to put loaded reachable set into this.reachset
         })
