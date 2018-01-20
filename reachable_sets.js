@@ -113,16 +113,13 @@ class loaded_SafeSet extends SafeSet {
             // Load the JSON into a local data member
             console.log(json)
             this.reachset = json
-            // TODO: Figure out how to put loaded reachable set into this.reachset
         })
     //fetch("reachableSets/dubIntV2_reachset.json").then(this.foo).then(this.bar)
   }
   // Method for calculating the gradient at the given state
   gradV(states){
     // Find the nearest neighbors
-    let indices = this.nearIndices(states)
-    let low_index = indices[0]
-    let high_index  = indices[1]
+    let [low_index,high_index] = this.nearIndices(states)
     // Calculate the patial along each axis
     let gradient = []
     for(var cur_dim=0;cur_dim<states.length;cur_dim++){ // Iterate along each axis in the state space...
@@ -170,10 +167,7 @@ class loaded_SafeSet extends SafeSet {
   // Method for reading the value function at the given state
   value(states){
     // Find the nearest neighbors
-    let indices = this.nearIndices(states)
-    let low_index = indices[0]
-    //console.log(low_index)
-    let high_index  = indices[1]
+    let [low_index,high_index] = this.nearIndices(states)
     //console.log(high_index)
     // Calculate the hypervolumes between the interpolation point and the nearest neighbors
     let low_distance = []
@@ -195,7 +189,7 @@ class loaded_SafeSet extends SafeSet {
     // a zero in the dth bit represents the lower corner along the dth axis
     for(var corner = 0;corner<Math.pow(2,states.length);corner++){
       let volume = 1 // Initialize volume aggregator: volume is calculated by multiplying the cubes' lengths together
-      let corner_subarray = this.reachset.data
+      let corner_subarray = this.reachset.data.slice()
       for(var cur_dim=0;cur_dim<states.length;cur_dim++){ // Iterate along each axis in the state space
         if(corner & Math.pow(2,cur_dim) ){ // Check the cur_dim-th bit
           volume *= low_distance[cur_dim] // multiply in this cell's length along the cur_dim axis
