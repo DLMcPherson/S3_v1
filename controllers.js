@@ -3,22 +3,35 @@ class Controller {
   constructor(_robot){
     this.robot = _robot;
   }
+  // Returns the current control value responding to the robot's state
   u(){
     return [0];
   }
 }
 
-// Concatenated controllers class
+// Controller class that takes in a list of small 1D controllers, and
+// concatenates them into one multi-dimensional control output
 class Concat_Contr extends Controller {
+  // Pass in an array of 1D controller objects
   constructor(_robot,_controllerArray){
     super(_robot);
     this.robot = _robot;
     this.controllers = _controllerArray;
   }
+  // Method for updating the setpoint to be tracked
+  updateSetpoint(_set){
+    for(let curU = 0; curU < this.controllers.length; curU++){
+      // HACK: Hardcodes which setpoints are governed by which controller
+      // Should make a generalized index or something that will send these
+      // setpoints to update the correct controller's setpoint
+      (this.controllers[curU]).updateSetpoint(_set[curU])
+    }
+  }
+  // Returns the current control value responding to the robot's state
   u(){
     let uResultant = [];
-    for(let uNum = 0; uNum < this.controllers.length; uNum++){
-      uResultant[uNum] = (this.controllers[uNum]).u()[0]
+    for(let curU = 0; curU < this.controllers.length; curU++){
+      uResultant[curU] = (this.controllers[curU]).u()[0]
     }
     return uResultant;
   }
@@ -29,13 +42,17 @@ class PD_Contr extends Controller {
   constructor(_robot,_set,_controlledState){
     super(_robot);
     this.setpoint = _set;
-    this.K_P = -3; // const
-    this.K_D = -2; // const
-
-    this.controlledState = _controlledState; // const
-
+    this.K_P = -3;
+    this.K_D = -2;
+    this.controlledState = _controlledState;
+    // Memory variables
     this.lastU = 0;
   }
+  // Method for updating the setpoint to be tracked
+  updateSetpoint(_set){
+    this.setpoint = _set;
+  }
+  // Returns the current control value responding to the robot's state
   u(){
     // Calculate the components of the PD Controller
     let P = this.K_P * (this.robot.states[this.controlledState] - this.setpoint);
@@ -53,6 +70,7 @@ class Zero_Contr extends Controller {
   constructor(_robot){
     super(_robot);
   }
+  // Returns the current control value responding to the robot's state
   u(){
     return [0];
   }
@@ -63,11 +81,16 @@ class Dubins_Contr extends Controller {
   constructor(_robot,_Umax,_set){
     super(_robot);
     this.Umax = _Umax;
-    this.setX = _set[0];
-    this.setY = _set[1];
+    this.set = _set;
   }
+  // Method for updating the setpoint to be tracked
+  updateSetpoint(_set){
+    this.set = _set;
+  }
+  // Returns the current control value responding to the robot's state
   u(){
-    let trackAngle = Math.atan2(this.setY - this.robot.states[1],this.setX - this.robot.states[0])
+    let trackAngle = Math.atan2(this.set[1] - this.robot.states[1],
+        this.set[0] - this.robot.states[0]);
     if(this.robot.states[2] > Math.PI / +2 && trackAngle < Math.PI / -2) {
       trackAngle += 2*Math.PI;
     }
@@ -91,21 +114,24 @@ class Safe_Contr extends Controller {
     super(_robot);
     this.maxU = _maxU;
   }
+  // Returns the current control value responding to the robot's state
   u(momentum){
     let u_out = [];
     console.log(momentum);
-    for(var cur_control=0;cur_control<this.robot.controlCoefficient().length;cur_control++){ // Iterate along each axis in the control space
-      if(this.innerProduct(this.robot.controlCoefficient()[cur_control] , momentum)  > 0){
-        u_out[cur_control] = this.maxU;
+    // For each control output...
+    for(var curU=0;curU<this.robot.controlCoefficient().length;curU++){
+      // maximize the Hamiltonian (f^T p) within the maximum output afforded
+      if(this.dotProduct(this.robot.controlCoefficient()[curU], momentum)  > 0){
+        u_out[curU] = this.maxU;
       }
       else{
-        u_out[cur_control] = -this.maxU;
+        u_out[curU] = -this.maxU;
       }
     }
     return(u_out);
   }
   // Returns the inner product of two equal length arrays
-  innerProduct(a,b){
+  dotProduct(a,b){
     let sum = 0;
     for(var i=0;i<a.length;i++){
       sum += a[i] * b[i];
@@ -125,10 +151,13 @@ class Intervention_Contr extends Controller {
   }
   // Method that returns the current input responding to the current state
   u(){
+    // Check if the reachset value function is below the triggering level set
     if( this.intervening_set.value(this.robot.states) < this.trigger_level ){
+      // If we have trespassed the reachset, interrupt with the safe policy
       return this.safer.u(this.intervening_set.gradV(this.robot.states) );
     }
     else{
+      // If we're still safe, continue with the default tracking behavior
       return this.tracker.u();
     }
   }

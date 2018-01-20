@@ -64,7 +64,7 @@ stage.addChild(goal);
 
 // Robot Object
 let Umax = 1
-///* // 2D Quadrotor Robot
+/* // 2D Quadrotor Robot
 let robot = new QuadrotorRobot([-6,0,3,0]);
 stage.addChild(robot);
 let intervener = new Intervention_Contr(robot,
@@ -73,9 +73,9 @@ let intervener = new Intervention_Contr(robot,
     new Concat_Contr(robot,[new PD_Contr(robot,goalX,0),new PD_Contr(robot,goalY,2)]) );
 intervener.trigger_level = robot.width/(2*graphics.mapper.Myy);
 let obstacle = new BoxObstacle(0,0,1,1);
-//*/
-/* // Dubins Car Robot
-let robot = new DubinsRobot([-4,0,0]);
+*/
+//* // Dubins Car Robot
+let robot = new DubinsRobot([-4,2,0]);
 stage.addChild(robot);
 let intervener = new Intervention_Contr(robot,
     new loaded_SafeSet("dubinsV3"),
@@ -83,7 +83,7 @@ let intervener = new Intervention_Contr(robot,
     new Dubins_Contr(robot,Umax,[goalX,goalY]));
 intervener.trigger_level = robot.height/(2*graphics.mapper.Mxx);
 let obstacle = new RoundObstacle(0,0,1);
-*/
+//*/
 /* // 1D Quadrotor Robot
 let robot = new VerticalQuadrotorRobot([3,0]);
 stage.addChild(robot);
@@ -142,8 +142,9 @@ document.addEventListener("mousedown",function(event) {
   let mousePosition = renderer.plugins.interaction.mouse.global;
   goal.x = mousePosition.x;
   goal.y = mousePosition.y;
-  intervener.tracker.setX = graphics.mapper.mapPositionToState(goal.x,goal.y)[0];
-  intervener.tracker.setY = graphics.mapper.mapPositionToState(goal.x,goal.y)[1];
+  intervener.tracker.updateSetpoint([
+      graphics.mapper.mapPositionToState(goal.x,goal.y)[0],
+      graphics.mapper.mapPositionToState(goal.x,goal.y)[1]]);
   // End
 })
 
