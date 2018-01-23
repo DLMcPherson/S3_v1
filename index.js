@@ -120,13 +120,15 @@ let key = null;
 document.addEventListener("keydown",function(event) {
   // Log time and key
   key = event.keyCode;
+  /*
   // Update level set
   if(intervener.trigger_level < intervener.intervening_set.value(robot.states)){
     intervener.trigger_level = intervener.intervening_set.value(robot.states);
   }
   // Draw level set
   obstacle.renderAugmented(intervener.trigger_level);
-  // Debugging report
+  */
+  // Save result to cloud
   if(saveToCloud){
     firebase.push({
       date : Date.now(),
