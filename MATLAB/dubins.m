@@ -93,6 +93,6 @@ if compTraj
   end
 end
 
-json_export_reachset(data(:,:,:,end),g);
+json_export_reachset(data(:,:,:,end),g,'dubins');
 
 end

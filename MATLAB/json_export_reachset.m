@@ -1,6 +1,7 @@
-function json_export_reachset(data,g)
+function json_export_reachset(data,g,filename)
 
-    fileID = fopen("../reachableSets/exported_reachset.json","w");
+    save("../reachableSets/"+filename+"_reachset.mat",'data','g');
+    fileID = fopen("../reachableSets/"+filename+"_reachset.json","w");
     TEXT = jsonencode(data);
     %fprintf(fileID,'let reachset = { \n');
     fprintf(fileID,'{ \n');

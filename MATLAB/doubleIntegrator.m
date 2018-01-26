@@ -66,7 +66,7 @@ HJIextraArgs.deleteLastPlot = true; %delete previous plot as you update
   HJIPDE_solve(data0, tau, schemeData, 'zero', HJIextraArgs);
 
 if saveData
-  json_export_reachset(data(:,:,end),g);
+  json_export_reachset(data(:,:,end),g,"dubInt");
 end
 
 dataT = data(:,:,end);
