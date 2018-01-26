@@ -113,7 +113,7 @@ window.setInterval(function() {
   robot.update(delT,u);
   // Rendering the stage
   //intervener.intervening_set.displayGrid(graphics,robot.states,0,1);
-  //intervener.intervening_set.testFunction(10,0);
+  intervener.intervening_set.testFunction(10,0);
   intervener.intervening_set.indexToState(10,0);
   renderer.render(stage);
 },2)
