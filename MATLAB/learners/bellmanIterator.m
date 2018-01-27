@@ -9,7 +9,7 @@ load('../../reachableSets/dubins_reachset.mat');
 visualizeLevelSet(g,data,'surface',0,"before adjustment")
 
 % Set the grid values to zero everywhere around each flinch point
-flincher = 0
+flincher = -10
 for curFlinch = 1:length(flinches.list)
     flinchState = flinches.list(curFlinch).state;
     for angle = g.min(3):g.dx(3):g.max(3)
@@ -32,6 +32,7 @@ for curFlinch = 1:length(flinches.list)
 end
 
 visualizeLevelSet(g,data,'surface',0,"after flinch placement")
+json_export_reachset(data,g,'dubinsPixelwise',"../../reachableSets/");
 
 %% time vector
 t0 = 0;
@@ -72,3 +73,5 @@ HJIextraArgs.deleteLastPlot = true; %delete previous plot as you update
 % HJIPDE_solve(data0, tau, schemeData, minWith, extraArgs)
 [data2, tau2, ~] = ...
   HJIPDE_solve(data, tau, schemeData, 'zero', HJIextraArgs);
+
+json_export_reachset(data2(:,:,:,end),g,'dubinsBI',"../../reachableSets/");

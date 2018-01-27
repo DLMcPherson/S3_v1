@@ -118,6 +118,42 @@ class loaded_SafeSet extends SafeSet {
             this.reachset = json;
         })
   }
+  // Method for displaying the value function
+  displayGrid(graphics,currentState,sweptStateX,sweptStateY){
+    let reachableSet = this.reachset;
+    let [lowEdgeIndex,highEdgeIndex] = this.nearIndices(currentState);
+    let index = lowEdgeIndex;
+    graphics.lineStyle(0, 0x000000);
+    for(let indexX = 0;indexX < reachableSet.gN[sweptStateX];indexX++){
+      for(let indexY = 0;indexY < reachableSet.gN[sweptStateY];indexY++){
+        index[sweptStateX] = indexX;
+        index[sweptStateY] = indexY;
+        let valuation = this.griddedValue(index);
+        // Display this gridpoint
+        let mappedState =
+          graphics.mapper.mapStateToPosition(this.indexToState(indexX,sweptStateX),this.indexToState(indexY,sweptStateY) );
+          // Choose the correct color
+        if(valuation > 0){
+        }
+        else{
+          // this is the unsafe zone
+          graphics.beginFill(0xFF745A);
+            // Draw the circle
+          graphics.drawCircle(mappedState[0],mappedState[1],8);
+          graphics.endFill();
+        }
+      }
+    }
+    //
+  }
+  griddedValue(index){
+    let indexedValue = this.reachset.data.slice();
+    for(var xDim=0;xDim<index.length;xDim++){
+      // unwrap another layer of referncing the value function
+      indexedValue = indexedValue[index[xDim]];
+    }
+    return indexedValue;
+  }
   // Method for calculating the gradient at the given state
   gradV(states){
     // Find the nearest neighbors
@@ -172,6 +208,9 @@ class loaded_SafeSet extends SafeSet {
   // Method for taking an index along an axis
   // and mapping it to its equivalent position in the state space
   indexToState(index,dim){
+    return index*this.reachset.gdx[dim]+this.reachset.gmin[dim];
+  }
+  david(index,dim){
     return index*this.reachset.gdx[dim]+this.reachset.gmin[dim];
   }
   // Method for reading the value function at the given state

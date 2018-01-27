@@ -77,11 +77,28 @@ let obstacle = new BoxObstacle(0,0,1,1);
 //* // Dubins Car Robot
 let robot = new DubinsRobot([-4,3,0]);
 stage.addChild(robot);
-let intervener = new Intervention_Contr(robot,
+let intervenerBIt = new Intervention_Contr(robot,
+    new loaded_SafeSet("dubinsBI"),
+    Umax,0,
+    new Dubins_Contr(robot,Umax,[goalX,goalY]));
+intervenerBIt.trigger_level = robot.height/(2*graphics.mapper.Mxx);
+let intervenerPix = new Intervention_Contr(robot,
+    new loaded_SafeSet("dubinsPixelwise"),
+    Umax,0,
+    new Dubins_Contr(robot,Umax,[goalX,goalY]));
+intervenerPix.trigger_level = robot.height/(2*graphics.mapper.Mxx);
+let intervenerOri = new Intervention_Contr(robot,
     new loaded_SafeSet("dubins"),
     Umax,0,
     new Dubins_Contr(robot,Umax,[goalX,goalY]));
-intervener.trigger_level = robot.height/(2*graphics.mapper.Mxx);
+intervenerOri.trigger_level = robot.height/(2*graphics.mapper.Mxx);
+let intervenerLSP = new Intervention_Contr(robot,
+    new loaded_SafeSet("dubinsLSPicker"),
+    Umax,0,
+    new Dubins_Contr(robot,Umax,[goalX,goalY]));
+intervenerLSP.trigger_level = robot.height/(2*graphics.mapper.Mxx);
+
+let intervener = intervenerOri;
 let obstacle = new RoundObstacle(0,0,1);
 //*/
 /* // 1D Quadrotor Robot
@@ -112,9 +129,9 @@ window.setInterval(function() {
   //console.log(clock,u)
   robot.update(delT,u);
   // Rendering the stage
-  //intervener.intervening_set.displayGrid(graphics,robot.states,0,1);
-  intervener.intervening_set.testFunction(10,0);
-  intervener.intervening_set.indexToState(10,0);
+  graphics.clear();
+  obstacle.render(intervener.trigger_level);
+  intervener.intervening_set.displayGrid(graphics,robot.states,0,1);
   renderer.render(stage);
 },2)
 
@@ -123,12 +140,27 @@ let key = null;
 document.addEventListener("keydown",function(event) {
   // Log time and key
   key = event.keyCode;
+  /*
   // Update level set
   if(intervener.trigger_level < intervener.intervening_set.value(robot.states)){
     intervener.trigger_level = intervener.intervening_set.value(robot.states);
   }
   // Draw level set
   obstacle.renderAugmented(intervener.trigger_level);
+  */
+  console.log(key);
+  if(key == 49){
+    intervener = intervenerOri;
+  }
+  if(key == 50){
+    intervener = intervenerPix;
+  }
+  if(key == 51){
+    intervener = intervenerLSP;
+  }
+  if(key == 52){
+    intervener = intervenerBIt;
+  }
   // Debugging report
   if(saveToCloud){
     firebase.push({

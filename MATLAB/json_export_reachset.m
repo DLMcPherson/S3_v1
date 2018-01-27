@@ -1,7 +1,12 @@
-function json_export_reachset(data,g,filename)
+function json_export_reachset(data,g,filename,infoldername)
 
-    save("../reachableSets/"+filename+"_reachset.mat",'data','g');
-    fileID = fopen("../reachableSets/"+filename+"_reachset.json","w");
+    if(nargin > 3)
+        foldername = infoldername;
+    else
+        foldername = "../reachableSets/";
+    end
+
+    fileID = fopen(foldername+filename+"_reachset.json","w");
     TEXT = jsonencode(data);
     %fprintf(fileID,'let reachset = { \n');
     fprintf(fileID,'{ \n');
@@ -13,5 +18,7 @@ function json_export_reachset(data,g,filename)
     fprintf(fileID,',"data" : %s \n',TEXT);
     fprintf(fileID,'}');
     fclose(fileID);
+    
+    save(foldername+filename+"_reachset.mat",'data','g');
 
 end
