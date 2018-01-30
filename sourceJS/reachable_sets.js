@@ -350,41 +350,43 @@ class loaded_SafeSet extends SafeSet {
     // Wrap indices to stay inside grid. This must be done manually here since
     // periodic wrap-arounds impact calculated distance to each edge
     // and FALSE flag was passed to nearIndices function accordingly
-    if(this.reachset.gperiodicity[xDim]){
-      //console.log(xDim,this.reachset.gperiodicity[xDim])
-      if(lowEdgeIndex[xDim] < 0){
-        //console.log("underflow ",states[xDim],lowEdgeIndex[xDim]);
-        lowEdgeIndex[xDim] += this.reachset.gN[xDim];
+    for(var xDim=0;xDim<states.length;xDim++){
+      if(this.reachset.gperiodicity[xDim]){
+        //console.log(xDim,this.reachset.gperiodicity[xDim])
+        if(lowEdgeIndex[xDim] < 0){
+          //console.log("underflow ",states[xDim],lowEdgeIndex[xDim]);
+          lowEdgeIndex[xDim] += this.reachset.gN[xDim];
+        }
+        if(lowEdgeIndex[xDim] >= this.reachset.gN[xDim]){
+          //console.log("overflow",states[xDim],lowEdgeIndex[xDim]);
+          lowEdgeIndex[xDim] -= this.reachset.gN[xDim];
+        }
+        if(highEdgeIndex[xDim] < 0){
+          //console.log("underflow ",states[xDim],highEdgeIndex[xDim]);
+          highEdgeIndex[xDim] += this.reachset.gN[xDim];
+        }
+        if(highEdgeIndex[xDim] >= this.reachset.gN[xDim]){
+          //console.log("overflow",states[xDim],highEdgeIndex[xDim]);
+          highEdgeIndex[xDim] -= this.reachset.gN[xDim];
+        }
       }
-      if(lowEdgeIndex[xDim] >= this.reachset.gN[xDim]){
-        //console.log("overflow",states[xDim],lowEdgeIndex[xDim]);
-        lowEdgeIndex[xDim] -= this.reachset.gN[xDim];
-      }
-      if(highEdgeIndex[xDim] < 0){
-        //console.log("underflow ",states[xDim],highEdgeIndex[xDim]);
-        highEdgeIndex[xDim] += this.reachset.gN[xDim];
-      }
-      if(highEdgeIndex[xDim] >= this.reachset.gN[xDim]){
-        //console.log("overflow",states[xDim],highEdgeIndex[xDim]);
-        highEdgeIndex[xDim] -= this.reachset.gN[xDim];
-      }
-    }
-    else{
-      if(lowEdgeIndex[xDim] < 0){
-        lowEdgeIndex[xDim] = 0;
-        //console.log("underbound");
-      }
-      if(lowEdgeIndex[xDim] >= this.reachset.gN[xDim]){
-        lowEdgeIndex[xDim] = this.reachset.gN[xDim]-1;
-        //console.log("overbound");
-      }
-      if(highEdgeIndex[xDim] < 0){
-        highEdgeIndex[xDim] = 0;
-        //console.log("underbound");
-      }
-      if(highEdgeIndex[xDim] >= this.reachset.gN[xDim]){
-        highEdgeIndex[xDim] = this.reachset.gN[xDim]-1;
-        //console.log("overbound");
+      else{
+        if(lowEdgeIndex[xDim] < 0){
+          lowEdgeIndex[xDim] = 0;
+          //console.log("underbound",lowEdgeIndex[xDim]);
+        }
+        if(lowEdgeIndex[xDim] >= this.reachset.gN[xDim]){
+          lowEdgeIndex[xDim] = this.reachset.gN[xDim]-1;
+          //console.log("overbound");
+        }
+        if(highEdgeIndex[xDim] < 0){
+          highEdgeIndex[xDim] = 0;
+          //console.log("underbound",highEdgeIndex[xDim]);
+        }
+        if(highEdgeIndex[xDim] >= this.reachset.gN[xDim]){
+          highEdgeIndex[xDim] = this.reachset.gN[xDim]-1;
+          //console.log("overbound");
+        }
       }
     }
     // Multilinear interpolation by weighing each corner value by the volume in
