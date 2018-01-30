@@ -91,7 +91,7 @@ class QuadrotorRobot extends Robot {
     // Image
     super(PIXI.Texture.fromImage("../QuadcopterSide.png"));
     this.pivot.x = 100 ; this.pivot.y = 50;
-    this.width = 100 ; this.height = 50;
+    this.width = 100 ; this.height = 100;
     // State Vector
     this.states = initial_state;
     // Display State
@@ -145,11 +145,13 @@ class DubinsRobot extends Robot {
       this.states[curDim] += this.dynamics(u,curDim) * delT;
     }
     // Wrap around the angle
-    if(this.states[2]>Math.pi){
-      this.states[2] -= 2*Math.pi;
+    if(this.states[2] > Math.PI){
+      this.states[2] -= 2*Math.PI;
+      console.log("wrapped 2pi down");
     }
-    if(this.states[2]<-Math.pi){
-      this.states[2] += 2*Math.pi;
+    if(this.states[2] < -Math.PI){
+      this.states[2] += 2*Math.PI;
+      console.log("wrapped 2pi up");
     }
   }
   // Function that passes out the dynamical update for the current state

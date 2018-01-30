@@ -9,7 +9,7 @@ load('../../reachableSets/dubins_reachset.mat');
 visualizeLevelSet(g,data,'surface',0,"before adjustment")
 
 % Set the grid values to zero everywhere around each flinch point
-flincher = -10
+flincher = -1
 for curFlinch = 1:length(flinches.list)
     flinchState = flinches.list(curFlinch).state;
     for angle = g.min(3):g.dx(3):g.max(3)

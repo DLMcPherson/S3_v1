@@ -65,40 +65,27 @@ stage.addChild(goal);
 // Robot Object
 let Umax = 1
 /* // 2D Quadrotor Robot
+let obstacle = new BoxObstacle(0,0,1,1);
 let robot = new QuadrotorRobot([-6,0,3,0]);
 stage.addChild(robot);
 let intervener = new Intervention_Contr(robot,
-    new twoTwo(new loaded_SafeSet("dubIntV2"),new loaded_SafeSet("dubIntV2") ),
+    new twoTwo(new loaded_SafeSet("dubInt"),new loaded_SafeSet("dubIntV2") ),
     Umax,0,
     new Concat_Contr(robot,[new PD_Contr(robot,goalX,0),new PD_Contr(robot,goalY,2)]) );
 intervener.trigger_level = robot.width/(2*graphics.mapper.Myy);
-let obstacle = new BoxObstacle(0,0,1,1);
 */
-//* // Dubins Car Robot
+///* // Dubins Car Robot
 let robot = new DubinsRobot([-4,3,0]);
 stage.addChild(robot);
-let intervenerBIt = new Intervention_Contr(robot,
-    new loaded_SafeSet("dubinsBI"),
+let originalSafeset = new loaded_SafeSet("dubins");
+let pixelwiseSafeset = new loaded_SafeSet("dubinsPixelwise");
+let LSPickerSafeset = new loaded_SafeSet("dubinsLSPicker");
+let BellmanIteratedSafeset = new loaded_SafeSet("dubinsBI");
+let intervener = new Intervention_Contr(robot,
+    originalSafeset,
     Umax,0,
     new Dubins_Contr(robot,Umax,[goalX,goalY]));
-intervenerBIt.trigger_level = robot.height/(2*graphics.mapper.Mxx);
-let intervenerPix = new Intervention_Contr(robot,
-    new loaded_SafeSet("dubinsPixelwise"),
-    Umax,0,
-    new Dubins_Contr(robot,Umax,[goalX,goalY]));
-intervenerPix.trigger_level = robot.height/(2*graphics.mapper.Mxx);
-let intervenerOri = new Intervention_Contr(robot,
-    new loaded_SafeSet("dubins"),
-    Umax,0,
-    new Dubins_Contr(robot,Umax,[goalX,goalY]));
-intervenerOri.trigger_level = robot.height/(2*graphics.mapper.Mxx);
-let intervenerLSP = new Intervention_Contr(robot,
-    new loaded_SafeSet("dubinsLSPicker"),
-    Umax,0,
-    new Dubins_Contr(robot,Umax,[goalX,goalY]));
-intervenerLSP.trigger_level = robot.height/(2*graphics.mapper.Mxx);
-
-let intervener = intervenerOri;
+intervener.trigger_level = robot.height/(2*graphics.mapper.Mxx);
 let obstacle = new RoundObstacle(0,0,1);
 //*/
 /* // 1D Quadrotor Robot
@@ -116,22 +103,24 @@ obstacle.renderAugmented(intervener.trigger_level);
 // ===================== THE MAIN EVENT ================== //
 
 // Main Loop
+let control = [0];
 let clock =  0 ;
 let now = Date.now();
 window.setInterval(function() {
   // Time management
   let delT = Date.now() - now;
-  delT *= 0.0005 * 2;
+  //delT *= 0.0005 * 2;
+  delT *= 0.0005 * 3;1
   clock += delT;
   now = Date.now();
   // Robot dynamics
-  let u = intervener.u();
+  let u = control;
   //console.log(clock,u)
   robot.update(delT,u);
   // Rendering the stage
   graphics.clear();
   obstacle.render(intervener.trigger_level);
-  intervener.intervening_set.displayGrid(graphics,robot.states,0,1);
+  //intervener.intervening_set.displayGrid(graphics,robot.states,0,1);
   renderer.render(stage);
 },2)
 
@@ -150,16 +139,13 @@ document.addEventListener("keydown",function(event) {
   */
   console.log(key);
   if(key == 49){
-    intervener = intervenerOri;
+    control = [-1];
   }
   if(key == 50){
-    intervener = intervenerPix;
+    control = [0];
   }
   if(key == 51){
-    intervener = intervenerLSP;
-  }
-  if(key == 52){
-    intervener = intervenerBIt;
+    control = [1];
   }
   // Debugging report
   if(saveToCloud){

@@ -1,4 +1,4 @@
-function data = helperOC_tutorial()
+function [g,data] = helperOC_tutorial()
 
 %% Should we compute the trajectory?
 compTraj = false;

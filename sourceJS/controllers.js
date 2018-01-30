@@ -42,7 +42,7 @@ class PD_Contr extends Controller {
   constructor(_robot,_set,_controlledState){
     super(_robot);
     this.setpoint = _set;
-    this.K_P = -3;
+    this.K_P = -2;
     this.K_D = -2;
     this.controlledState = _controlledState;
     // Memory variables
@@ -91,17 +91,22 @@ class Dubins_Contr extends Controller {
   u(){
     let trackAngle = Math.atan2(this.set[1] - this.robot.states[1],
         this.set[0] - this.robot.states[0]);
+    /*
     if(this.robot.states[2] > Math.PI / +2 && trackAngle < Math.PI / -2) {
       trackAngle += 2*Math.PI;
     }
     if(this.robot.states[2] < Math.PI / -2 && trackAngle > Math.PI / +2) {
       trackAngle -= 2*Math.PI;
     }
+    let angleDifference = this.robot.states[2] - trackAngle;
+    */
+    let angleDifference = this.robot.states[2] - trackAngle;
+    angleDifference = Math.atan2(Math.sin(angleDifference),Math.cos(angleDifference));
     let Uout = 0
-    if(this.robot.states[2]<trackAngle){
+    if(angleDifference < 0){
       Uout = this.Umax;
     }
-    if(this.robot.states[2]>trackAngle){
+    if(angleDifference > 0){
       Uout = -this.Umax;
     }
     return [Uout];
@@ -117,7 +122,7 @@ class Safe_Contr extends Controller {
   // Returns the current control value responding to the robot's state
   u(momentum){
     let u_out = [];
-    console.log(momentum);
+    //console.log(momentum);
     // For each control output...
     for(var curU=0;curU<this.robot.controlCoefficient().length;curU++){
       // maximize the Hamiltonian (f^T p) within the maximum output afforded
@@ -153,6 +158,7 @@ class Intervention_Contr extends Controller {
   u(){
     // Check if the reachset value function is below the triggering level set
     if( this.intervening_set.value(this.robot.states) < this.trigger_level ){
+      console.log(this.intervening_set.value(this.robot.states),this.trigger_level);
       // If we have trespassed the reachset, interrupt with the safe policy
       return this.safer.u(this.intervening_set.gradV(this.robot.states) );
     }

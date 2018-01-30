@@ -103,6 +103,65 @@ class twoTwo extends SafeSet{
     }
     return gradient;
   }
+  // Method for displaying the value function = HACK: Assuming is double quadrotor with square obstacle in global reference
+  displayGrid(graphics,currentState,sweptStateX,sweptStateY){
+    let states = currentState;
+    let left = obstacle.ObX-obstacle.ObW;
+    let top = obstacle.ObY-obstacle.ObH;
+    let right = obstacle.ObX+obstacle.ObW;
+    let bottom = obstacle.ObY+obstacle.ObH;
+    let leeway = 1 - 0; // is the max control magnitude - the max disturbance magnitude
+    let padX = 0;
+    if(states[1]*(obstacle.ObX-states[0]) > 0){
+      padX = Math.pow(states[1],2)/(2*leeway);
+    }
+    if( (obstacle.ObX-states[0]) > 0 ){
+      left -= padX;
+    }
+    else{
+      right += padX;
+    }
+    let padY = 0;
+    if(states[3]*(obstacle.ObY-states[2]) > 0){
+      padY = Math.pow(states[3],2)/(2*leeway);
+    }
+    if( (obstacle.ObY-states[2]) > 0 ){
+      top -= padY;
+    }
+    else{
+      bottom += padY;
+    }
+    obstacle.drawFromState(graphics,0,0xcf4c34,left,top,right,bottom)
+    obstacle.render();
+  }
+  /*
+  displayGrid(graphics,currentState,sweptStateX,sweptStateY){
+    let [lowEdgeIndex,highEdgeIndex] = this.nearIndices(currentState,true);
+    let index = lowEdgeIndex;
+    graphics.lineStyle(0, 0x000000);
+    for(let indexX = 0;indexX < this.setA.reachset.gN[sweptStateX];indexX++){
+      for(let indexY = 0;indexY < this.setB.reachset.gN[sweptStateY];indexY++){
+        index[sweptStateX] = indexX;
+        index[sweptStateY] = indexY;
+        let valuation = this.griddedValue(index);
+        // Display this gridpoint
+        let mappedState =
+          graphics.mapper.mapStateToPosition(this.setA.indexToState(indexX,0),this.setB.indexToState(indexY,0) );
+          // Choose the correct color
+        if(valuation > 0){
+        }
+        else{
+          // this is the unsafe zone
+          graphics.beginFill(0xFF745A);
+            // Draw the circle
+          graphics.drawCircle(mappedState[0],mappedState[1],8);
+          graphics.endFill();
+        }
+      }
+    }
+    //
+  }
+  */
 }
 
 // Safe Set loaded from MATLAB-dumped JSON in LSToolbox format
@@ -121,7 +180,7 @@ class loaded_SafeSet extends SafeSet {
   // Method for displaying the value function
   displayGrid(graphics,currentState,sweptStateX,sweptStateY){
     let reachableSet = this.reachset;
-    let [lowEdgeIndex,highEdgeIndex] = this.nearIndices(currentState);
+    let [lowEdgeIndex,highEdgeIndex] = this.nearIndices(currentState,true);
     let index = lowEdgeIndex;
     graphics.lineStyle(0, 0x000000);
     for(let indexX = 0;indexX < reachableSet.gN[sweptStateX];indexX++){
@@ -146,10 +205,11 @@ class loaded_SafeSet extends SafeSet {
     }
     //
   }
+  // Method that returns the value at the gridpoint
   griddedValue(index){
     let indexedValue = this.reachset.data.slice();
     for(var xDim=0;xDim<index.length;xDim++){
-      // unwrap another layer of referncing the value function
+      // unwrap another layer of referencing the value function
       indexedValue = indexedValue[index[xDim]];
     }
     return indexedValue;
@@ -157,7 +217,7 @@ class loaded_SafeSet extends SafeSet {
   // Method for calculating the gradient at the given state
   gradV(states){
     // Find the nearest neighbors
-    let [lowEdgeIndex,highEdgeIndex] = this.nearIndices(states);
+    let [lowEdgeIndex,highEdgeIndex] = this.nearIndices(states,true);
     // Calculate the patial along each axis
     let gradient = [];
     for(var xDim=0;xDim<states.length;xDim++){
@@ -177,17 +237,33 @@ class loaded_SafeSet extends SafeSet {
     return gradient;
   }
   // Method for finding the nearest neighboring gridpoints
-  nearIndices(_states){
-    // If the state is outsid the grid, then round to nearest gridpoint
+  nearIndices(_states,gridwrap){
+    // Handle states outside of the grid
     let states = _states.slice(); // only round a clone of the state vector
+    /*
     for(var xDim=0;xDim<states.length;xDim++){
       if(states[xDim] < this.reachset.gmin[xDim]){
-        states[xDim] = this.reachset.gmin[xDim];
+        if(this.reachset.gperiodicity[xDim]){
+          // if axis is periodic, wraparound the state
+          states[xDim] += this.reachset.gmax[xDim] - this.reachset.gmin[xDim];
+        }
+        else{
+          // if axis is non-periodic, project onto the nearest gridpoint
+          states[xDim] = this.reachset.gmin[xDim];
+        }
       }
       if(states[xDim] > this.reachset.gmax[xDim]){
-        states[xDim] = this.reachset.gmax[xDim];
+        if(this.reachset.gperiodicity[xDim]){
+          // if axis is periodic, wraparound the state
+          states[xDim] -= this.reachset.gmax[xDim] - this.reachset.gmin[xDim];
+        }
+        else{
+          // if axis is non-periodic, project onto the nearest gridpoint
+          states[xDim] = this.reachset.gmax[xDim];
+        }
       }
     }
+    */
     // Initialize the nearest neighbor index arrays
     let lowEdgeIndex = [];
     let highEdgeIndex = [];
@@ -202,6 +278,46 @@ class loaded_SafeSet extends SafeSet {
           (states[xDim]-this.reachset.gmin[xDim])/
               this.reachset.gdx[xDim]
                   );
+      if(gridwrap){
+        if(this.reachset.gperiodicity[xDim]){
+          //console.log(xDim,this.reachset.gperiodicity[xDim])
+          if(lowEdgeIndex[xDim] < 0){
+            //console.log("underflow ",states[xDim],lowEdgeIndex[xDim]);
+            lowEdgeIndex[xDim] += this.reachset.gN[xDim];
+          }
+          if(lowEdgeIndex[xDim] >= this.reachset.gN[xDim]){
+            //console.log("overflow",states[xDim],lowEdgeIndex[xDim]);
+            lowEdgeIndex[xDim] -= this.reachset.gN[xDim];
+          }
+          if(highEdgeIndex[xDim] < 0){
+            //console.log("underflow ",states[xDim],highEdgeIndex[xDim]);
+            highEdgeIndex[xDim] += this.reachset.gN[xDim];
+          }
+          if(highEdgeIndex[xDim] >= this.reachset.gN[xDim]){
+            //console.log("overflow",states[xDim],highEdgeIndex[xDim]);
+            highEdgeIndex[xDim] -= this.reachset.gN[xDim];
+          }
+        }
+        else{
+          if(lowEdgeIndex[xDim] < 0){
+            lowEdgeIndex[xDim] = 0;
+            //console.log("underbound");
+          }
+          if(lowEdgeIndex[xDim] >= this.reachset.gN[xDim]){
+            lowEdgeIndex[xDim] = this.reachset.gN[xDim]-1;
+            //console.log("overbound");
+          }
+          if(highEdgeIndex[xDim] < 0){
+            highEdgeIndex[xDim] = 0;
+            //console.log("underbound");
+          }
+          if(highEdgeIndex[xDim] >= this.reachset.gN[xDim]){
+            highEdgeIndex[xDim] = this.reachset.gN[xDim]-1;
+            //console.log("overbound");
+          }
+        }
+      }
+
     }
     return [lowEdgeIndex,highEdgeIndex];
   }
@@ -210,13 +326,10 @@ class loaded_SafeSet extends SafeSet {
   indexToState(index,dim){
     return index*this.reachset.gdx[dim]+this.reachset.gmin[dim];
   }
-  david(index,dim){
-    return index*this.reachset.gdx[dim]+this.reachset.gmin[dim];
-  }
   // Method for reading the value function at the given state
   value(states){
     // Find the nearest neighbors
-    let [lowEdgeIndex,highEdgeIndex] = this.nearIndices(states);
+    let [lowEdgeIndex,highEdgeIndex] = this.nearIndices(states,false);
     // Compute volumes between the interpolation point and its nearest neighbors
     let distanceToLower = [];
     let distanceToHigher = [];
@@ -232,6 +345,46 @@ class loaded_SafeSet extends SafeSet {
       if(lowEdgeIndex[xDim] == highEdgeIndex[xDim]){
         distanceToLower[xDim] = 1;
         distanceToHigher[xDim] = 0;
+      }
+    }
+    // Wrap indices to stay inside grid. This must be done manually here since
+    // periodic wrap-arounds impact calculated distance to each edge
+    // and FALSE flag was passed to nearIndices function accordingly
+    if(this.reachset.gperiodicity[xDim]){
+      //console.log(xDim,this.reachset.gperiodicity[xDim])
+      if(lowEdgeIndex[xDim] < 0){
+        //console.log("underflow ",states[xDim],lowEdgeIndex[xDim]);
+        lowEdgeIndex[xDim] += this.reachset.gN[xDim];
+      }
+      if(lowEdgeIndex[xDim] >= this.reachset.gN[xDim]){
+        //console.log("overflow",states[xDim],lowEdgeIndex[xDim]);
+        lowEdgeIndex[xDim] -= this.reachset.gN[xDim];
+      }
+      if(highEdgeIndex[xDim] < 0){
+        //console.log("underflow ",states[xDim],highEdgeIndex[xDim]);
+        highEdgeIndex[xDim] += this.reachset.gN[xDim];
+      }
+      if(highEdgeIndex[xDim] >= this.reachset.gN[xDim]){
+        //console.log("overflow",states[xDim],highEdgeIndex[xDim]);
+        highEdgeIndex[xDim] -= this.reachset.gN[xDim];
+      }
+    }
+    else{
+      if(lowEdgeIndex[xDim] < 0){
+        lowEdgeIndex[xDim] = 0;
+        //console.log("underbound");
+      }
+      if(lowEdgeIndex[xDim] >= this.reachset.gN[xDim]){
+        lowEdgeIndex[xDim] = this.reachset.gN[xDim]-1;
+        //console.log("overbound");
+      }
+      if(highEdgeIndex[xDim] < 0){
+        highEdgeIndex[xDim] = 0;
+        //console.log("underbound");
+      }
+      if(highEdgeIndex[xDim] >= this.reachset.gN[xDim]){
+        highEdgeIndex[xDim] = this.reachset.gN[xDim]-1;
+        //console.log("overbound");
       }
     }
     // Multilinear interpolation by weighing each corner value by the volume in
