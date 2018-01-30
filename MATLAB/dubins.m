@@ -1,4 +1,4 @@
-function [g,data] = helperOC_tutorial()
+function [g,data] = dubins()
 
 %% Should we compute the trajectory?
 compTraj = false;
@@ -93,6 +93,6 @@ if compTraj
   end
 end
 
-json_export_reachset(data(:,:,:,end),g,'dubins');
+%json_export_reachset(data(:,:,:,end),g,'dubins');
 
 end

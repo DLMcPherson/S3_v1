@@ -216,6 +216,28 @@ class loaded_SafeSet extends SafeSet {
   }
   // Method for calculating the gradient at the given state
   gradV(states){
+    return this.gradV2(states);
+  }
+  gradV2(states){
+    // Calculate the patial along each axis
+    let gradient = [];
+    for(var xDim=0;xDim<states.length;xDim++){
+      // Project along the current axis to the hyperplane intersecting the
+      // nearest gridpoints on both sides
+        // Clone the state vector
+      let statesLow = states.slice(0);
+      let statesHigh = states.slice(0);
+      // Replace the xDim-th state with an offset location
+      statesLow[xDim] -= this.reachset.gdx[xDim]/2;
+      statesHigh[xDim] += this.reachset.gdx[xDim]/2;
+      // Calculate the slope between the two projected points
+      gradient[xDim] =  (this.value(statesHigh) - this.value(statesLow))
+                              / this.reachset.gdx[xDim];
+    }
+    //
+    return gradient;
+  }
+  gradV1(states){
     // Find the nearest neighbors
     let [lowEdgeIndex,highEdgeIndex] = this.nearIndices(states,true);
     // Calculate the patial along each axis
@@ -227,6 +249,7 @@ class loaded_SafeSet extends SafeSet {
       let statesLow = states.slice(0);
       let statesHigh = states.slice(0);
       // Replace the xDim-th state with the location of the nearest gridpoint
+      console.log(lowEdgeIndex[xDim],highEdgeIndex[xDim])
       statesLow[xDim] = this.indexToState(lowEdgeIndex[xDim],xDim);
       statesHigh[xDim] = this.indexToState(highEdgeIndex[xDim],xDim);
       // Calculate the slope between the two projected points

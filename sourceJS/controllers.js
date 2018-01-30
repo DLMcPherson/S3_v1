@@ -122,14 +122,14 @@ class Safe_Contr extends Controller {
   // Returns the current control value responding to the robot's state
   u(momentum){
     let u_out = [];
-    //console.log(momentum);
+    console.log(momentum);
     // For each control output...
     for(var curU=0;curU<this.robot.controlCoefficient().length;curU++){
       // maximize the Hamiltonian (f^T p) within the maximum output afforded
-      if(this.dotProduct(this.robot.controlCoefficient()[curU], momentum)  > 0){
+      if(this.dotProduct(this.robot.controlCoefficient()[curU], momentum)  > 0.1){
         u_out[curU] = this.maxU;
       }
-      else{
+      if(this.dotProduct(this.robot.controlCoefficient()[curU], momentum)  < -0.1){
         u_out[curU] = -this.maxU;
       }
     }
@@ -158,7 +158,7 @@ class Intervention_Contr extends Controller {
   u(){
     // Check if the reachset value function is below the triggering level set
     if( this.intervening_set.value(this.robot.states) < this.trigger_level ){
-      console.log(this.intervening_set.value(this.robot.states),this.trigger_level);
+      //console.log(this.intervening_set.value(this.robot.states),this.trigger_level);
       // If we have trespassed the reachset, interrupt with the safe policy
       return this.safer.u(this.intervening_set.gradV(this.robot.states) );
     }

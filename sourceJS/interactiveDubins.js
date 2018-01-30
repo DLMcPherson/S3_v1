@@ -85,7 +85,7 @@ let intervener = new Intervention_Contr(robot,
     originalSafeset,
     Umax,0,
     new Dubins_Contr(robot,Umax,[goalX,goalY]));
-intervener.trigger_level = robot.height/(2*graphics.mapper.Mxx);
+intervener.trigger_level = robot.height/(2*graphics.mapper.Mxx) * Math.SQRT2;
 let obstacle = new RoundObstacle(0,0,1);
 //*/
 /* // 1D Quadrotor Robot
@@ -100,7 +100,7 @@ let obstacle = new BoxObstacle(0,0,1,1);
 // Render the Obstacle
 obstacle.renderAugmented(intervener.trigger_level);
 
-// ===================== THE MAIN EVENT ================== //
+// ===================== THE MAIN EVENT ================== // 3
 
 // Main Loop
 let clock =  0 ;
