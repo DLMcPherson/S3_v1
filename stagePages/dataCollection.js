@@ -1,5 +1,8 @@
 "use strict"
 
+//var filesaver = require('file-saver');
+//var pixies = require('PIXI');
+
 // Mapper class that scales state space to screen
 class ScreenXYMap {
   constructor(_Mxx,_Mxy,_Myx,_Myy,_bx,_by){
@@ -51,41 +54,28 @@ if(saveToCloud){
 let stage = new PIXI.Container();
   // Graphics object for lines and squares and such...
 let graphics = new PIXI.Graphics();
-graphics.mapper = new ScreenXYMap(70,0,0,70,630,350);
+graphics.mapper = new ScreenXYMap(70,0,0,70,1030,350);
 stage.addChild(graphics);
-
-// Goal point Marker
-let goal = new PIXI.Text('X',{font : '24px Gill Sans', fill : 0x077f4d});
-goal.pivot.x = 10; goal.pivot.y = 12;
-const goalX = 1 ; const goalY = -4;
-goal.x = graphics.mapper.mapStateToPosition(goalX,goalY)[0];
-goal.y = graphics.mapper.mapStateToPosition(goalX,goalY)[1];
-stage.addChild(goal);
 
 // Robot Object
 let Umax = 1
 /* // 2D Quadrotor Robot
-let obstacle = new BoxObstacle(0,0,1,1);
 let robot = new QuadrotorRobot([-6,0,3,0]);
 stage.addChild(robot);
 let intervener = new Intervention_Contr(robot,
-    new twoTwo(new loaded_SafeSet("dubInt"),new loaded_SafeSet("dubIntV2") ),
+    new twoTwo(new loaded_SafeSet("dubIntV2"),new loaded_SafeSet("dubIntV2") ),
     Umax,0,
     new Concat_Contr(robot,[new PD_Contr(robot,goalX,0),new PD_Contr(robot,goalY,2)]) );
 intervener.trigger_level = robot.width/(2*graphics.mapper.Myy);
+let obstacle = new BoxObstacle(0,0,1,1);
 */
-///* // Dubins Car Robot
-let robot = new DubinsRobot([-4,3,0],3);
+//* // Dubins Car Robot
+let robotY0 = [2.25,0.75,1,-1,-2,1.5,0.25,-0.25,-1.5,1.25,-1.25,-2.25,1.75,0.5,2,-0.5,-1.5,-0.75,0];
+let robotX0 = -12;
+let curY0 = 0;
+let robot = new DubinsRobot([robotX0,robotY0[curY0],0],3,0xFF745A);
 stage.addChild(robot);
-let originalSafeset = new loaded_SafeSet("dubins");
-let pixelwiseSafeset = new loaded_SafeSet("dubinsPixelwise");
-let LSPickerSafeset = new loaded_SafeSet("dubinsLSPicker");
-let BellmanIteratedSafeset = new loaded_SafeSet("dubinsBI");
-let intervener = new Intervention_Contr(robot,
-    originalSafeset,
-    Umax,0,
-    new Dubins_Contr(robot,Umax,[goalX,goalY]));
-intervener.trigger_level = robot.height/(2*graphics.mapper.Mxx);
+let trigger_level = robot.height/(2*graphics.mapper.Mxx);
 let obstacle = new RoundObstacle(0,0,1);
 //*/
 /* // 1D Quadrotor Robot
@@ -98,77 +88,79 @@ let obstacle = new BoxObstacle(0,0,1,1);
 */
 
 // Render the Obstacle
-obstacle.renderAugmented(intervener.trigger_level);
+obstacle.render(trigger_level);
 
 // ===================== THE MAIN EVENT ================== //
 
 // Main Loop
-let control = [0];
 let clock =  0 ;
+let counter = 0;
 let now = Date.now();
 window.setInterval(function() {
   // Time management
   let delT = Date.now() - now;
-  //delT *= 0.0005 * 2;
   delT *= 0.0005 * 4;
   clock += delT;
+  counter += delT;
   now = Date.now();
   // Robot dynamics
-  let u = control;
-  //console.log(clock,u)
+  let u = [0];
+    // Reset robot position after 8 seconds
+  if(robot.states[0] > 1){
+    curY0++;
+    if(curY0 >= robotY0.length){
+      curY0 = 0;
+    }
+    robot.states = [robotX0,robotY0[curY0],0];
+    console.log("reset robot state to ",[robotX0,robotY0[curY0],0]);
+    counter = 0;
+  }
   robot.update(delT,u);
   // Rendering the stage
-  graphics.clear();
-  obstacle.render(intervener.trigger_level);
-  //intervener.intervening_set.displayGrid(graphics,robot.states,0,1);
   renderer.render(stage);
 },2)
 
 // ====================== Keyboard Listener Loop ========================= //
 let key = null;
+let flinchData = {
+  ip : userip,
+  bufferlevel : trigger_level,
+  system : 'dubins',
+}
+flinchData.list = []
 document.addEventListener("keydown",function(event) {
   // Log time and key
   key = event.keyCode;
-  /*
-  // Update level set
-  if(intervener.trigger_level < intervener.intervening_set.value(robot.states)){
-    intervener.trigger_level = intervener.intervening_set.value(robot.states);
+  // 'S' is the save-to-file key
+  if(key == 83){
+    var blob = new Blob([JSON.stringify(flinchData)], {type: "text/plain;charset=utf-8"});
+    saveAs(blob, "supervisorFlinches"+Date.now()+".dat");
   }
-  // Draw level set
-  obstacle.renderAugmented(intervener.trigger_level);
-  */
-  console.log(key);
-  if(key == 37 || key == 65){
-    control = [-1];
-  }
-  if(key == 38 || key == 40 || key == 87 || key == 83){
-    control = [0];
-  }
-  if(key == 39 || key == 68){
-    control = [1];
-  }
-  // Debugging report
-  if(saveToCloud){
-    firebase.push({
+  else{
+    // Save flinch information
+    flinchData.list.push({
       date : Date.now(),
       state : robot.states,
-      ip : userip,
     })
+      // Save to cloud database, if enabled (Testing-Only feature)
+    if(saveToCloud){
+      firebase.push({
+        date : Date.now(),
+        state : robot.states,
+        ip : userip,
+      })
+    }
+    // Reset the game of robot chicken
+    curY0++;
+    if(curY0 >= robotY0.length){
+      curY0 = 0;
+    }
+    robot.states = [robotX0,robotY0[curY0],0];
+    console.log("reset robot state to ",[robotX0,robotY0[curY0],0]);
+    counter = 0;
   }
   // End
 })
-
-// ====================== Mouse Listener Loop ========================= //
-document.addEventListener("mousedown",function(event) {
-  let mousePosition = renderer.plugins.interaction.mouse.global;
-  goal.x = mousePosition.x;
-  goal.y = mousePosition.y;
-  intervener.tracker.updateSetpoint([
-      graphics.mapper.mapPositionToState(goal.x,goal.y)[0],
-      graphics.mapper.mapPositionToState(goal.x,goal.y)[1]]);
-  // End
-})
-
 
 // Mount the renderer in the website
 let mount = document.getElementById("mount");
