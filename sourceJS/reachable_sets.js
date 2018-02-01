@@ -104,7 +104,7 @@ class twoTwo extends SafeSet{
     return gradient;
   }
   // Method for displaying the value function = HACK: Assuming is double quadrotor with square obstacle in global reference
-  displayGrid(graphics,currentState,sweptStateX,sweptStateY){
+  displayGrid(graphics,color,currentState,sweptStateX,sweptStateY){
     let states = currentState;
     let left = obstacle.ObX-obstacle.ObW;
     let top = obstacle.ObY-obstacle.ObH;
@@ -131,7 +131,7 @@ class twoTwo extends SafeSet{
     else{
       bottom += padY;
     }
-    obstacle.drawFromState(graphics,0,0xcf4c34,left,top,right,bottom)
+    obstacle.drawFromState(graphics,0,left,top,right,bottom)
     obstacle.render();
   }
   /*
@@ -178,7 +178,7 @@ class loaded_SafeSet extends SafeSet {
         })
   }
   // Method for displaying the value function
-  displayGrid(graphics,currentState,sweptStateX,sweptStateY){
+  displayGrid(graphics,color,currentState,sweptStateX,sweptStateY){
     let reachableSet = this.reachset;
     let [lowEdgeIndex,highEdgeIndex] = this.nearIndices(currentState,true);
     let index = lowEdgeIndex;
@@ -196,7 +196,7 @@ class loaded_SafeSet extends SafeSet {
         }
         else{
           // this is the unsafe zone
-          graphics.beginFill(0xFF745A);
+          graphics.beginFill(color);
             // Draw the circle
           graphics.drawCircle(mappedState[0],mappedState[1],8);
           graphics.endFill();

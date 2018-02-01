@@ -27,7 +27,7 @@ tau = t0:dt:tMax;
 %% problem parameters
 
 % input bounds
-speed = 1;
+speed = 3;
 wMax = 1;
 
 % control trying to min or max value function?
@@ -93,6 +93,6 @@ if compTraj
   end
 end
 
-%json_export_reachset(data(:,:,:,end),g,'dubins');
+json_export_reachset(data(:,:,:,end),g,'dubins');
 
 end

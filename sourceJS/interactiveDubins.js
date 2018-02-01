@@ -55,12 +55,17 @@ graphics.mapper = new ScreenXYMap(70,0,0,70,630,350);
 stage.addChild(graphics);
 
 // Goal point Marker
-let goal = new PIXI.Text('X',{font : '24px Gill Sans', fill : 0x077f4d});
+let goal = new PIXI.Text('X',{font : '24px Gill Sans', fill : 0xFF745A});
 goal.pivot.x = 10; goal.pivot.y = 12;
+let goal2 = new PIXI.Text('X',{font : '24px Gill Sans', fill : 0x077f4d});
+goal2.pivot.x = 10; goal2.pivot.y = 12;
 const goalX = 1 ; const goalY = -4;
 goal.x = graphics.mapper.mapStateToPosition(goalX,goalY)[0];
 goal.y = graphics.mapper.mapStateToPosition(goalX,goalY)[1];
+goal2.x = goal.x;
+goal2.y = goal.y;
 stage.addChild(goal);
+stage.addChild(goal2);
 
 // Robot Object
 let Umax = 1
@@ -75,7 +80,7 @@ let intervener = new Intervention_Contr(robot,
 intervener.trigger_level = robot.width/(2*graphics.mapper.Myy);
 */
 ///* // Dubins Car Robot
-let robot = new DubinsRobot([-4,3,0]);
+let robot = new DubinsRobot([-4,3,0],3,0xFF745A);
 stage.addChild(robot);
 let originalSafeset = new loaded_SafeSet("dubins");
 let pixelwiseSafeset = new loaded_SafeSet("dubinsPixelwise");
@@ -87,6 +92,14 @@ let intervener = new Intervention_Contr(robot,
     new Dubins_Contr(robot,Umax,[goalX,goalY]));
 intervener.trigger_level = robot.height/(2*graphics.mapper.Mxx) * Math.SQRT2;
 let obstacle = new RoundObstacle(0,0,1);
+
+let robot2 = new DubinsRobot([4,3,0],3,0x24EB98);
+stage.addChild(robot2);
+let intervener2 = new Intervention_Contr(robot2,
+    originalSafeset,
+    Umax,0,
+    new Dubins_Contr(robot2,Umax,[goalX,goalY]));
+intervener2.trigger_level = robot2.height/(2*graphics.mapper.Mxx) * Math.SQRT2;
 //*/
 /* // 1D Quadrotor Robot
 let robot = new VerticalQuadrotorRobot([3,0]);
@@ -108,17 +121,20 @@ let now = Date.now();
 window.setInterval(function() {
   // Time management
   let delT = Date.now() - now;
-  delT *= 0.0005 * 2;
+  delT *= 0.0005 * 4;
   clock += delT;
   now = Date.now();
   // Robot dynamics
   let u = intervener.u();
+  let u2 = intervener2.u();
   //console.log(clock,u)
   robot.update(delT,u);
+  robot2.update(delT,u2);
   // Rendering the stage
   graphics.clear();
   obstacle.render(intervener.trigger_level);
-  intervener.intervening_set.displayGrid(graphics,robot.states,0,1);
+  intervener.intervening_set.displayGrid(graphics,robot.tint,robot.states,0,1);
+  intervener.intervening_set.displayGrid(graphics,robot2.tint,robot2.states,0,1);
   renderer.render(stage);
 },2)
 

@@ -75,7 +75,7 @@ let intervener = new Intervention_Contr(robot,
 intervener.trigger_level = robot.width/(2*graphics.mapper.Myy);
 */
 ///* // Dubins Car Robot
-let robot = new DubinsRobot([-4,3,0]);
+let robot = new DubinsRobot([-4,3,0],3);
 stage.addChild(robot);
 let originalSafeset = new loaded_SafeSet("dubins");
 let pixelwiseSafeset = new loaded_SafeSet("dubinsPixelwise");
@@ -110,7 +110,7 @@ window.setInterval(function() {
   // Time management
   let delT = Date.now() - now;
   //delT *= 0.0005 * 2;
-  delT *= 0.0005 * 3;1
+  delT *= 0.0005 * 4;
   clock += delT;
   now = Date.now();
   // Robot dynamics
@@ -138,13 +138,13 @@ document.addEventListener("keydown",function(event) {
   obstacle.renderAugmented(intervener.trigger_level);
   */
   console.log(key);
-  if(key == 49){
+  if(key == 37 || key == 65){
     control = [-1];
   }
-  if(key == 50){
+  if(key == 38 || key == 40 || key == 87 || key == 83){
     control = [0];
   }
-  if(key == 51){
+  if(key == 39 || key == 68){
     control = [1];
   }
   // Debugging report

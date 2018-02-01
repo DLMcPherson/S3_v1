@@ -43,7 +43,7 @@ tau = t0:dt:tMax;
 %% problem parameters
 
 % input bounds
-speed = 1;
+speed = 3;
 wMax = 1;
 
 % control trying to min or max value function?

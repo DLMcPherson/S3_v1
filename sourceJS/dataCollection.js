@@ -73,7 +73,7 @@ let obstacle = new BoxObstacle(0,0,1,1);
 let robotY0 = [2.25,0.75,1,-1,-2,1.5,0.25,-0.25,-1.5,1.25,-1.25,-2.25,1.75,0.5,2,-0.5,-1.5,-0.75,0];
 let robotX0 = -12;
 let curY0 = 0;
-let robot = new DubinsRobot([robotX0,robotY0[curY0],0]);
+let robot = new DubinsRobot([robotX0,robotY0[curY0],0],3);
 stage.addChild(robot);
 let trigger_level = robot.height/(2*graphics.mapper.Mxx);
 let obstacle = new RoundObstacle(0,0,1);
@@ -99,14 +99,14 @@ let now = Date.now();
 window.setInterval(function() {
   // Time management
   let delT = Date.now() - now;
-  delT *= 0.0005 * 15;
+  delT *= 0.0005 * 4;
   clock += delT;
   counter += delT;
   now = Date.now();
   // Robot dynamics
   let u = [0];
     // Reset robot position after 8 seconds
-  if(counter>2-robotX0){
+  if(robot.states[0] > 1){
     curY0++;
     if(curY0 >= robotY0.length){
       curY0 = 0;

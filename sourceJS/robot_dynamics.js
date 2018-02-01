@@ -188,14 +188,15 @@ class DubinsRobot extends Robot {
   }
   // Constructor initializes PIXI.Sprite members fitting the quadrotor Texture
   // and sets initial state data
-  constructor(initial_state){
+  constructor(initial_state,velocity,tint){
     // Image
-    super(PIXI.Texture.fromImage("../DubinsCar.png"));
+    super(PIXI.Texture.fromImage("../GrayDubinsCar.png"));
     this.width = 80 ; this.height = 80;
     this.pivot.x = 100 ; this.pivot.y = 100;
+    this.tint = tint;
     // State Vector
     this.states = initial_state;
-    this.speed = 1;
+    this.speed = velocity;
     // Display State
     this.displayState();
   }
