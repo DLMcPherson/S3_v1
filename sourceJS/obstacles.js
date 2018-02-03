@@ -5,13 +5,106 @@ class Obstacle {
   renderAugmented(pad){
     return;
   }
+  constructor(_ObX,_ObY,avoidSets){
+    // save a reference to the reachable set conforming to this shaped obstacle
+    this.ObX = _ObX;
+    this.ObY = _ObY;
+    this.offset = [this.ObX,this.ObY];
+    this.avoidSets = avoidSets;
+  }
+  // Method for transforming global state to obstacle-relative state
+  offsetStates(states){
+    let offsetS = states.slice();
+    for(let curDim = 0; curDim < states.length; curDim++){
+      offsetS[curDim] -= this.offset[curDim];
+    }
+    return offsetS;
+  }
+  // Passing calls to internalized reachable sets palette
+  value(setID,states){
+    return this.avoidSets.value(setID,this.offsetStates(states));
+  }
+  // Method for calculating the gradient
+  gradV(setID,states){
+    return this.avoidSets.gradV(setID,this.offsetStates(states));
+  }
+  // Method for displaying the value function on a grid
+  displayGrid(setID,graphics,color,currentState,sweptStateX,sweptStateY){
+    this.avoidSets.displayGrid(setID,graphics,color,this.offsetStates(currentState),sweptStateX,sweptStateY);
+    return 0;
+  }
+}
+
+class Obstaclescape {
+  render(){
+    for(let obNum = 0; obNum < this.obstacles.length ; obNum++){
+      if(this.obstacleDestroyed[obNum] == false){
+        this.obstacles[obNum].render();
+      }
+    }
+    return;
+  }
+  renderAugmented(pad){
+    for(let obNum = 0; obNum < this.obstacles.length ; obNum++){
+      if(this.obstacleDestroyed[obNum] == false){
+        this.obstacles[obNum].renderAugmented(pad);
+      }
+    }
+    return;
+  }
+  constructor(_obstacles){
+    // save a reference to the reachable set conforming to this shaped obstacle
+    this.obstacles = _obstacles;
+    this.obstacleDestroyed = [];
+    this.obstacleUndetected = [];
+    for(let obNum = 0; obNum < this.obstacles.length ; obNum++){
+      this.obstacleDestroyed[obNum] = false;
+      this.obstacleUndetected[obNum] = false;
+    }
+  }
+  // Passing calls to internalized reachable sets palette
+  value(setID,states){
+    let curMinValue = 100;
+    for(let obNum = 0; obNum < this.obstacles.length ; obNum++){
+      if(this.obstacleDestroyed[obNum] == false && this.obstacleUndetected[obNum] == false){
+        let obsValue = this.obstacles[obNum].value(setID,states);
+        if(obsValue < curMinValue)
+          curMinValue = obsValue;
+      }
+    }
+    return curMinValue;
+  }
+  // Method for calculating the gradient
+  gradV(setID,states){
+    let curMinValue = 100;
+    let dominantObstacle = 0;
+    for(let obNum = 0; obNum < this.obstacles.length ; obNum++){
+      if(this.obstacleDestroyed[obNum] == false && this.obstacleUndetected[obNum] == false){
+        let obsValue = this.obstacles[obNum].value(setID,states);
+        if(obsValue < curMinValue){
+          curMinValue = obsValue;
+          dominantObstacle = obNum;
+        }
+      }
+    }
+    return this.obstacles[dominantObstacle].gradV(setID,states);
+  }
+  // Method for displaying the value function on a grid
+  displayGrid(setID,graphics,color,currentState,sweptStateX,sweptStateY){
+    for(let obNum = 0; obNum < this.obstacles.length ; obNum++){
+      if(this.obstacleDestroyed[obNum] == false && this.obstacleUndetected[obNum] == false){
+        this.obstacles[obNum].displayGrid(setID,graphics,color,currentState,sweptStateX,sweptStateY);
+      }
+    }
+    return 0;
+  }
 }
 
 class BoxObstacle extends Obstacle{
-  constructor(_ObX,_ObY,_ObW,_ObH){
-    super();
-    this.ObX = _ObX;
-    this.ObY = _ObY;
+  constructor(_ObX,_ObY,_ObW,_ObH,avoidSets){
+    super(_ObX,_ObY,avoidSets);
+    this.offset = [this.ObX,0,this.ObY,0];
+    this.collisionSet = new twoTwo(new dubIntInterval_Set(_ObW),new dubIntInterval_Set(_ObH) );
     this.ObW = _ObW;
     this.ObH = _ObH;
   }
@@ -50,10 +143,10 @@ class BoxObstacle extends Obstacle{
 }
 
 class RoundObstacle extends Obstacle{
-  constructor(_ObX,_ObY,_ObW){
-    super();
-    this.ObX = _ObX;
-    this.ObY = _ObY;
+  constructor(_ObX,_ObY,_ObW,avoidSets){
+    super(_ObX,_ObY,avoidSets);
+    this.offset = [_ObX,_ObY,0]; // TODO: This is system-specific. Make obstacles system agnostic
+    this.collisionSet = new dubinsCircle_Set(_ObW);
     this.ObW = _ObW;
     this.ObH = _ObW;
   }

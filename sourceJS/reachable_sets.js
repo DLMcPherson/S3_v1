@@ -7,7 +7,63 @@ class SafeSet {
   gradV(states){
     return 0;
   }
+  // Method for displaying the value function on a grid
+  displayGrid(graphics,color,currentState,sweptStateX,sweptStateY){
+    return 0;
+  }
 }
+
+// Safe set palette 'virtual' class
+class SafeSetPalette {
+  value(setID,states){
+    return this.safesets[setID].value(states);
+  }
+  // Method for calculating the gradient
+  gradV(setID,states){
+    return this.safesets[setID].gradV(states);
+  }
+  // Method for displaying the value function on a grid
+  displayGrid(setID,graphics,color,currentState,sweptStateX,sweptStateY){
+    this.safesets[setID].displayGrid(graphics,color,currentState,sweptStateX,sweptStateY);
+    return 0;
+  }
+  constructor(safesetArray){
+    this.safesets = safesetArray;
+  }
+}
+
+// Particular palette that automatically searches for the extensions for the
+// learned safe sets modified from one pase safe set
+class LearnedPalette extends SafeSetPalette {
+  constructor(filename){
+    super([new loaded_SafeSet(filename),
+        new loaded_SafeSet(filename+"Pixelwise"),
+        new loaded_SafeSet(filename+"LSPicker"),
+        new loaded_SafeSet(filename+"BI")
+        ]);
+  }
+}
+
+class PaletteWrapper {
+  constructor(palette,whichSet){
+    this.palette = palette;
+    this.mySet = whichSet;
+  }
+  value(states){
+    return this.palette.value(mySet,states);
+  }
+  // Method for calculating the gradient
+  gradV(states){
+    return this.palette.gradV(mySet,states);
+  }
+  // Method for displaying the value function on a grid
+  displayGrid(graphics,color,currentState,sweptStateX,sweptStateY){
+    this.palette.displayGrid(mySet,graphics,color,currentState,sweptStateX,sweptStateY);
+    return 0;
+  }
+}
+
+// Analytical double integrator safeset
 class DoubleIntegrator_SafeSet extends SafeSet {
   constructor(_leeway,_obP,_obL){
     super();
@@ -54,6 +110,8 @@ class DoubleIntegrator_SafeSet extends SafeSet {
     return [dVdp,dVdv];
   }
 }
+
+
 
 // HACK: Class for combining two safe sets of dimension two
 // into one safe set of dimension 4
@@ -106,26 +164,27 @@ class twoTwo extends SafeSet{
   // Method for displaying the value function = HACK: Assuming is double quadrotor with square obstacle in global reference
   displayGrid(graphics,color,currentState,sweptStateX,sweptStateY){
     let states = currentState;
-    let left = obstacle.ObX-obstacle.ObW;
-    let top = obstacle.ObY-obstacle.ObH;
-    let right = obstacle.ObX+obstacle.ObW;
-    let bottom = obstacle.ObY+obstacle.ObH;
+    let collideBoxX = 0; let collideBoxY = 0; let collideBoxW = 1; let collideBoxH = 1;
+    let left = collideBoxX-collideBoxW;
+    let top = collideBoxY-collideBoxH;
+    let right = collideBoxX+collideBoxW;
+    let bottom = collideBoxY+collideBoxH;
     let leeway = 1 - 0; // is the max control magnitude - the max disturbance magnitude
     let padX = 0;
-    if(states[1]*(obstacle.ObX-states[0]) > 0){
+    if(states[1]*(collideBoxX-states[0]) > 0){
       padX = Math.pow(states[1],2)/(2*leeway);
     }
-    if( (obstacle.ObX-states[0]) > 0 ){
+    if( (collideBoxX-states[0]) > 0 ){
       left -= padX;
     }
     else{
       right += padX;
     }
     let padY = 0;
-    if(states[3]*(obstacle.ObY-states[2]) > 0){
+    if(states[3]*(collideBoxY-states[2]) > 0){
       padY = Math.pow(states[3],2)/(2*leeway);
     }
-    if( (obstacle.ObY-states[2]) > 0 ){
+    if( (collideBoxY-states[2]) > 0 ){
       top -= padY;
     }
     else{
@@ -164,6 +223,65 @@ class twoTwo extends SafeSet{
   */
 }
 
+// Set object that represents a basic circle in Dubins state space
+class dubinsCircle_Set extends SafeSet {
+  constructor(_radius){
+    super();
+    this.radius = _radius;
+  }
+  value(states){
+    return Math.pow(Math.pow(states[0],2)+Math.pow(states[1],2) , 0.5) - this.radius ;
+  }
+  // Method for calculating the gradient
+  gradV(states){
+    let norm = Math.pow(Math.pow(states[0],2)+Math.pow(states[1],2) , 0.5);
+    return [states[0]/norm,states[1]/norm,0];
+  }
+  // Method for displaying the value function on a grid
+  displayGrid(graphics,color,currentState,sweptStateX,sweptStateY){
+    this.drawFromState(graphics,2,color, 0, 0, this.radius)
+    return 0;
+  }
+  // Draw a circle given the state coordinates of its center and radius
+  drawFromState(graphics,linewidth,color, _x,_y,radius){
+    let center = graphics.mapper.mapStateToPosition(_x,_y);
+    this.drawCircle(graphics,linewidth,color, center[0],center[1],radius*graphics.mapper.Mxx);
+    return;
+  }
+  // Draw a circle using PIXI.graphics
+  drawCircle(graphics,linewidth,color,left,top,radius){
+    // Set a fill and line style
+    graphics.beginFill(color);
+    graphics.lineStyle(linewidth, 0x000000);
+
+    // Draw the circle
+    graphics.drawCircle(left,top,radius);
+    graphics.endFill();
+    return;
+  }
+}
+
+
+// Set object that represents a basic interval in double-integrator state space
+class dubIntInterval_Set extends SafeSet {
+  constructor(_width){
+    super();
+    this.width = _width;
+  }
+  value(states){
+    return Math.abs(states[0]) - this.width;
+  }
+  // Method for calculating the gradient
+  gradV(states){
+    let norm = Math.abs(states[0]);
+    return [states[0]/norm,0];
+  }
+  // Method for displaying the value function on a grid
+  displayGrid(graphics,color,currentState,sweptStateX,sweptStateY){
+    return 0;
+  }
+}
+
 // Safe Set loaded from MATLAB-dumped JSON in LSToolbox format
 class loaded_SafeSet extends SafeSet {
   constructor(name){
@@ -178,7 +296,7 @@ class loaded_SafeSet extends SafeSet {
         })
   }
   // Method for displaying the value function
-  displayGrid(graphics,color,currentState,sweptStateX,sweptStateY){
+  displayGrid(graphics,color,currentState,sweptStateX,sweptStateY,stateOffset){
     let reachableSet = this.reachset;
     let [lowEdgeIndex,highEdgeIndex] = this.nearIndices(currentState,true);
     let index = lowEdgeIndex;

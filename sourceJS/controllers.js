@@ -82,15 +82,24 @@ class Dubins_Contr extends Controller {
     super(_robot);
     this.Umax = _Umax;
     this.set = _set;
+
+    this.goal = new PIXI.Text('X',{font : '24px Gill Sans', fill : this.robot.tint});
+    this.goal.pivot.x = 10; this.goal.pivot.y = 12;
+    this.goal.x = graphics.mapper.mapStateToPosition(this.set[0],this.set[1])[0];
+    this.goal.y = graphics.mapper.mapStateToPosition(this.set[0],this.set[1])[1];
+    stage.addChild(this.goal);
   }
   // Method for updating the setpoint to be tracked
   updateSetpoint(_set){
     this.set = _set;
+    this.goal.x = graphics.mapper.mapStateToPosition(this.set[0],this.set[1])[0];
+    this.goal.y = graphics.mapper.mapStateToPosition(this.set[0],this.set[1])[1];
   }
   // Returns the current control value responding to the robot's state
   u(){
-    let trackAngle = Math.atan2(this.set[1] - this.robot.states[1],
-        this.set[0] - this.robot.states[0]);
+    let deltaX = this.set[0] - this.robot.states[0];
+    let deltaY = this.set[1] - this.robot.states[1];
+    let trackAngle = Math.atan2(deltaY,deltaX);
     /*
     if(this.robot.states[2] > Math.PI / +2 && trackAngle < Math.PI / -2) {
       trackAngle += 2*Math.PI;
@@ -109,6 +118,10 @@ class Dubins_Contr extends Controller {
     if(angleDifference > 0){
       Uout = -this.Umax;
     }
+    // Change setpoint if the robot has reached its goal
+    if(Math.abs(deltaX) < 0.5 && Math.abs(deltaY) < 0.5){
+      this.updateSetpoint(graphics.mapper.randomStateXY());
+    }
     return [Uout];
   }
 }
@@ -122,7 +135,7 @@ class Safe_Contr extends Controller {
   // Returns the current control value responding to the robot's state
   u(momentum){
     let u_out = [];
-    console.log(momentum);
+    //console.log(momentum);
     // For each control output...
     for(var curU=0;curU<this.robot.controlCoefficient().length;curU++){
       // maximize the Hamiltonian (f^T p) within the maximum output afforded
@@ -161,6 +174,32 @@ class Intervention_Contr extends Controller {
       //console.log(this.intervening_set.value(this.robot.states),this.trigger_level);
       // If we have trespassed the reachset, interrupt with the safe policy
       return this.safer.u(this.intervening_set.gradV(this.robot.states) );
+    }
+    else{
+      // If we're still safe, continue with the default tracking behavior
+      return this.tracker.u();
+    }
+  }
+}
+
+// Intervention controller that swaps between PD and Safe controls
+// interfaces with palettes of safesets
+class PaletteIntervention_Contr extends Controller {
+  constructor(_robot,_safesetPalette,_mySetID,_maxU,_maxD,_tracker){
+    super(_robot);
+    this.tracker = _tracker;
+    this.safer   = new Safe_Contr(_robot,_maxU);
+    this.intervening_sets = _safesetPalette;
+    this.setID = _mySetID;
+    this.trigger_level = 0;
+  }
+  // Method that returns the current input responding to the current state
+  u(){
+    // Check if the reachset value function is below the triggering level set
+    if( this.intervening_sets.value(this.setID,this.robot.states) < this.trigger_level ){
+      //console.log(this.intervening_set.value(this.robot.states),this.trigger_level);
+      // If we have trespassed the reachset, interrupt with the safe policy
+      return this.safer.u(this.intervening_sets.gradV(this.setID,this.robot.states) );
     }
     else{
       // If we're still safe, continue with the default tracking behavior

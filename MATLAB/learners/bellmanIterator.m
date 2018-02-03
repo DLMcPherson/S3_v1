@@ -2,7 +2,8 @@
 
 % Load in the flinch data
 %flinches = loadFlinchData('supervisorDavidFlinches1516841518310.dat')
-flinches = loadFlinchData('supervisorDavidFlinches1516914792649.dat')
+%flinches = loadFlinchData('supervisorDavidFlinches1516914792649.dat')
+flinches = loadFlinchData('supervisorFlinches1517612485181Dexter.dat')
 
 % Load in the initial reachable set (to be modified)
 load('../../reachableSets/dubins_reachset.mat');
@@ -12,6 +13,9 @@ visualizeLevelSet(g,data,'surface',0,"before adjustment")
 flincher = -1
 for curFlinch = 1:length(flinches.list)
     flinchState = flinches.list(curFlinch).state;
+    if(any(flinchState > g.max) || any(flinchState < g.min))
+        continue
+    end
     for angle = g.min(3):g.dx(3):g.max(3)
         state = flinchState;
         state(1) = flinchState(1)*cos(angle)-flinchState(2)*sin(angle);

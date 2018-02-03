@@ -62,57 +62,40 @@ if(saveToCloud){
 let stage = new PIXI.Container();
   // Graphics object for lines and squares and such...
 let graphics = new PIXI.Graphics();
-graphics.mapper = new ScreenXYMap(70,0,0,70,630,350);
+graphics.mapper = new ScreenXYMap(30,0,0,30,630,350);
 stage.addChild(graphics);
 
-// Goal point Marker
-const goalX = 1 ; const goalY = -4;
+// Obstacles
+let dubinsCircles = new LearnedPalette("dubins");
+let obstacleList = [];
+for(let ii = 0; ii < 10; ii++){
+  let pos = graphics.mapper.randomStateXY();
+  obstacleList.push(new RoundObstacle(pos[0],pos[1],1,dubinsCircles))
+}
+let obstacles = new Obstaclescape(obstacleList)
 
 // Robot Object
-let Umax = 1
-/* // 2D Quadrotor Robot
-let obstacle = new BoxObstacle(0,0,1,1);
-let robot = new QuadrotorRobot([-6,0,3,0]);
-stage.addChild(robot);
-let intervener = new Intervention_Contr(robot,
-    new twoTwo(new loaded_SafeSet("dubInt"),new loaded_SafeSet("dubIntV2") ),
-    Umax,0,
-    new Concat_Contr(robot,[new PD_Contr(robot,goalX,0),new PD_Contr(robot,goalY,2)]) );
-intervener.trigger_level = robot.width/(2*graphics.mapper.Myy);
-*/
+let Umax = 1;
 ///* // Dubins Car Robot
-let robot = new DubinsRobot([-4,3,0],3,0xFF745A);
-stage.addChild(robot);
-let originalSafeset = new loaded_SafeSet("dubins");
-let pixelwiseSafeset = new loaded_SafeSet("dubinsPixelwise");
-let LSPickerSafeset = new loaded_SafeSet("dubinsLSPicker");
-let BellmanIteratedSafeset = new loaded_SafeSet("dubinsBI");
-let intervener = new Intervention_Contr(robot,
-    originalSafeset,
-    Umax,0,
-    new Dubins_Contr(robot,Umax,[goalX,goalY]));
-intervener.trigger_level = robot.height/(2*graphics.mapper.Mxx) * Math.SQRT2;
-let obstacle = new RoundObstacle(0,0,1);
+let robots = [];
+let robotControllers = [];
+//robots.push(new DubinsRobot([-4,3,0],3,0xFF745A));
+for(let robotNum = 0; robotNum < 10; robotNum++){
+  let pos = graphics.mapper.randomStateXY();
+  robots[robotNum] = new DubinsRobot([pos[0],pos[1],0],3,0x24EB98);
 
-let robot2 = new DubinsRobot([4,3,0],3,0x24EB98);
-stage.addChild(robot2);
-let intervener2 = new Intervention_Contr(robot2,
-    originalSafeset,
-    Umax,0,
-    new Dubins_Contr(robot2,Umax,[goalX,goalY]));
-intervener2.trigger_level = robot2.height/(2*graphics.mapper.Mxx) * Math.SQRT2;
-//*/
-/* // 1D Quadrotor Robot
-let robot = new VerticalQuadrotorRobot([3,0]);
-stage.addChild(robot);
-let intervener = new Intervention_Contr(robot,
-  new loaded_SafeSet("dubIntV2"),Umax,0,new PD_Contr(robot,goalY,0) );
-intervener.trigger_level = robot.height/(2*graphics.mapper.Mxx);
-let obstacle = new BoxObstacle(0,0,1,1);
-*/
+  robots[robotNum].width /= 2;
+  robots[robotNum].height /= 2;
 
-// Render the Obstacle
-obstacle.renderAugmented(intervener.trigger_level);
+  stage.addChild(robots[robotNum]);
+
+  let intervener = new PaletteIntervention_Contr(robots[robotNum],
+      obstacles,0,
+      Umax,0,
+      new Dubins_Contr(robots[robotNum],Umax,graphics.mapper.randomStateXY() ));
+  intervener.trigger_level = robots[robotNum].height/(2*graphics.mapper.Mxx) * Math.SQRT2;
+  robotControllers[robotNum] = intervener;
+}
 
 // ===================== THE MAIN EVENT ================== // 3
 
@@ -126,16 +109,14 @@ window.setInterval(function() {
   clock += delT;
   now = Date.now();
   // Robot dynamics
-  let u = intervener.u();
-  let u2 = intervener2.u();
-  //console.log(clock,u)
-  robot.update(delT,u);
-  robot2.update(delT,u2);
+  for(let robotNum = 0; robotNum < robots.length; robotNum++){
+    robots[robotNum].update(delT,robotControllers[robotNum].u() )
+  }
   // Rendering the stage
   graphics.clear();
-  obstacle.render(intervener.trigger_level);
-  intervener.intervening_set.displayGrid(graphics,robot.tint,robot.states,0,1);
-  intervener2.intervening_set.displayGrid(graphics,robot2.tint,robot2.states,0,1);
+  obstacles.render();
+  //intervener.intervening_sets.displayGrid(intervener.setID,graphics,robot.tint,robot.states,0,1);
+  //intervener2.intervening_sets.displayGrid(intervener2.setID,graphics,robot2.tint,robot2.states,0,1);
   renderer.render(stage);
 },2)
 
@@ -154,28 +135,24 @@ document.addEventListener("keydown",function(event) {
   */
   console.log(key);
   if(key == 49){
-    intervener.intervening_set = originalSafeset;
+    intervener.setID = 0;
+    //intervener.intervening_set = originalSafeset;
     //intervener = intervenerOri;
   }
   if(key == 50){
-    intervener.intervening_set = pixelwiseSafeset;
+    intervener.setID = 1;
+    //intervener.intervening_set = pixelwiseSafeset;
     //intervener = intervenerPix;
   }
   if(key == 51){
-    intervener.intervening_set = LSPickerSafeset;
+    intervener.setID = 2;
+    //intervener.intervening_set = LSPickerSafeset;
     //intervener = intervenerLSP;
   }
   if(key == 52){
-    intervener.intervening_set = BellmanIteratedSafeset;
+    intervener.setID = 3;
+    //intervener.intervening_set = BellmanIteratedSafeset;
     //intervener = intervenerBIt;
-  }
-  // Debugging report
-  if(saveToCloud){
-    firebase.push({
-      date : Date.now(),
-      state : robot.states,
-      ip : userip,
-    })
   }
   // End
 })
@@ -183,9 +160,15 @@ document.addEventListener("keydown",function(event) {
 // ====================== Mouse Listener Loop ========================= //
 document.addEventListener("mousedown",function(event) {
   let mousePosition = renderer.plugins.interaction.mouse.global;
-  intervener.tracker.updateSetpoint([
-      graphics.mapper.mapPositionToState(mousePosition.x,mousePosition.y)[0],
-      graphics.mapper.mapPositionToState(mousePosition.x,mousePosition.y)[1]]);
+  let mouseState = graphics.mapper.mapPositionToState(mousePosition.x,mousePosition.y);
+  for(let obNum = 0; obNum < obstacles.obstacles.length ; obNum++){
+    let curObstacle = obstacles.obstacles[obNum];
+    console.log(curObstacle.collisionSet.value([mouseState[0],mouseState[1],0]));
+    if(curObstacle.collisionSet.value([mouseState[0],mouseState[1],0]) < 0){
+      obstacles.obstacleDestroyed[obNum] = true;
+      console.log('obstacle destroyed')
+    }
+  }
   // End
 })
 
