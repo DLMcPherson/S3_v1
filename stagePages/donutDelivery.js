@@ -78,9 +78,10 @@ for(let ii = 0; ii < 20; ii++){
   obstacleList.push(new RoundObstacle(pos[0],pos[1],1,dubinsCircles))
 }
 let obstacles = new Obstaclescape(obstacleList)
-obstacles.obstacleUndetected[2] = true;
-obstacles.obstacleUndetected[7] = true;
-obstacles.obstacleUndetected[9] = true;
+for(let ii = 0; ii < 20; ii++){
+  if(ii % 2 == 0)
+    obstacles.obstacleUndetected[ii] = true;
+}
 
 // Robot Object
 let Umax = 1;
