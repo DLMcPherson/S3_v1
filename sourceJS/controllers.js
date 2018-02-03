@@ -121,6 +121,10 @@ class Dubins_Contr extends Controller {
     // Change setpoint if the robot has reached its goal
     if(Math.abs(deltaX) < 0.5 && Math.abs(deltaY) < 0.5){
       this.updateSetpoint(graphics.mapper.randomStateXY());
+      if(ArcadeScore != undefined){
+        ArcadeScore += 10;
+        console.log(ArcadeScore);
+      }
     }
     return [Uout];
   }

@@ -30,7 +30,7 @@ class Obstacle {
   }
   // Method for displaying the value function on a grid
   displayGrid(setID,graphics,color,currentState,sweptStateX,sweptStateY){
-    this.avoidSets.displayGrid(setID,graphics,color,this.offsetStates(currentState),sweptStateX,sweptStateY);
+    this.avoidSets.displayGrid(setID,graphics,color,this.offsetStates(currentState),sweptStateX,sweptStateY,this.offset);
     return 0;
   }
 }
@@ -149,6 +149,9 @@ class RoundObstacle extends Obstacle{
     this.collisionSet = new dubinsCircle_Set(_ObW);
     this.ObW = _ObW;
     this.ObH = _ObW;
+  }
+  collisionSetValue(states){
+    return this.collisionSet.value(this.offsetStates(states));
   }
   // Rendering standard obstacle
   render(){

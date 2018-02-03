@@ -23,8 +23,8 @@ class SafeSetPalette {
     return this.safesets[setID].gradV(states);
   }
   // Method for displaying the value function on a grid
-  displayGrid(setID,graphics,color,currentState,sweptStateX,sweptStateY){
-    this.safesets[setID].displayGrid(graphics,color,currentState,sweptStateX,sweptStateY);
+  displayGrid(setID,graphics,color,currentState,sweptStateX,sweptStateY,offset){
+    this.safesets[setID].displayGrid(graphics,color,currentState,sweptStateX,sweptStateY,offset);
     return 0;
   }
   constructor(safesetArray){
@@ -307,8 +307,15 @@ class loaded_SafeSet extends SafeSet {
         index[sweptStateY] = indexY;
         let valuation = this.griddedValue(index);
         // Display this gridpoint
+        let gX = this.indexToState(indexX,sweptStateX);
+        let gY = this.indexToState(indexY,sweptStateY);
+        if(stateOffset != undefined){
+          gX += stateOffset[0];
+          gY += stateOffset[1];
+          console.log('grid shifted')
+        }
         let mappedState =
-          graphics.mapper.mapStateToPosition(this.indexToState(indexX,sweptStateX),this.indexToState(indexY,sweptStateY) );
+          graphics.mapper.mapStateToPosition(gX, gY);
           // Choose the correct color
         if(valuation > 0){
         }
