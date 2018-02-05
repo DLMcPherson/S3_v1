@@ -32,7 +32,7 @@ class ScreenXYMap {
     let y_state = (-this.Myx * x + this.Mxx * y)/determinant;
     return([x_state,y_state]);
   }
-  // Returns a random point on the screen
+  // Returns a random point on the screen as a X-Y tuple
   randomScreenXY(){
     return [Math.random()*SCREEN_WIDTH,Math.random()*SCREEN_HEIGHT];
   }
