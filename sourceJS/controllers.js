@@ -42,8 +42,10 @@ class PD_Contr extends Controller {
   constructor(_robot,_set,_controlledState){
     super(_robot);
     this.setpoint = _set;
+    // PID Gains
     this.K_P = -2;
     this.K_D = -2;
+    // Which indexed state to reference errors from
     this.controlledState = _controlledState;
     // Memory variables
     this.lastU = 0;
@@ -61,7 +63,6 @@ class PD_Contr extends Controller {
     // Store and send the resultant control
     this.lastU = resultU;
     return [resultU];
-    //return [this.PID(this.robot.states[0],this.set,this.robot.states[1])];
   }
 }
 
@@ -76,13 +77,16 @@ class Zero_Contr extends Controller {
   }
 }
 
-// Dubins Car steering class
+// Dubins Car steering class that ever-naively turns towards the setpoint
 class Dubins_Contr extends Controller {
   constructor(_robot,_Umax,_set){
     super(_robot);
+    // Maximum steering allowed (scalar)
     this.Umax = _Umax;
+    // Setpoint x,y-tuple (array)
     this.set = _set;
 
+    // Create the marker that designates the robots current goalpoint
     this.goal = new PIXI.Text('X',{font : '24px Gill Sans', fill : this.robot.tint});
     this.goal.pivot.x = 10; this.goal.pivot.y = 12;
     this.goal.x = graphics.mapper.mapStateToPosition(this.set[0],this.set[1])[0];
@@ -92,25 +96,22 @@ class Dubins_Contr extends Controller {
   // Method for updating the setpoint to be tracked
   updateSetpoint(_set){
     this.set = _set;
+    // Move the marker to match the new setpoint
     this.goal.x = graphics.mapper.mapStateToPosition(this.set[0],this.set[1])[0];
     this.goal.y = graphics.mapper.mapStateToPosition(this.set[0],this.set[1])[1];
   }
   // Returns the current control value responding to the robot's state
   u(){
+    // Calculate the angle of the ray from the robot's current state to the
+    // setpoint via the arctangent
     let deltaX = this.set[0] - this.robot.states[0];
     let deltaY = this.set[1] - this.robot.states[1];
     let trackAngle = Math.atan2(deltaY,deltaX);
-    /*
-    if(this.robot.states[2] > Math.PI / +2 && trackAngle < Math.PI / -2) {
-      trackAngle += 2*Math.PI;
-    }
-    if(this.robot.states[2] < Math.PI / -2 && trackAngle > Math.PI / +2) {
-      trackAngle -= 2*Math.PI;
-    }
-    let angleDifference = this.robot.states[2] - trackAngle;
-    */
+    // Make the robot turn the shortest angular distance necessary to get to the
+    // desired angle by wrapping to be between -pi and pi
     let angleDifference = this.robot.states[2] - trackAngle;
     angleDifference = Math.atan2(Math.sin(angleDifference),Math.cos(angleDifference));
+    // Turn in the direction of the angular difference
     let Uout = 0
     if(angleDifference < 0){
       Uout = this.Umax;
@@ -127,6 +128,7 @@ class Dubins_Contr extends Controller {
         console.log(ArcadeScore);
       }
     }
+    // Return
     return [Uout];
   }
 }
@@ -167,9 +169,13 @@ class Safe_Contr extends Controller {
 class Intervention_Contr extends Controller {
   constructor(_robot,_safeset,_maxU,_maxD,_tracker){
     super(_robot);
+    // Default controller for when the system is not in danger
     this.tracker = _tracker;
+    // Safety controller that will always steer the system out of danger
     this.safer   = new Safe_Contr(_robot,_maxU);
+    // Safeset for determining danger status and deciding which control to use
     this.intervening_set = _safeset;
+    // Added padding to the safeset for factoring in robot width
     this.trigger_level = 0;
   }
   // Method that returns the current input responding to the current state
@@ -192,10 +198,15 @@ class Intervention_Contr extends Controller {
 class PaletteIntervention_Contr extends Controller {
   constructor(_robot,_safesetPalette,_mySetID,_maxU,_maxD,_tracker){
     super(_robot);
+    // Default controller for when the system is not in danger
     this.tracker = _tracker;
+    // Safety controller that will always steer the system out of danger
     this.safer   = new Safe_Contr(_robot,_maxU);
+    // Safeset for determining danger status and deciding which control to use
     this.intervening_sets = _safesetPalette;
+    // Which safeset to act on inside the palette
     this.setID = _mySetID;
+    // Added padding to the safeset for factoring in robot width
     this.trigger_level = 0;
   }
   // Method that returns the current input responding to the current state
