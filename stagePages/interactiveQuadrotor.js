@@ -69,7 +69,7 @@ let obstacle = new BoxObstacle(0,0,1,1);
 let robot = new QuadrotorRobot([-6,0,3,0]);
 stage.addChild(robot);
 let intervener = new Intervention_Contr(robot,
-    new twoTwo(new loaded_SafeSet("dubInt"),new loaded_SafeSet("dubIntV2") ),
+    new twoTwo(new loaded_SafeSet("dubInt"),new loaded_SafeSet("dubInt") ),
     Umax,0,
     new Concat_Contr(robot,[new PD_Contr(robot,goalX,0),new PD_Contr(robot,goalY,2)]) );
 intervener.trigger_level = robot.width/(2*graphics.mapper.Myy);

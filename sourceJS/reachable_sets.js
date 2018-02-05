@@ -1,5 +1,6 @@
 // Safe set 'virtual' class
 class SafeSet {
+  // Method that returns the value at the given state
   value(states){
     return 0;
   }
@@ -15,20 +16,22 @@ class SafeSet {
 
 // Safe set palette 'virtual' class
 class SafeSetPalette {
+  constructor(safesetArray){
+    this.safesets = safesetArray;
+  }
+  // Return the value for the sampled safeset
   value(setID,states){
     return this.safesets[setID].value(states);
   }
-  // Method for calculating the gradient
+  // Return the gradient for the sampled safeset
   gradV(setID,states){
     return this.safesets[setID].gradV(states);
   }
-  // Method for displaying the value function on a grid
+  // Display the sampled value function
   displayGrid(setID,graphics,color,currentState,sweptStateX,sweptStateY,offset){
-    this.safesets[setID].displayGrid(graphics,color,currentState,sweptStateX,sweptStateY,offset);
+    this.safesets[setID].displayGrid(graphics,color,currentState,
+        sweptStateX,sweptStateY,offset);
     return 0;
-  }
-  constructor(safesetArray){
-    this.safesets = safesetArray;
   }
 }
 
@@ -41,25 +44,6 @@ class LearnedPalette extends SafeSetPalette {
         new loaded_SafeSet(filename+"LSPicker"),
         new loaded_SafeSet(filename+"BI")
         ]);
-  }
-}
-
-class PaletteWrapper {
-  constructor(palette,whichSet){
-    this.palette = palette;
-    this.mySet = whichSet;
-  }
-  value(states){
-    return this.palette.value(mySet,states);
-  }
-  // Method for calculating the gradient
-  gradV(states){
-    return this.palette.gradV(mySet,states);
-  }
-  // Method for displaying the value function on a grid
-  displayGrid(graphics,color,currentState,sweptStateX,sweptStateY){
-    this.palette.displayGrid(mySet,graphics,color,currentState,sweptStateX,sweptStateY);
-    return 0;
   }
 }
 
@@ -161,7 +145,8 @@ class twoTwo extends SafeSet{
     }
     return gradient;
   }
-  // Method for displaying the value function = HACK: Assuming is double quadrotor with square obstacle in global reference
+  // Method for displaying the value function
+  // HACK: This assumes the system is a double integrator with a square obstacle
   displayGrid(graphics,color,currentState,sweptStateX,sweptStateY){
     let states = currentState;
     let collideBoxX = 0; let collideBoxY = 0; let collideBoxW = 1; let collideBoxH = 1;
@@ -229,6 +214,7 @@ class dubinsCircle_Set extends SafeSet {
     super();
     this.radius = _radius;
   }
+  // Returns the value function (signed distance) at the given state
   value(states){
     return Math.pow(Math.pow(states[0],2)+Math.pow(states[1],2) , 0.5) - this.radius ;
   }
@@ -268,6 +254,7 @@ class dubIntInterval_Set extends SafeSet {
     super();
     this.width = _width;
   }
+  //  Returns the value function (signed distance) at the given state
   value(states){
     return Math.abs(states[0]) - this.width;
   }
@@ -297,30 +284,34 @@ class loaded_SafeSet extends SafeSet {
   }
   // Method for displaying the value function
   displayGrid(graphics,color,currentState,sweptStateX,sweptStateY,stateOffset){
+    graphics.lineStyle(0, 0x000000);
+    // Determine which slice of the reachable set to display
     let reachableSet = this.reachset;
     let [lowEdgeIndex,highEdgeIndex] = this.nearIndices(currentState,true);
     let index = lowEdgeIndex;
-    graphics.lineStyle(0, 0x000000);
+    // Loop through all gridpoints
     for(let indexX = 0;indexX < reachableSet.gN[sweptStateX];indexX++){
       for(let indexY = 0;indexY < reachableSet.gN[sweptStateY];indexY++){
+        // Find the value at the current gridpoint
         index[sweptStateX] = indexX;
         index[sweptStateY] = indexY;
         let valuation = this.griddedValue(index);
-        // Display this gridpoint
+        // Translate grid-coordinates to screen coordinates
         let gX = this.indexToState(indexX,sweptStateX);
         let gY = this.indexToState(indexY,sweptStateY);
+          // if necessary, offset the state by the given shift
         if(stateOffset != undefined){
           gX += stateOffset[0];
           gY += stateOffset[1];
           console.log('grid shifted')
         }
-        let mappedState =
-          graphics.mapper.mapStateToPosition(gX, gY);
-          // Choose the correct color
+        let mappedState = graphics.mapper.mapStateToPosition(gX, gY);
+        // Display the gridpoint according to the value at this gridpoint
         if(valuation > 0){
+          // optional case for displaying safe zone
         }
         else{
-          // this is the unsafe zone
+          // display the unsafe zone
           graphics.beginFill(color);
             // Draw the circle
           graphics.drawCircle(mappedState[0],mappedState[1],8);
@@ -341,14 +332,15 @@ class loaded_SafeSet extends SafeSet {
   }
   // Method for calculating the gradient at the given state
   gradV(states){
+    // Use the second gradient calculation method
     return this.gradV2(states);
   }
+  // Gradient calculated by finite differencing of length g.dx and centered at
+  // the current state, resulting in a continuous gradient
   gradV2(states){
-    // Calculate the patial along each axis
+    // Calculate the partial along each axis
     let gradient = [];
     for(var xDim=0;xDim<states.length;xDim++){
-      // Project along the current axis to the hyperplane intersecting the
-      // nearest gridpoints on both sides
         // Clone the state vector
       let statesLow = states.slice(0);
       let statesHigh = states.slice(0);
@@ -362,6 +354,8 @@ class loaded_SafeSet extends SafeSet {
     //
     return gradient;
   }
+  // Gradient calculated by finite differencing between nearest gridpoints to
+  // current state, resulting in a piecewise constant gradient
   gradV1(states){
     // Find the nearest neighbors
     let [lowEdgeIndex,highEdgeIndex] = this.nearIndices(states,true);
@@ -388,30 +382,6 @@ class loaded_SafeSet extends SafeSet {
   nearIndices(_states,gridwrap){
     // Handle states outside of the grid
     let states = _states.slice(); // only round a clone of the state vector
-    /*
-    for(var xDim=0;xDim<states.length;xDim++){
-      if(states[xDim] < this.reachset.gmin[xDim]){
-        if(this.reachset.gperiodicity[xDim]){
-          // if axis is periodic, wraparound the state
-          states[xDim] += this.reachset.gmax[xDim] - this.reachset.gmin[xDim];
-        }
-        else{
-          // if axis is non-periodic, project onto the nearest gridpoint
-          states[xDim] = this.reachset.gmin[xDim];
-        }
-      }
-      if(states[xDim] > this.reachset.gmax[xDim]){
-        if(this.reachset.gperiodicity[xDim]){
-          // if axis is periodic, wraparound the state
-          states[xDim] -= this.reachset.gmax[xDim] - this.reachset.gmin[xDim];
-        }
-        else{
-          // if axis is non-periodic, project onto the nearest gridpoint
-          states[xDim] = this.reachset.gmax[xDim];
-        }
-      }
-    }
-    */
     // Initialize the nearest neighbor index arrays
     let lowEdgeIndex = [];
     let highEdgeIndex = [];
@@ -426,9 +396,12 @@ class loaded_SafeSet extends SafeSet {
           (states[xDim]-this.reachset.gmin[xDim])/
               this.reachset.gdx[xDim]
                   );
+      // if the function is not handling grid wrapping itself, ensure that all
+      // indices are within the limits of the grid which the reachset is defined
+      // on. Either constrain to limits or wrap around depending on periodicity
       if(gridwrap){
+        // if this state is periodic, then wrap around
         if(this.reachset.gperiodicity[xDim]){
-          //console.log(xDim,this.reachset.gperiodicity[xDim])
           if(lowEdgeIndex[xDim] < 0){
             //console.log("underflow ",states[xDim],lowEdgeIndex[xDim]);
             lowEdgeIndex[xDim] += this.reachset.gN[xDim];
@@ -446,7 +419,7 @@ class loaded_SafeSet extends SafeSet {
             highEdgeIndex[xDim] -= this.reachset.gN[xDim];
           }
         }
-        else{
+        else{ // otherwise just project the index into allowable indices
           if(lowEdgeIndex[xDim] < 0){
             lowEdgeIndex[xDim] = 0;
             //console.log("underbound");
@@ -500,7 +473,6 @@ class loaded_SafeSet extends SafeSet {
     // and FALSE flag was passed to nearIndices function accordingly
     for(var xDim=0;xDim<states.length;xDim++){
       if(this.reachset.gperiodicity[xDim]){
-        //console.log(xDim,this.reachset.gperiodicity[xDim])
         if(lowEdgeIndex[xDim] < 0){
           //console.log("underflow ",states[xDim],lowEdgeIndex[xDim]);
           lowEdgeIndex[xDim] += this.reachset.gN[xDim];
