@@ -185,9 +185,11 @@ class BoxObstacle extends Obstacle{
 
 // Circular obstacle designed for Dubins-Car system
 class RoundObstacle extends Obstacle{
-  constructor(_ObX,_ObY,_ObR,avoidSets){
+  constructor(_ObX,_ObY,_ObR,radiusTrim,avoidSets){
     super(_ObX,_ObY,avoidSets);
     this.ObR = _ObR;
+    this.trimmedObR = _ObR - radiusTrim;
+    this.color = 0x000000;
     // Offset vector (in the state space) that translates between global
     // coordinates and obstacle-relative coordinates for safeset
     this.offset = [_ObX,_ObY,0]; // TODO: Make obstacles system agnostic
@@ -196,12 +198,13 @@ class RoundObstacle extends Obstacle{
   }
   // Rendering standard obstacle
   render(){
-    this.drawFromState(graphics,5,0x4C1C13, this.ObX,this.ObY,this.ObR);
+    // Color used to be 0x4C1C13
+    this.drawFromState(graphics,5,this.color, this.ObX,this.ObY,this.trimmedObR);
     return;
   }
   // Rendering an obstacle with extra buffer distance added to all sides
   renderAugmented(pad){
-    this.drawFromState(graphics,0,0xcf4c34, this.ObX,this.ObY,this.ObR+pad);
+    this.drawFromState(graphics,0,0xcf4c34, this.ObX,this.ObY,this.trimmedObR+pad);
     this.render();
     return;
   }

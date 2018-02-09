@@ -91,16 +91,17 @@ let intervener = new Intervention_Contr(robot,
     originalSafeset,
     Umax,0,
     new Dubins_Contr(robot,Umax,[goalX,goalY]));
-intervener.trigger_level = robot.height/(2*graphics.mapper.Mxx) * Math.SQRT2;
-let obstacle = new RoundObstacle(0,0,1);
+//intervener.trigger_level = robot.height/(2*graphics.mapper.Mxx) * Math.SQRT2;
+let carRadius = 0.55;
+let obstacle = new RoundObstacle(0,0,1.8,carRadius);
 
 let robot2 = new DubinsRobot([4,3,0],3,0x24EB98);
-stage.addChild(robot2);
+//stage.addChild(robot2);
 let intervener2 = new Intervention_Contr(robot2,
     originalSafeset,
     Umax,0,
     new Dubins_Contr(robot2,Umax,[goalX,goalY]));
-intervener2.trigger_level = robot2.height/(2*graphics.mapper.Mxx) * Math.SQRT2;
+//intervener2.trigger_level = robot2.height/(2*graphics.mapper.Mxx) * Math.SQRT2;
 //*/
 /* // 1D Quadrotor Robot
 let robot = new VerticalQuadrotorRobot([3,0]);
@@ -133,11 +134,11 @@ window.setInterval(function() {
   robot2.update(delT,u2);
   // Rendering the stage
   graphics.clear();
-  obstacle.render(intervener.trigger_level);
+  obstacle.render();
   intervener.intervening_set.displayGrid(graphics,robot.tint,robot.states,0,1);
-  intervener2.intervening_set.displayGrid(graphics,robot2.tint,robot2.states,0,1);
+  //intervener2.intervening_set.displayGrid(graphics,robot2.tint,robot2.states,0,1);
   renderer.render(stage);
-},2)
+},10)
 
 // ====================== Keyboard Listener Loop ========================= //
 let key = null;

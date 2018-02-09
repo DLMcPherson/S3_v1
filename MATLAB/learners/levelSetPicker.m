@@ -1,6 +1,6 @@
 % Load in the flinch data
 %flinches = loadFlinchData('supervisorDavidFlinches1516841518310.dat')
-flinches = loadFlinchData('supervisorDavidFlinches1516914792649.dat')
+flinches = loadFlinchData('supervisorFlinches1518126409244Dexter.dat')
 
 % Load in the initial reachable set (to be modified)
 load('../../reachableSets/dubins_reachset.mat');

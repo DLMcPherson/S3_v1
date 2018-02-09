@@ -34,7 +34,9 @@ class ScreenXYMap {
 /* ===================== SETUP ================== */
 
 // Setup the PIXI renderer that handles interactive display and input inside the browser
-let renderer = PIXI.autoDetectRenderer(1400, 768);
+const SCREEN_WIDTH = 1400;
+const SCREEN_HEIGHT = 768;
+let renderer = PIXI.autoDetectRenderer(SCREEN_WIDTH, SCREEN_HEIGHT);
 renderer.backgroundColor = 0xffffff;
 renderer.roundPixels = true;
 
@@ -51,31 +53,14 @@ if(saveToCloud){
 let stage = new PIXI.Container();
   // Graphics object for lines and squares and such...
 let graphics = new PIXI.Graphics();
-graphics.mapper = new ScreenXYMap(70,0,0,70,630,350);
+//graphics.mapper = new ScreenXYMap(70,0,0,70,630,350);
+graphics.mapper = new ScreenXYMap(30,0,0,30,SCREEN_WIDTH/2,SCREEN_HEIGHT/2);
 stage.addChild(graphics);
-
-// Goal point Marker
-let goal = new PIXI.Text('X',{font : '24px Gill Sans', fill : 0x077f4d});
-goal.pivot.x = 10; goal.pivot.y = 12;
-const goalX = 1 ; const goalY = -4;
-goal.x = graphics.mapper.mapStateToPosition(goalX,goalY)[0];
-goal.y = graphics.mapper.mapStateToPosition(goalX,goalY)[1];
-stage.addChild(goal);
 
 // Robot Object
 let Umax = 1
-/* // 2D Quadrotor Robot
-let obstacle = new BoxObstacle(0,0,1,1);
-let robot = new QuadrotorRobot([-6,0,3,0]);
-stage.addChild(robot);
-let intervener = new Intervention_Contr(robot,
-    new twoTwo(new loaded_SafeSet("dubInt"),new loaded_SafeSet("dubIntV2") ),
-    Umax,0,
-    new Concat_Contr(robot,[new PD_Contr(robot,goalX,0),new PD_Contr(robot,goalY,2)]) );
-intervener.trigger_level = robot.width/(2*graphics.mapper.Myy);
-*/
 ///* // Dubins Car Robot
-let robot = new DubinsRobot([-4,3,0],3,0xFF745A);
+let robot = new DubinsRobot([-4,3,0],3,0xDDDDDD);
 stage.addChild(robot);
 let originalSafeset = new loaded_SafeSet("dubins");
 let pixelwiseSafeset = new loaded_SafeSet("dubinsPixelwise");
@@ -84,18 +69,10 @@ let BellmanIteratedSafeset = new loaded_SafeSet("dubinsBI");
 let intervener = new Intervention_Contr(robot,
     originalSafeset,
     Umax,0,
-    new Dubins_Contr(robot,Umax,[goalX,goalY]));
+    new Zero_Contr());
 intervener.trigger_level = robot.height/(2*graphics.mapper.Mxx);
-let obstacle = new RoundObstacle(0,0,1);
-//*/
-/* // 1D Quadrotor Robot
-let robot = new VerticalQuadrotorRobot([3,0]);
-stage.addChild(robot);
-let intervener = new Intervention_Contr(robot,
-  new loaded_SafeSet("dubIntV2"),Umax,0,new PD_Contr(robot,goalY,0) );
-intervener.trigger_level = robot.height/(2*graphics.mapper.Mxx);
-let obstacle = new BoxObstacle(0,0,1,1);
-*/
+let carRadius = 0.55;
+let obstacle = new RoundObstacle(0,0,1.8,carRadius);
 
 // Render the Obstacle
 obstacle.renderAugmented(intervener.trigger_level);
@@ -117,6 +94,10 @@ window.setInterval(function() {
   let u = control;
   //console.log(clock,u)
   robot.update(delT,u);
+  let robotScreenPosition = graphics.mapper.mapStateToPosition(robot.states[0],robot.states[1]);
+  if(robotScreenPosition[0] > SCREEN_WIDTH || robotScreenPosition[0] < 0 || robotScreenPosition[1] > SCREEN_HEIGHT || robotScreenPosition[1] < 0){
+    robot.states = [-4,3,0];
+  }
   // Rendering the stage
   graphics.clear();
   obstacle.render(intervener.trigger_level);
@@ -154,6 +135,21 @@ document.addEventListener("keydown",function(event) {
       state : robot.states,
       ip : userip,
     })
+  }
+  // End
+})
+document.addEventListener("keyup",function(event) {
+  // Log time and key
+  key = event.keyCode;
+  console.log(key);
+  if(key == 37 || key == 65){
+    control = [0];
+  }
+  if(key == 38 || key == 40 || key == 87 || key == 83){
+    control = [0];
+  }
+  if(key == 39 || key == 68){
+    control = [0];
   }
   // End
 })

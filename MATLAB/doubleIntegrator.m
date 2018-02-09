@@ -1,7 +1,7 @@
 function [dataT,g,data0] = doubleIntegrator()
 
 %% Should we export the final reachable set?
-saveData = true;
+saveData = false;
 
 %% Grid
 grid_min = [-10; -5]; % Lower corner of computation domain

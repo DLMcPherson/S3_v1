@@ -43,6 +43,7 @@ class Robot extends PIXI.Sprite {
     super(texture);
     this.pivot.x = 50 ; this.pivot.y = 50;
     this.width = 100 ; this.height = 100;
+    this.spinout = 0;
     // State Vector
     this.states = [0,0,0];
     // Display State
@@ -184,14 +185,22 @@ class DubinsRobot extends Robot {
         graphics.mapper.mapStateToPosition(this.states[0],this.states[1]);
     this.x =  mappedState[0];
     this.y =  mappedState[1];
-    this.rotation = this.states[2] + 3.1415/2;
+    if(this.spinout > 0){
+      this.rotation += 6.2830/100;
+      this.spinout -= 1;
+    }
+    else{
+      this.rotation = this.states[2] + 3.1415/2;
+    }
   }
   // Constructor initializes PIXI.Sprite members fitting the quadrotor Texture
   // and sets initial state data
   constructor(initial_state,velocity,tint){
     // Image
-    super(PIXI.Texture.fromImage("../GrayDubinsCar.png"));
-    this.width = 80 ; this.height = 80;
+    super(PIXI.Texture.fromImage("../DubinsCarV2.png"));
+    this.width = 1.1 * graphics.mapper.Mxx;
+    this.height = 1.1 * graphics.mapper.Mxx;
+//    this.width = 80 * 3/7; this.height = 80 * 3/7;
     this.pivot.x = 100 ; this.pivot.y = 100;
     this.tint = tint;
     // State Vector

@@ -36,7 +36,7 @@ class ScreenXYMap {
 
 /* ===================== SETUP ================== */
 
-// Setup the PIXI renderer that handles interactive display and input inside the browser
+// Setup the PIXI renderer that handles interactive display and input
 let renderer = PIXI.autoDetectRenderer(1400, 768);
 renderer.backgroundColor = 0xffffff;
 renderer.roundPixels = true;
@@ -54,41 +54,29 @@ if(saveToCloud){
 let stage = new PIXI.Container();
   // Graphics object for lines and squares and such...
 let graphics = new PIXI.Graphics();
-graphics.mapper = new ScreenXYMap(70,0,0,70,1030,350);
+//graphics.mapper = new ScreenXYMap(70,0,0,70,1030,350);
+const SCREEN_WIDTH = 1400;
+const SCREEN_HEIGHT = 768;
+graphics.mapper = new ScreenXYMap(30,0,0,30,SCREEN_WIDTH/2,SCREEN_HEIGHT/2);
 stage.addChild(graphics);
 
 // Robot Object
 let Umax = 1
-/* // 2D Quadrotor Robot
-let robot = new QuadrotorRobot([-6,0,3,0]);
-stage.addChild(robot);
-let intervener = new Intervention_Contr(robot,
-    new twoTwo(new loaded_SafeSet("dubIntV2"),new loaded_SafeSet("dubIntV2") ),
-    Umax,0,
-    new Concat_Contr(robot,[new PD_Contr(robot,goalX,0),new PD_Contr(robot,goalY,2)]) );
-intervener.trigger_level = robot.width/(2*graphics.mapper.Myy);
-let obstacle = new BoxObstacle(0,0,1,1);
-*/
-//* // Dubins Car Robot
-let robotY0 = [2.25,0.75,1,-1,-2,1.5,0.25,-0.25,-1.5,1.25,-1.25,-2.25,1.75,0.5,2,-0.5,-1.5,-0.75,0];
+let robotY0 = [-2,1.75,	0.25,	0.50,0, 1.50,	-0.750,	-1.75, 1.75, 1.25,	-1.25,
+    0.750,	0.750,	-2.25,	2.25,	-1.50,	-1.750,	-0.25,	-0.50,0,2,-1,0,-2,0,
+    1.25,1,-0.750,	0.25,	-1.50,	0.50,0,-1.25,	-1,1.50, 1,-0.50,0,2,-2.25,
+    -0.25,	2.25];
 let robotX0 = -12;
 let curY0 = 0;
-let robot = new DubinsRobot([robotX0,robotY0[curY0],0],3,0xFF745A);
+let robot = new DubinsRobot([robotX0,robotY0[curY0],0],3,0xDDDDDD);
 stage.addChild(robot);
 let trigger_level = robot.height/(2*graphics.mapper.Mxx);
-let obstacle = new RoundObstacle(0,0,1);
-//*/
-/* // 1D Quadrotor Robot
-let robot = new VerticalQuadrotorRobot([3,0]);
-stage.addChild(robot);
-let intervener = new Intervention_Contr(robot,
-  new loaded_SafeSet("dubIntV2"),Umax,0,new PD_Contr(robot,goalY,0) );
-intervener.trigger_level = robot.height/(2*graphics.mapper.Mxx);
-let obstacle = new BoxObstacle(0,0,1,1);
-*/
+let carRadius = 0.55;
+let obstacle = new RoundObstacle(0,0,1.8,carRadius);
+obstacle.color = 0xA62F27;
 
 // Render the Obstacle
-obstacle.render(trigger_level);
+obstacle.render();
 
 // ===================== THE MAIN EVENT ================== //
 
@@ -106,7 +94,7 @@ window.setInterval(function() {
   // Robot dynamics
   let u = [0];
     // Reset robot position after 8 seconds
-  if(robot.states[0] > 1){
+  if(robot.states[0] > 1 || 3*counter > 2-robotX0){
     curY0++;
     if(curY0 >= robotY0.length){
       curY0 = 0;
@@ -114,8 +102,13 @@ window.setInterval(function() {
     robot.states = [robotX0,robotY0[curY0],0];
     console.log("reset robot state to ",[robotX0,robotY0[curY0],0]);
     counter = 0;
+    robot.speed = 3;
   }
   robot.update(delT,u);
+  if(obstacle.collisionSetValue(robot.states) < 0){
+    robot.speed = 0;
+    robot.spinout = 0;
+  }
   // Rendering the stage
   renderer.render(stage);
 },2)
@@ -124,15 +117,15 @@ window.setInterval(function() {
 let key = null;
 let flinchData = {
   ip : userip,
-  bufferlevel : trigger_level,
   system : 'dubins',
 }
 flinchData.list = []
 document.addEventListener("keydown",function(event) {
   // Log time and key
   key = event.keyCode;
+  console.log(key);
   // 'S' is the save-to-file key
-  if(key == 83){
+  if(key == 90){
     var blob = new Blob([JSON.stringify(flinchData)], {type: "text/plain;charset=utf-8"});
     saveAs(blob, "supervisorFlinches"+Date.now()+".dat");
   }

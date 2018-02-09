@@ -15,7 +15,7 @@ g = createGrid(grid_min, grid_max, N, pdDims);
 %% target set
 R = 1.8;
 % data0 = shapeCylinder(grid,ignoreDims,center,radius)
-data0 = shapeCylinder(g, 3, [0; 0; 0], R);
+data0 = shapeRectangleByCorners(g, [-inf; -inf; -inf],[inf; 0; inf]);
 % also try shapeRectangleByCorners, shapeSphere, etc.
 
 %% time vector
@@ -93,6 +93,6 @@ if compTraj
   end
 end
 
-json_export_reachset(data(:,:,:,end),g,'dubins');
+json_export_reachset(data(:,:,:,end),g,'dubinsWall');
 
 end

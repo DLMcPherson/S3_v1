@@ -3,6 +3,12 @@
 const SCREEN_WIDTH = 1400;
 const SCREEN_HEIGHT = 768;
 
+var seed = 1;
+function random() {
+    var x = Math.sin(seed++) * 10000;
+    return x - Math.floor(x);
+}
+
 // Mapper class that scales state space to screen
 class ScreenXYMap {
   constructor(_Mxx,_Mxy,_Myx,_Myy,_bx,_by){
@@ -34,7 +40,7 @@ class ScreenXYMap {
   }
   // Returns a random point on the screen as a X-Y tuple
   randomScreenXY(){
-    return [Math.random()*SCREEN_WIDTH,Math.random()*SCREEN_HEIGHT];
+    return [random()*SCREEN_WIDTH,random()*SCREEN_HEIGHT];
   }
   randomStateXY(){
     let pos = this.randomScreenXY();
@@ -62,7 +68,7 @@ if(saveToCloud){
 let stage = new PIXI.Container();
   // Graphics object for lines and squares and such...
 let graphics = new PIXI.Graphics();
-graphics.mapper = new ScreenXYMap(30,0,0,30,630,350);
+graphics.mapper = new ScreenXYMap(30,0,0,30,SCREEN_WIDTH/2,SCREEN_HEIGHT/2);
 stage.addChild(graphics);
 
 let ArcadeScore = 0;
@@ -72,11 +78,29 @@ stage.addChild(arcadeScore);
 
 // Obstacles
 let dubinsCircles = new LearnedPalette("dubins");
+let dubinsWall = new LearnedPalette("dubins");
 let obstacleList = [];
+let carRadius = 0.55;
 for(let ii = 0; ii < 20; ii++){
-  let pos = graphics.mapper.randomStateXY();
-  obstacleList.push(new RoundObstacle(pos[0],pos[1],1,dubinsCircles))
+  //let pos = graphics.mapper.randomStateXY();
+  let posX = random()*30 - 15;
+  let posY = random()*24 - 12;
+  let blocked = false;
+  do {
+    posX = random()*30 - 15;
+    posY = random()*24 - 12;
+    blocked = false;
+    for(let obNum = 0; obNum < obstacleList.length; obNum++){
+      if( Math.pow((obstacleList[obNum].ObX - posX),2)
+            + Math.pow((obstacleList[obNum].ObY - posY),2)
+                < Math.pow((3 * obstacleList[obNum].ObR),2) ){
+        blocked = true;
+      }
+    }
+  }while(blocked)
+  obstacleList.push(new RoundObstacle(posX,posY,1.8,carRadius,dubinsCircles))
 }
+//obstacleList.push(new RoundObstacle(posX,posY,1.8,carRadius,dubinsCircles) )
 let obstacles = new Obstaclescape(obstacleList)
 for(let ii = 0; ii < 20; ii++){
   if(ii % 2 == 0)
@@ -91,20 +115,23 @@ let robotControllers = [];
 //robots.push(new DubinsRobot([-4,3,0],3,0xFF745A));
 for(let robotNum = 0; robotNum < 6; robotNum++){
   let pos = graphics.mapper.randomStateXY();
-  robots[robotNum] = new DubinsRobot([pos[0],pos[1],0],3,0x24EB98);
-
-  robots[robotNum].width /= 2;
-  robots[robotNum].height /= 2;
+  robots[robotNum] = new DubinsRobot([pos[0],pos[1],0],3,0xDDDDDD);
 
   stage.addChild(robots[robotNum]);
+
+  let goalPoint = graphics.mapper.randomStateXY();
+  goalPoint[0] = 20;
 
   let intervener = new PaletteIntervention_Contr(robots[robotNum],
       obstacles,0,
       Umax,0,
-      new Dubins_Contr(robots[robotNum],Umax,graphics.mapper.randomStateXY() ));
-  intervener.trigger_level = robots[robotNum].height/(2*graphics.mapper.Mxx) * Math.SQRT2;
+      new Dubins_Contr(robots[robotNum],Umax,goalPoint ));
+  //intervener.trigger_level = robots[robotNum].height/(2*graphics.mapper.Mxx) * Math.SQRT2;
   robotControllers[robotNum] = intervener;
 }
+robotControllers[0].setID = 0; robots[0].tint = 0x24EB98;
+robotControllers[1].setID = 0; robots[1].tint = 0x24EB98;
+
 robotControllers[2].setID = 2; robots[2].tint = 0xFF745A;
 robotControllers[3].setID = 2; robots[3].tint = 0xFF745A;
 
@@ -127,16 +154,24 @@ window.setInterval(function() {
     if(robots[robotNum].destroyed) continue;
     robots[robotNum].update(delT,robotControllers[robotNum].u() );
     // Check if the robot ran into an obstacle
+    let robotCollision = false;
     for(let obNum = 0; obNum < obstacles.obstacles.length ; obNum++){
       let curObstacle = obstacles.obstacles[obNum];
       if(obstacles.obstacleDestroyed[obNum] == false){
         if(curObstacle.collisionSetValue(robots[robotNum].states) < 0){
-          obstacles.obstacleDestroyed[obNum] = true;
-          robots[robotNum].destroyed = true;
-          robots[robotNum].speed = 0;
-          robots[robotNum].tint = 0x999999;
-          console.log('robot destroyed')
-          ArcadeScore -= 100;
+          robotCollision = true;
+          if(robots[robotNum].spinout == 0){
+            /*
+            obstacles.obstacleDestroyed[obNum] = true;
+            robots[robotNum].destroyed = true;
+            robots[robotNum].speed = 0;
+            */
+            //robots[robotNum].tint = 0x999999;
+
+            ArcadeScore -= 100;
+            console.log('robot mistake!');
+          }
+          robots[robotNum].spinout = 100;
         }
       }
     }
