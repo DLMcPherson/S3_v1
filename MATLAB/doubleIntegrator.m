@@ -1,7 +1,7 @@
 function [dataT,g,data0] = doubleIntegrator()
 
 %% Should we export the final reachable set?
-saveData = true;
+saveData = false;
 
 %% Grid
 grid_min = [-10; -5]; % Lower corner of computation domain
@@ -66,7 +66,7 @@ HJIextraArgs.deleteLastPlot = true; %delete previous plot as you update
   HJIPDE_solve(data0, tau, schemeData, 'zero', HJIextraArgs);
 
 if saveData
-  json_export_reachset(data(:,:,end),g);
+  json_export_reachset(data(:,:,end),g,"dubInt");
 end
 
 dataT = data(:,:,end);

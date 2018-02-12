@@ -7,7 +7,7 @@ compTraj = false;
 grid_min = [-6; -6; -pi]; % Lower corner of computation domain
 grid_max = [6; 6; pi];    % Upper corner of computation domain
 N = [49; 49; 41];         % Number of grid points per dimension
-pdDims = 3;               % 3rd dimension is periodic
+pdDims = [3];               % 3rd dimension is periodic
 g = createGrid(grid_min, grid_max, N, pdDims);
 % Use "g = createGrid(grid_min, grid_max, N);" if there are no periodic
 % state space dimensions
@@ -15,7 +15,7 @@ g = createGrid(grid_min, grid_max, N, pdDims);
 %% target set
 R = 1.8;
 % data0 = shapeCylinder(grid,ignoreDims,center,radius)
-data0 = shapeCylinder(g, 3, [0; 0; 0], R);
+data0 = shapeRectangleByCorners(g, [-inf; -inf; -inf],[inf; 0; inf]);
 % also try shapeRectangleByCorners, shapeSphere, etc.
 
 %% time vector
@@ -93,6 +93,6 @@ if compTraj
   end
 end
 
-json_export_reachset(data(:,:,:,end),g,'dubins');
+json_export_reachset(data(:,:,:,end),g,'dubinsWall');
 
 end
