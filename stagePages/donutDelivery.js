@@ -40,7 +40,7 @@ class ScreenXYMap {
   }
   // Returns a random point on the screen as a X-Y tuple
   randomScreenXY(){
-    return [random()*SCREEN_WIDTH,random()*SCREEN_HEIGHT];
+    return [random()*SCREEN_WIDTH,random()*(SCREEN_HEIGHT-120)+60];
   }
   randomStateXY(){
     let pos = this.randomScreenXY();
@@ -78,17 +78,17 @@ stage.addChild(arcadeScore);
 
 // Obstacles
 let dubinsCircles = new LearnedPalette("dubins");
-let dubinsWall = new LearnedPalette("dubins");
+let dubinsWalls = new CopiedPalette("dubinsWall");
 let obstacleList = [];
 let carRadius = 0.55;
 for(let ii = 0; ii < 20; ii++){
   //let pos = graphics.mapper.randomStateXY();
   let posX = random()*30 - 15;
-  let posY = random()*24 - 12;
+  let posY = random()*20 - 10;
   let blocked = false;
   do {
     posX = random()*30 - 15;
-    posY = random()*24 - 12;
+    posY = random()*20 - 10;
     blocked = false;
     for(let obNum = 0; obNum < obstacleList.length; obNum++){
       if( Math.pow((obstacleList[obNum].ObX - posX),2)
@@ -100,7 +100,9 @@ for(let ii = 0; ii < 20; ii++){
   }while(blocked)
   obstacleList.push(new RoundObstacle(posX,posY,1.8,carRadius,dubinsCircles))
 }
-//obstacleList.push(new RoundObstacle(posX,posY,1.8,carRadius,dubinsCircles) )
+//let wall = new RoundObstacle(0,-12.5,0.1,0,dubinsWalls);
+//wall.color = 0xEEEEEE;
+//obstacleList.push(wall )
 let obstacles = new Obstaclescape(obstacleList)
 for(let ii = 0; ii < 20; ii++){
   if(ii % 2 == 0)
@@ -113,9 +115,9 @@ let Umax = 1;
 let robots = [];
 let robotControllers = [];
 //robots.push(new DubinsRobot([-4,3,0],3,0xFF745A));
-for(let robotNum = 0; robotNum < 6; robotNum++){
+for(let robotNum = 0; robotNum < 3; robotNum++){
   let pos = graphics.mapper.randomStateXY();
-  robots[robotNum] = new DubinsRobot([pos[0],pos[1],0],3,0xDDDDDD);
+  robots[robotNum] = new DubinsRobot([-20,pos[1],0],3,0xDDDDDD);
 
   stage.addChild(robots[robotNum]);
 
@@ -130,13 +132,13 @@ for(let robotNum = 0; robotNum < 6; robotNum++){
   robotControllers[robotNum] = intervener;
 }
 robotControllers[0].setID = 0; robots[0].tint = 0x24EB98;
-robotControllers[1].setID = 0; robots[1].tint = 0x24EB98;
+//robotControllers[3].setID = 0; robots[3].tint = 0x24EB98;
 
-robotControllers[2].setID = 2; robots[2].tint = 0xFF745A;
-robotControllers[3].setID = 2; robots[3].tint = 0xFF745A;
+robotControllers[1].setID = 2; robots[1].tint = 0xFF745A;
+//robotControllers[4].setID = 2; robots[4].tint = 0xFF745A;
 
-robotControllers[4].setID = 3; robots[4].tint = 0x6333ed;
-robotControllers[5].setID = 3; robots[5].tint = 0x6333ed;
+robotControllers[2].setID = 3; robots[2].tint = 0x6333ed;
+//robotControllers[5].setID = 3; robots[5].tint = 0x6333ed;
 
 // ===================== THE MAIN EVENT ================== // 3
 

@@ -193,8 +193,8 @@ class RoundObstacle extends Obstacle{
     // Offset vector (in the state space) that translates between global
     // coordinates and obstacle-relative coordinates for safeset
     this.offset = [_ObX,_ObY,0]; // TODO: Make obstacles system agnostic
-    // Define a collision set for determining crashes and clicks
-    this.collisionSet = new dubinsCircle_Set(_ObR);
+    // Define a (loose) collision set for determining crashes and clicks
+    this.collisionSet = new dubinsCircle_Set(_ObR*0.95);
   }
   // Rendering standard obstacle
   render(){

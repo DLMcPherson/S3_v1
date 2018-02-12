@@ -47,6 +47,19 @@ class LearnedPalette extends SafeSetPalette {
   }
 }
 
+// Particular palette that automatically searches for the extensions for the
+// learned safe sets modified from one pase safe set
+class CopiedPalette extends SafeSetPalette {
+  constructor(filename){
+    let safeset = new loaded_SafeSet(filename);
+    super([safeset,
+        safeset,
+        safeset,
+        safeset
+        ]);
+  }
+}
+
 // Analytical double integrator safeset
 class DoubleIntegrator_SafeSet extends SafeSet {
   constructor(_leeway,_obP,_obL){
