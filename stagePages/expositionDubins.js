@@ -87,8 +87,8 @@ window.setInterval(function() {
   // Time management
   let delT = Date.now() - now;
   //delT *= 0.0005 * 2;
-  delT *= 0.0005 * 4;
   clock += delT;
+  delT *= 0.0005 * 4;
   now = Date.now();
   // Robot dynamics
   let u = control;
@@ -97,6 +97,10 @@ window.setInterval(function() {
   let robotScreenPosition = graphics.mapper.mapStateToPosition(robot.states[0],robot.states[1]);
   if(robotScreenPosition[0] > SCREEN_WIDTH || robotScreenPosition[0] < 0 || robotScreenPosition[1] > SCREEN_HEIGHT || robotScreenPosition[1] < 0){
     robot.states = [-4,3,0];
+  }
+  // End this phase after 1 Minute
+  if(clock > 60*1000){
+    document.location.href = "http://localhost:3000/stagePages/dataCollection.html";
   }
   // Rendering the stage
   graphics.clear();
@@ -153,18 +157,6 @@ document.addEventListener("keyup",function(event) {
   }
   // End
 })
-
-// ====================== Mouse Listener Loop ========================= //
-document.addEventListener("mousedown",function(event) {
-  let mousePosition = renderer.plugins.interaction.mouse.global;
-  goal.x = mousePosition.x;
-  goal.y = mousePosition.y;
-  intervener.tracker.updateSetpoint([
-      graphics.mapper.mapPositionToState(goal.x,goal.y)[0],
-      graphics.mapper.mapPositionToState(goal.x,goal.y)[1]]);
-  // End
-})
-
 
 // Mount the renderer in the website
 let mount = document.getElementById("mount");

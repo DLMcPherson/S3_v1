@@ -76,6 +76,12 @@ let arcadeScore = new PIXI.Text('0',{font : '40px Gill Sans', fill : 0x000000})
 arcadeScore.text = 'SCORE: '+ ArcadeScore;
 stage.addChild(arcadeScore);
 
+// Add the Countdown Timer
+let countdown = new PIXI.Text('3',{font : '80px Gill Sans', fill : 0x000000})
+countdown.x = SCREEN_WIDTH/2;
+countdown.y = SCREEN_HEIGHT/2;
+stage.addChild(countdown);
+
 // Obstacles
 let dubinsCircles = new LearnedPalette("dubins");
 let dubinsWalls = new CopiedPalette("dubinsWall");
@@ -148,35 +154,41 @@ let now = Date.now();
 window.setInterval(function() {
   // Time management
   let delT = Date.now() - now;
-  delT *= 0.0005 * 4;
   clock += delT;
   now = Date.now();
-  // Robot dynamics
-  for(let robotNum = 0; robotNum < robots.length; robotNum++){
-    if(robots[robotNum].destroyed) continue;
-    robots[robotNum].update(delT,robotControllers[robotNum].u() );
-    // Check if the robot ran into an obstacle
-    let robotCollision = false;
-    for(let obNum = 0; obNum < obstacles.obstacles.length ; obNum++){
-      let curObstacle = obstacles.obstacles[obNum];
-      if(obstacles.obstacleDestroyed[obNum] == false){
-        if(curObstacle.collisionSetValue(robots[robotNum].states) < 0){
-          robotCollision = true;
-          if(robots[robotNum].spinout == 0){
-            /*
-            obstacles.obstacleDestroyed[obNum] = true;
-            robots[robotNum].destroyed = true;
-            robots[robotNum].speed = 0;
-            */
-            //robots[robotNum].tint = 0x999999;
+  if(clock > 3000){
+    delT *= 0.0005 * 4;
+    // Robot dynamics
+    for(let robotNum = 0; robotNum < robots.length; robotNum++){
+      if(robots[robotNum].destroyed) continue;
+      robots[robotNum].update(delT,robotControllers[robotNum].u() );
+      // Check if the robot ran into an obstacle
+      let robotCollision = false;
+      for(let obNum = 0; obNum < obstacles.obstacles.length ; obNum++){
+        let curObstacle = obstacles.obstacles[obNum];
+        if(obstacles.obstacleDestroyed[obNum] == false){
+          if(curObstacle.collisionSetValue(robots[robotNum].states) < 0){
+            robotCollision = true;
+            if(robots[robotNum].spinout == 0){
+              /*
+              obstacles.obstacleDestroyed[obNum] = true;
+              robots[robotNum].destroyed = true;
+              robots[robotNum].speed = 0;
+              */
+              //robots[robotNum].tint = 0x999999;
 
-            ArcadeScore -= 100;
-            console.log('robot mistake!');
+              ArcadeScore -= 100;
+              console.log('robot mistake!');
+            }
+            robots[robotNum].spinout = 100;
           }
-          robots[robotNum].spinout = 100;
         }
       }
     }
+    countdown.text = '';
+  }
+  else{
+    countdown.text = Math.ceil( 3+(3 - clock)/1000 );
   }
   // Rendering the stage
   graphics.clear();

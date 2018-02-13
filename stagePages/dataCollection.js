@@ -60,6 +60,12 @@ const SCREEN_HEIGHT = 768;
 graphics.mapper = new ScreenXYMap(30,0,0,30,SCREEN_WIDTH/2,SCREEN_HEIGHT/2);
 stage.addChild(graphics);
 
+// Add the Countdown Timer
+let countdown = new PIXI.Text('3',{font : '80px Gill Sans', fill : 0x000000})
+countdown.x = SCREEN_WIDTH/2;
+countdown.y = SCREEN_HEIGHT/8;
+stage.addChild(countdown);
+
 // Robot Object
 let Umax = 1
 let robotY0 = [-2,1.75,	0.25,	0.50,0, 1.50,	-0.750,	-1.75, 1.75, 1.25,	-1.25,
@@ -82,32 +88,41 @@ obstacle.render();
 
 // Main Loop
 let clock =  0 ;
-let counter = 0;
+let counter = -1;
 let now = Date.now();
 window.setInterval(function() {
   // Time management
   let delT = Date.now() - now;
-  delT *= 0.0005 * 4;
   clock += delT;
-  counter += delT;
   now = Date.now();
-  // Robot dynamics
-  let u = [0];
-    // Reset robot position after 8 seconds
-  if(robot.states[0] > 1 || 3*counter > 2-robotX0){
-    curY0++;
-    if(curY0 >= robotY0.length){
-      curY0 = 0;
+  if(clock > 3000){
+    delT *= 0.0005 * 4;
+    counter += delT;
+    if(counter > 0){
+      // Robot dynamics
+      let u = [0];
+        // Reset robot position after 8 seconds
+      if(robot.states[0] > 1 || 3*counter > 2-robotX0){
+        curY0++;
+        if(curY0 >= robotY0.length){
+          curY0 = 0;
+          document.location.href = "http://localhost:3000/stagePages/donutDelivery.html";
+        }
+        robot.states = [robotX0,robotY0[curY0],0];
+        console.log("reset robot state to ",[robotX0,robotY0[curY0],0]);
+        robot.speed = 3;
+        counter = -1;
+      }
+      robot.update(delT,u);
+      if(obstacle.collisionSetValue(robot.states) < 0){
+        robot.speed = 0;
+        robot.spinout = 0;
+      }
+      countdown.text = '';
     }
-    robot.states = [robotX0,robotY0[curY0],0];
-    console.log("reset robot state to ",[robotX0,robotY0[curY0],0]);
-    counter = 0;
-    robot.speed = 3;
   }
-  robot.update(delT,u);
-  if(obstacle.collisionSetValue(robot.states) < 0){
-    robot.speed = 0;
-    robot.spinout = 0;
+  else{
+    countdown.text = Math.ceil( 3+(3 - clock)/1000 );
   }
   // Rendering the stage
   renderer.render(stage);
@@ -150,7 +165,7 @@ document.addEventListener("keydown",function(event) {
     }
     robot.states = [robotX0,robotY0[curY0],0];
     console.log("reset robot state to ",[robotX0,robotY0[curY0],0]);
-    counter = 0;
+    counter = -1;
   }
   // End
 })
