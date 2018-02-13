@@ -131,7 +131,7 @@ for(let robotNum = 0; robotNum < 3; robotNum++){
   goalPoint[0] = 20;
 
   let intervener = new PaletteIntervention_Contr(robots[robotNum],
-      obstacles,0,
+      new maskedObstaclescape(obstacles),0,
       Umax,0,
       new Dubins_Contr(robots[robotNum],Umax,goalPoint ));
   //intervener.trigger_level = robots[robotNum].height/(2*graphics.mapper.Mxx) * Math.SQRT2;
@@ -166,26 +166,22 @@ window.setInterval(function() {
       robots[robotNum].update(delT,robotControllers[robotNum].u() );
       // Check if the robot ran into an obstacle
       let robotCollision = false;
-      for(let obNum = 0; obNum < obstacles.obstacles.length ; obNum++){
-        let curObstacle = obstacles.obstacles[obNum];
-        if(obstacles.obstacleDestroyed[obNum] == false){
-          if(curObstacle.collisionSetValue(robots[robotNum].states) < 0){
-            robotCollision = true;
-            if(robots[robotNum].spinout == 0){
-              /*
-              obstacles.obstacleDestroyed[obNum] = true;
-              robots[robotNum].destroyed = true;
-              robots[robotNum].speed = 0;
-              */
-              //robots[robotNum].tint = 0x999999;
+      if(obstacles.collisionSetValue(robots[robotNum].states) < 0){
+        robotCollision = true;
+        if(robots[robotNum].spinout == 0){
+          /*
+          obstacles.obstacleDestroyed[obNum] = true;
+          robots[robotNum].destroyed = true;
+          robots[robotNum].speed = 0;
+          */
+          //robots[robotNum].tint = 0x999999;
 
-              ArcadeScore -= 100;
-              console.log('robot mistake!');
-            }
-            robots[robotNum].spinout = 100;
-          }
+          ArcadeScore -= 50;
+          console.log('robot mistake!');
         }
+        robots[robotNum].spinout = 100;
       }
+
     }
     countdown.text = '';
   }
@@ -256,7 +252,7 @@ document.addEventListener("mousedown",function(event) {
       if(curObstacle.collisionSetValue([mouseState[0],mouseState[1],0]) < 0){
         obstacles.obstacleDestroyed[obNum] = true;
         console.log('obstacle destroyed')
-        ArcadeScore -= 50;
+        ArcadeScore -= 20;
       }
     }
   }

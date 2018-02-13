@@ -120,16 +120,7 @@ class Dubins_Contr extends Controller {
       Uout = -this.Umax;
     }
     // Change setpoint if the robot has reached its goal
-    if(Math.abs(deltaX) < 0.5 && Math.abs(deltaY) < 0.5){
-      let swapX = this.set[0] * -1;
-      let newGoal = graphics.mapper.randomStateXY();
-      newGoal[0] = swapX;
-      this.updateSetpoint(newGoal);
-      if(ArcadeScore != undefined){
-        ArcadeScore += 10;
-        console.log(ArcadeScore);
-      }
-    }
+
     // Return
     return [Uout];
   }
@@ -213,6 +204,20 @@ class PaletteIntervention_Contr extends Controller {
   }
   // Method that returns the current input responding to the current state
   u(){
+    // Reset the tracker's goal if the goal has been reached
+    let deltaX = this.tracker.set[0] - this.robot.states[0];
+    let deltaY = this.tracker.set[1] - this.robot.states[1];
+    if(Math.abs(deltaX) < 0.5 && Math.abs(deltaY) < 0.5){
+      let swapX = this.tracker.set[0] * -1;
+      let newGoal = graphics.mapper.randomStateXY();
+      newGoal[0] = swapX;
+      this.tracker.updateSetpoint(newGoal);
+      if(ArcadeScore != undefined){
+        ArcadeScore += 10;
+        console.log(ArcadeScore);
+      }
+      this.intervening_sets.rerandomizeUndetection();
+    }
     // Check if the reachset value function is below the triggering level set
     if( this.intervening_sets.value(this.setID,this.robot.states) < this.trigger_level ){
       //console.log(this.intervening_set.value(this.robot.states),this.trigger_level);

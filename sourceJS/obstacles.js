@@ -95,6 +95,21 @@ class Obstaclescape {
     // Return the lowest reachset value amongst all obstacles
     return curMinValue;
   }
+  // Determine collision in global coordinates with any of the contained obstacles
+  collisionSetValue(states){
+    // Running minimum value (initialized to preposterouly large number... 100)
+    let curMinValue = 100;
+    // Iterate over obstacles and find the lowest value function
+    for(let obNum = 0; obNum < this.obstacles.length ; obNum++){
+      if(this.obstacleDestroyed[obNum] == false){
+        let obsValue = this.obstacles[obNum].collisionSetValue(states);
+        if(obsValue < curMinValue)
+          curMinValue = obsValue;
+      }
+    }
+    // Return the lowest reachset value amongst all obstacles
+    return curMinValue;
+  }
   // Return the gradient corresponding to whichever obstacle currently dominates
   // the union by having the worst safety-value function
   gradV(setID,states){
@@ -126,6 +141,58 @@ class Obstaclescape {
                                                       ,sweptStateX,sweptStateY);
       }
     }
+    return 0;
+  }
+}
+
+class maskedObstaclescape {
+  constructor(_obstaclescape){
+    // save a reference to the reachable set conforming to this shaped obstacle
+    // the reachable set's state space is relative to the obstacle's position
+    this.obstaclescape = _obstaclescape;
+    this.undetectionscape = [];
+    this.rerandomizeUndetection();
+  }
+  // Method for displaying the obstacle
+  render(){
+    this.obstaclescape.render();
+    return;
+  }
+  // Method for displaying the obstacle with added width for level-set picking
+  renderAugmented(pad){
+    this.obstaclescape.renderAugmented(pad);
+    return;
+  }
+  //
+  rerandomizeUndetection(){
+    for(let obNum = 0; obNum < this.obstaclescape.obstacles.length ; obNum++){
+      let undetected = true;
+      if(random() < 0.5){
+        undetected = false;
+      }
+      this.undetectionscape[obNum] = undetected;
+    }
+    return ;
+  }
+  // Passing calls to internalized reachable sets palette
+  value(setID,states){
+    this.obstaclescape.obstacleUndetected = this.undetectionscape.slice();
+    return this.obstaclescape.value(setID,states);
+  }
+  // Access method for determining collision in global coordinates
+  collisionSetValue(states){
+    this.obstaclescape.obstacleUndetected = this.undetectionscape.slice();
+    return this.obstaclescape.collisionSetValue(states);
+  }
+  // Method for calculating the gradient
+  gradV(setID,states){
+    this.obstaclescape.obstacleUndetected = this.undetectionscape.slice();
+    return this.obstaclescape.gradV(setID,states);
+  }
+  // Method for displaying the value function on a grid
+  displayGrid(setID,graphics,color,currentState,sweptStateX,sweptStateY){
+    this.obstaclescape.displayGrid(setID,graphics,color,
+        currentState,sweptStateX,sweptStateY);
     return 0;
   }
 }
