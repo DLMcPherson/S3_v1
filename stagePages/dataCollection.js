@@ -106,7 +106,7 @@ window.setInterval(function() {
         curY0++;
         if(curY0 >= robotY0.length){
           curY0 = 0;
-          document.location.href = "http://localhost:3000/stagePages/donutDelivery.html";
+          document.location.href = "http://localhost:3000/stagePages/donutDeliveryTutorial.html";
         }
         robot.states = [robotX0,robotY0[curY0],0];
         console.log("reset robot state to ",[robotX0,robotY0[curY0],0]);
@@ -161,7 +161,7 @@ document.addEventListener("keydown",function(event) {
     // Reset the game of robot chicken
     curY0++;
     if(curY0 >= robotY0.length){
-      document.location.href = "http://localhost:3000/stagePages/donutDelivery.html";
+      document.location.href = "http://localhost:3000/stagePages/donutDeliveryTutorial.html";
       curY0 = 0;
     }
     robot.states = [robotX0,robotY0[curY0],0];
