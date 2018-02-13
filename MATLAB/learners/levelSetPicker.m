@@ -20,7 +20,12 @@ end
 % Offset the value function by the picked value
 data = data - maxValue;
 visualizeLevelSet(g,data,'surface',0,"after adjustment")
+
 json_export_reachset(data,g,'dubinsLSPicker',"../../reachableSets/");
+
+data = data - maxValue;
+visualizeLevelSet(g,data,'surface',0,"after after adjustment");
+json_export_reachset(data,g,strcat(filename,'Conservative'),"../../reachableSets/");
 
 function value = interpolateValue(state,grid,griddedFunction)
   eqIndex = (state - grid.min)./grid.dx;

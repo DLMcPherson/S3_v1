@@ -83,7 +83,7 @@ countdown.y = SCREEN_HEIGHT/2;
 stage.addChild(countdown);
 
 // Obstacles
-let dubinsCircles = new LearnedPalette("dubins");
+let dubinsCircles = new TestTrifectaPalette("dubins");
 let dubinsWalls = new CopiedPalette("dubinsWall");
 let obstacleList = [];
 let carRadius = 0.55;
@@ -139,14 +139,16 @@ for(let robotNum = 0; robotNum < 3; robotNum++){
 }
 robotControllers[0].setID = 0; robots[0].tint = 0x24EB98;
 //robotControllers[3].setID = 0; robots[3].tint = 0x24EB98;
-
-robotControllers[1].setID = 2; robots[1].tint = 0xFF745A;
+robotControllers[1].setID = 1; robots[1].tint = 0xFF745A;
 //robotControllers[4].setID = 2; robots[4].tint = 0xFF745A;
-
-robotControllers[2].setID = 3; robots[2].tint = 0x6333ed;
+robotControllers[2].setID = 2; robots[2].tint = 0x6333ed;
 //robotControllers[5].setID = 3; robots[5].tint = 0x6333ed;
 
 // ===================== THE MAIN EVENT ================== // 3
+let leftX;
+let rightX;
+[leftX,] = graphics.mapper.mapStateToPosition(-20,0);
+[rightX,] = graphics.mapper.mapStateToPosition(20,0);
 
 // Main Loop
 let clock =  0 ;
@@ -192,6 +194,13 @@ window.setInterval(function() {
   }
   // Rendering the stage
   graphics.clear();
+    // Draw the goal lines
+  graphics.beginFill(0xEEEEEE);
+  graphics.lineStyle(0,0x000000);
+  graphics.drawRect(0,0,leftX,SCREEN_HEIGHT);
+  graphics.drawRect(rightX,0,SCREEN_WIDTH-rightX,SCREEN_HEIGHT);
+  graphics.endFill();
+    // Render the obstacles
   obstacles.render();
   //intervener.intervening_sets.displayGrid(intervener.setID,graphics,robot.tint,robot.states,0,1);
   //intervener2.intervening_sets.displayGrid(intervener2.setID,graphics,robot2.tint,robot2.states,0,1);

@@ -161,9 +161,11 @@ document.addEventListener("keydown",function(event) {
     // Reset the game of robot chicken
     curY0++;
     if(curY0 >= robotY0.length){
+      document.location.href = "http://localhost:3000/stagePages/donutDelivery.html";
       curY0 = 0;
     }
     robot.states = [robotX0,robotY0[curY0],0];
+    robot.update(0,u);
     console.log("reset robot state to ",[robotX0,robotY0[curY0],0]);
     counter = -1;
   }

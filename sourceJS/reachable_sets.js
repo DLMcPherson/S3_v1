@@ -48,6 +48,17 @@ class LearnedPalette extends SafeSetPalette {
 }
 
 // Particular palette that automatically searches for the extensions for the
+// safe sets used in the team-test
+class TestTrifectaPalette extends SafeSetPalette {
+  constructor(filename){
+    super([new loaded_SafeSet(filename),
+        new loaded_SafeSet(filename+"BI"),
+        new loaded_SafeSet(filename+"Conservative")
+        ]);
+  }
+}
+
+// Particular palette that automatically searches for the extensions for the
 // learned safe sets modified from one pase safe set
 class CopiedPalette extends SafeSetPalette {
   constructor(filename){
