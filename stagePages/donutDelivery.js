@@ -74,10 +74,14 @@ let graphics = new PIXI.Graphics();
 graphics.mapper = new ScreenXYMap(30,0,0,30,SCREEN_WIDTH/2,SCREEN_HEIGHT/2);
 stage.addChild(graphics);
 
+// Scoreboard
 let ArcadeScore = 0;
 let arcadeScore = new PIXI.Text('0',{font : '40px Gill Sans', fill : 0x000000})
 arcadeScore.text = 'SCORE: '+ ArcadeScore;
 stage.addChild(arcadeScore);
+let timerDisplay = new PIXI.Text('TIME: 240 sec',{font : '30px Gill Sans', fill : 0x000000})
+timerDisplay.y = 60;
+stage.addChild(timerDisplay);
 
 // Add the Countdown Timer
 let countdown = new PIXI.Text('3',{font : '80px Gill Sans', fill : 0x000000})
@@ -168,6 +172,7 @@ window.setInterval(function() {
   // Time management
   let delT = Date.now() - now;
   clock += delT;
+  timerDisplay.text = 'TIME: '+(240-Math.floor(clock/1000))+' sec';
   now = Date.now();
   if(clock > 3000){
     delT *= 0.0005 * 4;
@@ -185,7 +190,7 @@ window.setInterval(function() {
           */
           //robots[robotNum].tint = 0x999999;
 
-          ArcadeScore -= 50;
+          ArcadeScore -= 20;
           console.log('robot mistake!');
         }
         robots[robotNum].spinout = 100;
@@ -221,6 +226,10 @@ window.setInterval(function() {
         break;
       }
     }
+  }
+  // Check if Time has Elapsed
+  if(clock > 240000){
+    document.location.href = "http://localhost:3000/stagePages/completed.html";
   }
   // Rendering the stage
   graphics.clear();
@@ -288,7 +297,7 @@ document.addEventListener("mousedown",function(event) {
         console.log('obstacle destroyed')
         obstacleDeficit++;
         ghostObstacleIds.push(obNum);
-        ArcadeScore -= 20;
+        ArcadeScore -= 10;
       }
     }
   }

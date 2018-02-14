@@ -213,7 +213,7 @@ class PaletteIntervention_Contr extends Controller {
       newGoal[0] = swapX;
       this.tracker.updateSetpoint(newGoal);
       if(ArcadeScore != undefined){
-        ArcadeScore += 10;
+        ArcadeScore += 20;
         console.log(ArcadeScore);
       }
       this.intervening_sets.rerandomizeUndetection();
