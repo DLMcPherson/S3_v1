@@ -126,9 +126,11 @@ document.addEventListener("keydown",function(event) {
   if(key == 37 || key == 65){
     control = [-1];
   }
+  /*
   if(key == 38 || key == 40 || key == 87 || key == 83){
     control = [0];
   }
+  */
   if(key == 39 || key == 68){
     control = [1];
   }
@@ -146,13 +148,15 @@ document.addEventListener("keyup",function(event) {
   // Log time and key
   key = event.keyCode;
   console.log(key);
-  if(key == 37 || key == 65){
+  if((key == 37 || key == 65) && control == [-1]){
     control = [0];
   }
-  if(key == 38 || key == 40 || key == 87 || key == 83){
+  /*
+  if((key == 38 || key == 40 || key == 87 || key == 83) && control == [0]){
     control = [0];
   }
-  if(key == 39 || key == 68){
+  */
+  if((key == 39 || key == 68) && control == [1]){
     control = [0];
   }
   // End
