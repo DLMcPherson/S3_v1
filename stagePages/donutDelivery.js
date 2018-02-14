@@ -135,9 +135,10 @@ let robots = [];
 let robotControllers = [];
 let robotTints = [0x24EB98, 0xFF745A, 0x6333ed];
 //robots.push(new DubinsRobot([-4,3,0],3,0xFF745A));
-for(let robotNum = 0; robotNum < 3; robotNum++){
+for(let robotNum = 0; robotNum < 2; robotNum++){
   //let pos = graphics.mapper.randomStateXY();
-  robots[robotNum] = new DubinsRobot([-20,robotNum*5-5,0],3,robotTints[robotNum]);
+  //robots[robotNum] = new DubinsRobot([-20,robotNum*5-5,0],3,robotTints[robotNum]);
+  robots[robotNum] = new DubinsRobot([-20,robotNum*5-5,0],3,0xFFFFFF);
 
   stage.addChild(robots[robotNum]);
 
@@ -150,13 +151,16 @@ for(let robotNum = 0; robotNum < 3; robotNum++){
       new Dubins_Contr(robots[robotNum],Umax,goalPoint ));
   //intervener.trigger_level = robots[robotNum].height/(2*graphics.mapper.Mxx) * Math.SQRT2;
   robotControllers[robotNum] = intervener;
+  robotControllers[robotNum].setID = 1;
 }
+/*
 robotControllers[0].setID = 0;
 //robotControllers[3].setID = 0; robots[3].tint = 0x24EB98;
 robotControllers[1].setID = 1;
 //robotControllers[4].setID = 2; robots[4].tint = 0xFF745A;
 robotControllers[2].setID = 2;
 //robotControllers[5].setID = 3; robots[5].tint = 0x6333ed;
+*/
 
 // ===================== THE MAIN EVENT ================== // 3
 let leftX;
@@ -169,6 +173,8 @@ let clock =  0 ;
 let now = Date.now();
 let obstacleDeficit = 0;
 window.setInterval(function() {
+  // Clear the stage
+  graphics.clear();
   // Time management
   let delT = Date.now() - now;
   clock += delT;
@@ -195,7 +201,15 @@ window.setInterval(function() {
         }
         robots[robotNum].spinout = 100;
       }
-
+      // Draw goal rays
+      graphics.beginFill(0x222222);
+      graphics.lineStyle(5,0x000000);
+      let robotPos = graphics.mapper.mapStateToPosition(robots[robotNum].states);
+      graphics.moveTo(robotPos[0],robotPos[1]);
+      let goalPos = graphics.mapper.mapStateToPosition(
+          robotControllers[robotNum].tracker.set);
+      graphics.lineTo(goalPos[0],goalPos[1]);
+      graphics.endFill();
     }
     countdown.text = '';
   }
@@ -231,8 +245,6 @@ window.setInterval(function() {
   if(clock > 240000){
     document.location.href = "http://localhost:3000/stagePages/completed.html";
   }
-  // Rendering the stage
-  graphics.clear();
     // Draw the goal lines
   graphics.beginFill(0xEEEEEE);
   graphics.lineStyle(0,0x000000);

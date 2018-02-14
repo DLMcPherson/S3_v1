@@ -1,7 +1,0 @@
-offset = 5;
-filename = 'dubins_reachset';
-load('../reachableSets/''.mat');
-
-% Offset the value function by the picked value
-data = data - offset;
-json_export_reachset(data,g,'dubins');
