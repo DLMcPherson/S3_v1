@@ -167,7 +167,7 @@ class maskedObstaclescape {
   rerandomizeUndetection(){
     for(let obNum = 0; obNum < this.obstaclescape.obstacles.length ; obNum++){
       let undetected = true;
-      if(random() < 0.5){
+      if(random() < 0.8){
         undetected = false;
       }
       this.undetectionscape[obNum] = undetected;
@@ -261,7 +261,7 @@ class RoundObstacle extends Obstacle{
     // coordinates and obstacle-relative coordinates for safeset
     this.offset = [_ObX,_ObY,0]; // TODO: Make obstacles system agnostic
     // Define a (loose) collision set for determining crashes and clicks
-    this.collisionSet = new dubinsCircle_Set(_ObR*0.95);
+    this.collisionSet = new dubinsCircle_Set(_ObR*0.9);
   }
   // Rendering standard obstacle
   render(){

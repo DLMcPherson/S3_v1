@@ -91,7 +91,7 @@ class Dubins_Contr extends Controller {
     this.goal.pivot.x = 10; this.goal.pivot.y = 12;
     this.goal.x = graphics.mapper.mapStateToPosition(this.set[0],this.set[1])[0];
     this.goal.y = graphics.mapper.mapStateToPosition(this.set[0],this.set[1])[1];
-    //stage.addChild(this.goal);
+    stage.addChild(this.goal);
   }
   // Method for updating the setpoint to be tracked
   updateSetpoint(_set){

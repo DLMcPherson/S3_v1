@@ -44,7 +44,10 @@ class ScreenXYMap {
   }
   randomStateXY(){
     let pos = this.randomScreenXY();
-    return this.mapPositionToState(pos[0],pos[1]);
+    //return this.mapPositionToState(pos[0],pos[1]);
+    let posX = random()*30 - 15;
+    let posY = random()*20 - 10;
+    return [posX,posY];
   }
 }
 
@@ -87,14 +90,14 @@ let dubinsCircles = new TestTrifectaPalette("dubins");
 let dubinsWalls = new CopiedPalette("dubinsWall");
 let obstacleList = [];
 let carRadius = 0.55;
-for(let ii = 0; ii < 20; ii++){
+for(let ii = 0; ii < 15; ii++){
   //let pos = graphics.mapper.randomStateXY();
   let posX = random()*30 - 15;
-  let posY = random()*20 - 10;
+  let posY = random()*18 - 9;
   let blocked = false;
   do {
     posX = random()*30 - 15;
-    posY = random()*20 - 10;
+    posY = random()*18 - 9;
     blocked = false;
     for(let obNum = 0; obNum < obstacleList.length; obNum++){
       if( Math.pow((obstacleList[obNum].ObX - posX),2)
@@ -110,9 +113,15 @@ for(let ii = 0; ii < 20; ii++){
 //wall.color = 0xEEEEEE;
 //obstacleList.push(wall )
 let obstacles = new Obstaclescape(obstacleList)
-for(let ii = 0; ii < 20; ii++){
+for(let ii = 0; ii < 15; ii++){
   if(ii % 2 == 0)
     obstacles.obstacleUndetected[ii] = true;
+}
+// Clear out some obstacles to begin with
+let ghostObstacleIds = [];
+for(let ii = 10; ii < 15; ii++){
+  obstacles.obstacleDestroyed[ii] = true;
+  ghostObstacleIds.push(ii);
 }
 
 // Robot Object
@@ -120,10 +129,11 @@ let Umax = 1;
 ///* // Dubins Car Robot
 let robots = [];
 let robotControllers = [];
+let robotTints = [0x24EB98, 0xFF745A, 0x6333ed];
 //robots.push(new DubinsRobot([-4,3,0],3,0xFF745A));
 for(let robotNum = 0; robotNum < 3; robotNum++){
-  let pos = graphics.mapper.randomStateXY();
-  robots[robotNum] = new DubinsRobot([-20,pos[1],0],3,0xDDDDDD);
+  //let pos = graphics.mapper.randomStateXY();
+  robots[robotNum] = new DubinsRobot([-20,robotNum*5-5,0],3,robotTints[robotNum]);
 
   stage.addChild(robots[robotNum]);
 
@@ -137,11 +147,11 @@ for(let robotNum = 0; robotNum < 3; robotNum++){
   //intervener.trigger_level = robots[robotNum].height/(2*graphics.mapper.Mxx) * Math.SQRT2;
   robotControllers[robotNum] = intervener;
 }
-robotControllers[0].setID = 0; robots[0].tint = 0x24EB98;
+robotControllers[0].setID = 0;
 //robotControllers[3].setID = 0; robots[3].tint = 0x24EB98;
-robotControllers[1].setID = 1; robots[1].tint = 0xFF745A;
+robotControllers[1].setID = 1;
 //robotControllers[4].setID = 2; robots[4].tint = 0xFF745A;
-robotControllers[2].setID = 2; robots[2].tint = 0x6333ed;
+robotControllers[2].setID = 2;
 //robotControllers[5].setID = 3; robots[5].tint = 0x6333ed;
 
 // ===================== THE MAIN EVENT ================== // 3
@@ -153,6 +163,7 @@ let rightX;
 // Main Loop
 let clock =  0 ;
 let now = Date.now();
+let obstacleDeficit = 0;
 window.setInterval(function() {
   // Time management
   let delT = Date.now() - now;
@@ -165,9 +176,7 @@ window.setInterval(function() {
       if(robots[robotNum].destroyed) continue;
       robots[robotNum].update(delT,robotControllers[robotNum].u() );
       // Check if the robot ran into an obstacle
-      let robotCollision = false;
       if(obstacles.collisionSetValue(robots[robotNum].states) < 0){
-        robotCollision = true;
         if(robots[robotNum].spinout == 0){
           /*
           obstacles.obstacleDestroyed[obNum] = true;
@@ -187,6 +196,31 @@ window.setInterval(function() {
   }
   else{
     countdown.text = Math.ceil( 3+(3 - clock)/1000 );
+  }
+  // Obstacle regeneration
+  if(obstacleDeficit > 0){
+    //for(let obNum = 0; obNum < obstacles.obstacles.length; obNum++){
+    //  if(obstacles.obstacleDestroyed[obNum]){
+    for(let ii = 0; ii < ghostObstacleIds.length; ii++){
+      let obNum = ghostObstacleIds[ii];
+      {
+        let robotTooClose = false;
+        for(let robotNum = 0; robotNum < robots.length; robotNum++){
+          if(obstacles.obstacles[obNum].collisionSetValue(robots[robotNum].states) < 2){
+            robotTooClose = true;
+          }
+        }
+        if(robotTooClose == false){
+          obstacles.obstacleDestroyed[obNum] = false;
+          obstacleDeficit--;
+          ghostObstacleIds.shift();
+          console.log("obstacle respawned")
+        }
+      }
+      if(obstacleDeficit == 0){
+        break;
+      }
+    }
   }
   // Rendering the stage
   graphics.clear();
@@ -252,6 +286,8 @@ document.addEventListener("mousedown",function(event) {
       if(curObstacle.collisionSetValue([mouseState[0],mouseState[1],0]) < 0){
         obstacles.obstacleDestroyed[obNum] = true;
         console.log('obstacle destroyed')
+        obstacleDeficit++;
+        ghostObstacleIds.push(obNum);
         ArcadeScore -= 20;
       }
     }
