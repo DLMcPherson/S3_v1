@@ -60,7 +60,7 @@ stage.addChild(graphics);
 // Robot Object
 let Umax = 1
 ///* // Dubins Car Robot
-let robot = new DubinsRobot([-4,3,0],3,0xDDDDDD);
+let robot = new DubinsRobot([-4,3,0],3,0x24EB98);
 stage.addChild(robot);
 let originalSafeset = new loaded_SafeSet("dubins");
 let pixelwiseSafeset = new loaded_SafeSet("dubinsPixelwise");

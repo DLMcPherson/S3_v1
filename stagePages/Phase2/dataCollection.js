@@ -74,7 +74,7 @@ let robotY0 = [-2,1.75,	0.25,	0.50,0, 1.50,	-0.750,	-1.75, 1.75, 1.25,	-1.25,
     -0.25,	2.25];
 let robotX0 = -12;
 let curY0 = 0;
-let robot = new DubinsRobot([robotX0,robotY0[curY0],0],3,0xDDDDDD);
+let robot = new DubinsRobot([robotX0,robotY0[curY0],0],3,0x24EB98);
 stage.addChild(robot);
 let trigger_level = robot.height/(2*graphics.mapper.Mxx);
 let carRadius = 0.55;
