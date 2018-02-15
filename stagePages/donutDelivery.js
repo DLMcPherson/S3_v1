@@ -2,12 +2,14 @@
 
 const SCREEN_WIDTH = 1400;
 const SCREEN_HEIGHT = 768;
+const MAXTIME = 120;
 
-var seed = 1;
 function random() {
     var x = Math.sin(seed++) * 10000;
     return x - Math.floor(x);
 }
+
+console.log("Driving style for this game is "+thisDrivingStyle+" = "+drivingStyle)
 
 // Mapper class that scales state space to screen
 class ScreenXYMap {
@@ -138,7 +140,7 @@ let robotTints = [0x24EB98, 0xFF745A, 0x6333ed];
 for(let robotNum = 0; robotNum < 2; robotNum++){
   //let pos = graphics.mapper.randomStateXY();
   //robots[robotNum] = new DubinsRobot([-20,robotNum*5-5,0],3,robotTints[robotNum]);
-  robots[robotNum] = new DubinsRobot([-20,robotNum*5-5,0],3,0xFFFFFF);
+  robots[robotNum] = new DubinsRobot([-20,robotNum*5-5,0],3,0x24EB98);
 
   stage.addChild(robots[robotNum]);
 
@@ -151,7 +153,7 @@ for(let robotNum = 0; robotNum < 2; robotNum++){
       new Dubins_Contr(robots[robotNum],Umax,goalPoint ));
   //intervener.trigger_level = robots[robotNum].height/(2*graphics.mapper.Mxx) * Math.SQRT2;
   robotControllers[robotNum] = intervener;
-  robotControllers[robotNum].setID = 1;
+  robotControllers[robotNum].setID = drivingStyle;
 }
 /*
 robotControllers[0].setID = 0;
@@ -178,7 +180,7 @@ window.setInterval(function() {
   // Time management
   let delT = Date.now() - now;
   clock += delT;
-  timerDisplay.text = 'TIME: '+(240-Math.floor(clock/1000))+' sec';
+  timerDisplay.text = 'TIME: '+(MAXTIME-Math.floor(clock/1000))+' sec';
   now = Date.now();
   if(clock > 3000){
     delT *= 0.0005 * 4;
@@ -203,11 +205,11 @@ window.setInterval(function() {
       }
       // Draw goal rays
       graphics.beginFill(0x222222);
-      graphics.lineStyle(5,0x000000);
-      let robotPos = graphics.mapper.mapStateToPosition(robots[robotNum].states);
+      graphics.lineStyle(2,0xDDEEDD);
+      let robotPos = graphics.mapper.mapStateToPosition(robots[robotNum].states[0],robots[robotNum].states[1]);
       graphics.moveTo(robotPos[0],robotPos[1]);
-      let goalPos = graphics.mapper.mapStateToPosition(
-          robotControllers[robotNum].tracker.set);
+      //let goalPos = graphics.mapper.mapStateToPosition(robotControllers[robotNum].tracker.set);
+      let goalPos = [robotControllers[robotNum].tracker.goal.x,robotControllers[robotNum].tracker.goal.y];
       graphics.lineTo(goalPos[0],goalPos[1]);
       graphics.endFill();
     }
@@ -242,7 +244,7 @@ window.setInterval(function() {
     }
   }
   // Check if Time has Elapsed
-  if(clock > 240000){
+  if(clock > MAXTIME * 1000){
     document.location.href = "http://localhost:3000/stagePages/completed.html";
   }
     // Draw the goal lines
@@ -258,7 +260,7 @@ window.setInterval(function() {
   //obstacles.displayGrid(0,graphics,robots[0].tint,robots[0].states,0,1);
   arcadeScore.text = 'SCORE: '+ ArcadeScore;
   renderer.render(stage);
-},2)
+},10)
 
 // ====================== Keyboard Listener Loop ========================= //
 let key = null;

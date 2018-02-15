@@ -21,6 +21,26 @@
         <script src="../sourceJS/reachable_sets.js" type="text/javascript"></script>
         <script src="../sourceJS/obstacles.js" type="text/javascript"></script>
 
+        <script src="../../Experiments/1/config.js" type="text/javascript"></script>
+        <script type="text/javascript">
+          let gameNumber = 0;
+          let seed = seedSequence[gameNumber];
+          // Rotate through driving styles
+          let styleIDsequence = [0,1,1,2,2,0];
+          let thisStyleID = styleIDsequence[gameNumber];
+          let thisDrivingStyle = drivingStyleMapping[thisStyleID];
+          let drivingStyle = 0;
+          if(thisDrivingStyle == 'physics'){
+            drivingStyle = 0;
+          }
+          if(thisDrivingStyle == 'learned'){
+            drivingStyle = 1;
+          }
+          if(thisDrivingStyle == 'conservative'){
+            drivingStyle = 2;
+          }
+        </script>
+
         <script src="donutDelivery.js" type="text/javascript"></script>
     </body>
 </html>
