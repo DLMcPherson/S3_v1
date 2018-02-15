@@ -245,7 +245,12 @@ window.setInterval(function() {
   }
   // Check if Time has Elapsed
   if(clock > MAXTIME * 1000){
-    document.location.href = "../completed.html";
+    if(gameNumber<5){
+      document.location.href = "buffer.html#" + gameNumber;
+    }
+    else{
+      document.location.href = "../completed.html";
+    }
   }
     // Draw the goal lines
   graphics.beginFill(0xEEEEEE);

@@ -100,7 +100,7 @@ window.setInterval(function() {
   }
   // End this phase after 1 Minute
   if(clock > 60*1000){
-    document.location.href = "http://localhost:3000/stagePages/dataCollectionTutorial.html";
+    document.location.href = "../Phase2/";
   }
   // Rendering the stage
   graphics.clear();
