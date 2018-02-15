@@ -79,7 +79,7 @@ stage.addChild(robot);
 let trigger_level = robot.height/(2*graphics.mapper.Mxx);
 let carRadius = 0.55;
 let obstacle = new RoundObstacle(0,0,1.8,carRadius);
-obstacle.color = 0xA62F27;
+//obstacle.color = 0xA62F27;
 
 // Render the Obstacle
 obstacle.render();
@@ -106,6 +106,8 @@ window.setInterval(function() {
         curY0++;
         if(curY0 >= robotY0.length){
           curY0 = 0;
+          var blob = new Blob([JSON.stringify(flinchData)], {type: "text/plain;charset=utf-8"});
+          saveAs(blob, "supervisorFlinches"+Date.now()+".dat");
           document.location.href = "http://localhost:3000/stagePages/donutDeliveryTutorial.html";
         }
         robot.states = [robotX0,robotY0[curY0],0];
@@ -139,7 +141,7 @@ document.addEventListener("keydown",function(event) {
   // Log time and key
   key = event.keyCode;
   console.log(key);
-  // 'S' is the save-to-file key
+  // 'Z' is the save-to-file key
   if(key == 90){
     var blob = new Blob([JSON.stringify(flinchData)], {type: "text/plain;charset=utf-8"});
     saveAs(blob, "supervisorFlinches"+Date.now()+".dat");
@@ -161,12 +163,14 @@ document.addEventListener("keydown",function(event) {
     // Reset the game of robot chicken
     curY0++;
     if(curY0 >= robotY0.length){
+      var blob = new Blob([JSON.stringify(flinchData)], {type: "text/plain;charset=utf-8"});
+      saveAs(blob, "supervisorFlinches"+Date.now()+".dat");
       document.location.href = "http://localhost:3000/stagePages/donutDeliveryTutorial.html";
       curY0 = 0;
     }
     robot.states = [robotX0,robotY0[curY0],0];
-    robot.update(0,u);
-    console.log("reset robot state to ",[robotX0,robotY0[curY0],0]);
+    robot.update(0,0);
+    console.log("Key-based reset robot state to ",[robotX0,robotY0[curY0],0]);
     counter = -1;
   }
   // End
