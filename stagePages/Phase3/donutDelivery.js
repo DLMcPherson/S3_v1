@@ -245,7 +245,7 @@ window.setInterval(function() {
   }
   // Check if Time has Elapsed
   if(clock > MAXTIME * 1000){
-    document.location.href = "http://localhost:3000/stagePages/completed.html";
+    document.location.href = "../completed.html";
   }
     // Draw the goal lines
   graphics.beginFill(0xEEEEEE);

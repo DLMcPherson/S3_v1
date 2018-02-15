@@ -90,7 +90,7 @@ class QuadrotorRobot extends Robot {
   // and sets initial state data
   constructor(initial_state){
     // Image
-    super(PIXI.Texture.fromImage("../QuadcopterSide.png"));
+    super(PIXI.Texture.fromImage("http://localhost:3000/S3_v1/QuadcopterSide.png"));
     this.pivot.x = 100 ; this.pivot.y = 50;
     this.width = 100 ; this.height = 100;
     // State Vector
@@ -128,7 +128,7 @@ class VerticalQuadrotorRobot extends Robot {
   // and sets initial state data
   constructor(initial_state){
     // Image
-    super(PIXI.Texture.fromImage("../QuadcopterSide.png"));
+    super(PIXI.Texture.fromImage("http://localhost:3000/S3_v1/QuadcopterSide.png"));
     this.pivot.x = 100 ; this.pivot.y = 50;
     this.width = 100 ; this.height = 50;
     // State Vector
@@ -197,7 +197,7 @@ class DubinsRobot extends Robot {
   // and sets initial state data
   constructor(initial_state,velocity,tint){
     // Image
-    super(PIXI.Texture.fromImage("../DubinsCarV2.png"));
+    super(PIXI.Texture.fromImage("http://localhost:3000/S3_v1/DubinsCarV2.png"));
     this.width = 1.1 * graphics.mapper.Mxx;
     this.height = 1.1 * graphics.mapper.Mxx;
 //    this.width = 80 * 3/7; this.height = 80 * 3/7;

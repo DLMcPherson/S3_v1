@@ -298,7 +298,7 @@ class loaded_SafeSet extends SafeSet {
   constructor(name){
     super();
     // Fetch the reachset JSON file from the server
-    fetch("../reachableSets/"+name+"_reachset.json").then((response) => {
+    fetch("http://localhost:3000/S3_v1/reachableSets/"+name+"_reachset.json").then((response) => {
             return response.json();
         }).then((json) => {
             // Load the JSON into a local data member

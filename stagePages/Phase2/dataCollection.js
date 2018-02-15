@@ -108,7 +108,7 @@ window.setInterval(function() {
           curY0 = 0;
           var blob = new Blob([JSON.stringify(flinchData)], {type: "text/plain;charset=utf-8"});
           saveAs(blob, "supervisorFlinches"+Date.now()+".dat");
-          document.location.href = "http://localhost:3000/stagePages/donutDeliveryTutorial.html";
+          document.location.href = "../Phase3/";
         }
         robot.states = [robotX0,robotY0[curY0],0];
         console.log("reset robot state to ",[robotX0,robotY0[curY0],0]);
@@ -165,7 +165,8 @@ document.addEventListener("keydown",function(event) {
     if(curY0 >= robotY0.length){
       var blob = new Blob([JSON.stringify(flinchData)], {type: "text/plain;charset=utf-8"});
       saveAs(blob, "supervisorFlinches"+Date.now()+".dat");
-      document.location.href = "http://localhost:3000/stagePages/donutDeliveryTutorial.html";
+      //document.location.href = "http://localhost:3000/stagePages/donutDeliveryTutorial.html";
+      document.location.href = "../Phase3/";
       curY0 = 0;
     }
     robot.states = [robotX0,robotY0[curY0],0];
