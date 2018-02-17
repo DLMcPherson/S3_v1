@@ -2,14 +2,21 @@
 
 const SCREEN_WIDTH = 1400;
 const SCREEN_HEIGHT = 768;
-const MAXTIME = 120;
+const MAXTIME = 123;
+const NUMBER_OF_ROBOTS = 2;
+
+// Recording
+let unsaved = true;
+let record = new Record;
+const RECORDING_PERIOD = 10;
+let recordCounter = 0;
 
 function random() {
     var x = Math.sin(seed++) * 10000;
     return x - Math.floor(x);
 }
 
-console.log("Driving style for this game is "+thisDrivingStyle+" = "+drivingStyle)
+console.log("Driving style for this game is Number "+drivingStyle)
 
 // Mapper class that scales state space to screen
 class ScreenXYMap {
@@ -60,15 +67,6 @@ let renderer = PIXI.autoDetectRenderer(SCREEN_WIDTH, SCREEN_HEIGHT);
 renderer.backgroundColor = 0xffffff;
 renderer.roundPixels = true;
 
-// Optionally connect to Firebase Cloud Database.
-// IMPORTANT NOTE: Should only be used for internal test piloting. Results saved
-// online are not supported by our IRB (due to possible security issues) and
-// therefore would be unethical to publish.
-const saveToCloud = 0;
-if(saveToCloud){
-  let firebase = new Firebase("https://testpilotsuperss.firebaseio.com/");
-}
-
 // Standard Screen
 let stage = new PIXI.Container();
   // Graphics object for lines and squares and such...
@@ -86,7 +84,7 @@ timerDisplay.y = 60;
 stage.addChild(timerDisplay);
 
 // Add the Countdown Timer
-let countdown = new PIXI.Text('3',{font : '80px Gill Sans', fill : 0x000000})
+let countdown = new PIXI.Text('3',{font : '80px Gill Sans', fill : 0x555555})
 countdown.x = SCREEN_WIDTH/2;
 countdown.y = SCREEN_HEIGHT/2;
 stage.addChild(countdown);
@@ -114,6 +112,7 @@ for(let ii = 0; ii < 15; ii++){
     }
   }while(blocked)
   obstacleList.push(new RoundObstacle(posX,posY,1.8,carRadius,dubinsCircles))
+  record.obstacles.push([posX,posY,1.8,carRadius]);
 }
 //let wall = new RoundObstacle(0,-12.5,0.1,0,dubinsWalls);
 //wall.color = 0xEEEEEE;
@@ -137,7 +136,7 @@ let robots = [];
 let robotControllers = [];
 let robotTints = [0x24EB98, 0xFF745A, 0x6333ed];
 //robots.push(new DubinsRobot([-4,3,0],3,0xFF745A));
-for(let robotNum = 0; robotNum < 2; robotNum++){
+for(let robotNum = 0; robotNum < NUMBER_OF_ROBOTS; robotNum++){
   //let pos = graphics.mapper.randomStateXY();
   //robots[robotNum] = new DubinsRobot([-20,robotNum*5-5,0],3,robotTints[robotNum]);
   robots[robotNum] = new DubinsRobot([-20,robotNum*5-5,0],3,0x24EB98);
@@ -212,6 +211,22 @@ window.setInterval(function() {
       let goalPos = [robotControllers[robotNum].tracker.goal.x,robotControllers[robotNum].tracker.goal.y];
       graphics.lineTo(goalPos[0],goalPos[1]);
       graphics.endFill();
+      // Record the robot trajectories
+      recordCounter++;
+      if(recordCounter == RECORDING_PERIOD){
+        recordCounter = 0;
+        for(let robotNum = 0; robotNum < robots.length; robotNum++){
+          // Record the robot state
+          record.robotTraces[robotNum].push(robots[robotNum].states);
+            // do we want to record other data for each robot, like spinout?
+          // Record the current time
+          record.timeTrace.push(clock);
+          // Record the current mouse position
+          let mousePosition = renderer.plugins.interaction.mouse.global;
+          let mouseState = graphics.mapper.mapPositionToState(mousePosition.x,mousePosition.y);
+          record.mouseTrace.push(mouseState);
+        }
+      }
     }
     countdown.text = '';
   }
@@ -245,6 +260,12 @@ window.setInterval(function() {
   }
   // Check if Time has Elapsed
   if(clock > MAXTIME * 1000){
+    if(unsaved){
+      record.score = ArcadeScore;
+      var blob = new Blob([JSON.stringify(record)], {type: "text/plain;charset=utf-8"});
+      saveAs(blob, "Subject"+participantNumber+"Game"+gameNumber+".dat");
+      unsaved = false;
+    }
     if(gameNumber<5){
       document.location.href = "buffer.html#" + gameNumber;
     }
@@ -267,43 +288,6 @@ window.setInterval(function() {
   renderer.render(stage);
 },10)
 
-// ====================== Keyboard Listener Loop ========================= //
-let key = null;
-document.addEventListener("keydown",function(event) {
-  // Log time and key
-  key = event.keyCode;
-  /*
-  // Update level set
-  if(intervener.trigger_level < intervener.intervening_set.value(robot.states)){
-    intervener.trigger_level = intervener.intervening_set.value(robot.states);
-  }
-  // Draw level set
-  obstacle.renderAugmented(intervener.trigger_level);
-  */
-  console.log(key);
-  if(key == 49){
-    intervener.setID = 0;
-    //intervener.intervening_set = originalSafeset;
-    //intervener = intervenerOri;
-  }
-  if(key == 50){
-    intervener.setID = 1;
-    //intervener.intervening_set = pixelwiseSafeset;
-    //intervener = intervenerPix;
-  }
-  if(key == 51){
-    intervener.setID = 2;
-    //intervener.intervening_set = LSPickerSafeset;
-    //intervener = intervenerLSP;
-  }
-  if(key == 52){
-    intervener.setID = 3;
-    //intervener.intervening_set = BellmanIteratedSafeset;
-    //intervener = intervenerBIt;
-  }
-  // End
-})
-
 // ====================== Mouse Listener Loop ========================= //
 document.addEventListener("mousedown",function(event) {
   let mousePosition = renderer.plugins.interaction.mouse.global;
@@ -317,6 +301,19 @@ document.addEventListener("mousedown",function(event) {
         obstacleDeficit++;
         ghostObstacleIds.push(obNum);
         ArcadeScore -= 10;
+        // Log the mouseclick
+        let clickData = []
+        clickData.mouseState = mouseState;
+        clickData.destroyedObstacle = obNum;
+        clickData.timestamp = clock;
+        clickData.robots = [];
+        for(let robotNum = 0; robotNum < robots.length; robotNum++){
+          clickData.robots[robotNum] = [];
+          clickData.robots[robotNum].state = robots[robotNum].states;
+          clickData.robots[robotNum].blindToObstacle =
+             robotControllers[robotNum].intervening_sets.undetectionscape[obNum];
+        }
+        record.mouseEvents.push(clickData);
       }
     }
   }
