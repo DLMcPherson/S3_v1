@@ -1,0 +1,48 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="content-type" content="text/html">
+        <meta name="viewport" content="maximum-scale=1, width=device-width, initial-scale=1">
+        <link href='https://fonts.googleapis.com/css?family=Gill Sans&subset=latin,greek' rel='stylesheet' type='text/css'>
+        <link href="../index.css" rel="stylesheet" type="text/css"/>
+        <title>Phase 3</title>
+    </head>
+    <body>
+        <script type="text/javascript">var userip;</script>
+        <center><h1>Game Complete</h1>
+          <br>
+          The robot cars in the next game will have a different AI with its own driving style.
+          <br><br><br>
+        </center>
+
+        <div style="float: left"><img src="CarDeliveryCrop.png" alt="Making deliveries" width="100"></div>
+        <div style="float: right"><h2 align="right">+20</h2></div>
+        <div style="margin: 0 auto; width: 500px;">Robot team makes deliveries</div>
+        <br><br><br><br>
+
+        <div style="float: left"><img src="CarCrashed.png" alt="Making deliveries" width="100"></div>
+        <div style="float: right"><h2 align="right">-20</h2></div>
+        <div style="margin: 0 auto; width: 500px;">Sometimes robots won't detect the obstacle and might spinout</div>
+        <br><br><br><br>
+
+        <div style="float: left"><img src="CarSaved2.png" alt="Making deliveries" width="100"></div>
+        <div style="float: right"><h2 align="right">-10</h2></div>
+        <div style="margin: 0 auto; width: 500px;">You can save the robot by clicking to remove the obstacle, but click sparingly since each click costs</div>
+        <br><br><br><br>
+
+        <center><h2><a id="beginButton" href="donutDelivery.html#0">BEGIN</a></h2></center>
+
+        <script type="text/javascript">
+          let gameNumber = Number(window.location.href.slice(-1));
+          gameNumber++;
+          document.getElementById("beginButton").href = "donutDelivery.html#" + gameNumber;
+          //document.location.href = "donutDelivery.html#" + gameNumber;
+        </script>
+
+        <script type="text/javascript" src="https://l2.io/ip.js?var=userip"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
+        <script src="https://cdn.firebase.com/js/client/2.4.0/firebase.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js" type="text/javascript"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/3.0.9/pixi.min.js" type="text/javascript"></script>
+    </body>
+</html>

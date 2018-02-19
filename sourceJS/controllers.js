@@ -201,6 +201,13 @@ class PaletteIntervention_Contr extends Controller {
     this.setID = _mySetID;
     // Added padding to the safeset for factoring in robot width
     this.trigger_level = 0;
+    // Record the initialization in goal and undetection
+    let goalSetEvent = [];
+    goalSetEvent.robotID = this.robot.ID;
+    goalSetEvent.undetection = this.intervening_sets.undetectionscape.slice();
+    goalSetEvent.newGoal = this.tracker.set;
+    goalSetEvent.timestamp = clock;
+    record.goalSetEvents.push(goalSetEvent);
   }
   // Method that returns the current input responding to the current state
   u(){
@@ -217,6 +224,13 @@ class PaletteIntervention_Contr extends Controller {
         console.log(ArcadeScore);
       }
       this.intervening_sets.rerandomizeUndetection();
+      // Record this change in goal and undetection
+      let goalSetEvent = [];
+      goalSetEvent.robotID = this.robot.ID;
+      goalSetEvent.undetection = this.intervening_sets.undetectionscape.slice();
+      goalSetEvent.newGoal = newGoal;
+      goalSetEvent.timestamp = clock;
+      record.goalSetEvents.push(goalSetEvent);
     }
     // Check if the reachset value function is below the triggering level set
     if( this.intervening_sets.value(this.setID,this.robot.states) < this.trigger_level ){

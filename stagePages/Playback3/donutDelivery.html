@@ -1,0 +1,66 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="content-type" content="text/html">
+        <meta name="viewport" content="maximum-scale=1, width=device-width, initial-scale=1">
+        <link href='https://fonts.googleapis.com/css?family=Gill Sans&subset=latin,greek' rel='stylesheet' type='text/css'>
+        <link href="../index.css" rel="stylesheet" type="text/css"/>
+        <title>Phase 3</title>
+    </head>
+    <body>
+        <script type="text/javascript">var userip;</script>
+        <div id="mount">Help your robot delivery trucks safely reach their goals and earn points. Robots will dodge obstacles if they see it, but sometimes they can't detect them in time! Click to remove an obstacle.</div>
+        <script type="text/javascript" src="https://l2.io/ip.js?var=userip"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js" type="text/javascript"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/3.0.9/pixi.min.js" type="text/javascript"></script>
+        <script src="../FileSaver.js" type="text/javascript"></script>
+
+        <script src="http://localhost:3000/S3_v1/sourceJS/robot_dynamics.js" type="text/javascript"></script>
+        <script src="http://localhost:3000/S3_v1/sourceJS/controllers.js" type="text/javascript"></script>
+        <script src="http://localhost:3000/S3_v1/sourceJS/reachable_sets.js" type="text/javascript"></script>
+        <script src="http://localhost:3000/S3_v1/sourceJS/obstacles.js" type="text/javascript"></script>
+        <script src="http://localhost:3000/S3_v1/sourceJS/recording.js" type="text/javascript"></script>
+
+        <script src="http://localhost:3000/Experiments/3/config.js" type="text/javascript"></script>
+        <script type="text/javascript">
+          // Obtain the ID of this game (Subject, Game, and Comparison numbers)
+          let participantNumber = 3;
+            // Chronological number of which game we're on
+          let gameNumber = Number(window.location.href.slice(-1));
+            // Chronological number of which pairwise comparions we're currently in
+          let compairNumber = 0;
+          if(gameNumber == 0 || gameNumber == 1){
+            compairNumber = 0;
+          }
+          if(gameNumber == 2 || gameNumber == 3){
+            compairNumber = 1;
+          }
+          if(gameNumber == 4 || gameNumber == 5){
+            compairNumber = 2;
+          }
+          // Get the pairing ID (as defined by DRS in config.js file) for which
+          // pairwise comparison we are currently in
+          let pairingID = pairingOrder[compairNumber];
+          let pairingDrivingStyles = [4,4]
+          if(pairingID == 1){ // Comparing Learned and Physics-based Safety Sets
+            pairingDrivingStyles = [1,0];
+          }
+          if(pairingID == 2){ // Comparing Physics-based and Conservative Safety Sets
+            pairingDrivingStyles = [0,2];
+          }
+          if(pairingID == 3){ // Comparing Conservative and Learned Safety Sets
+            pairingDrivingStyles = [2,1];
+          }
+          // Get the seed
+          let seed = seedSequence[pairingID][gameNumber%2];
+          // Rotate through driving styles
+          let drivingStyle = pairingDrivingStyles[gameNumber%2];
+          if(flipped){
+            drivingStyle = pairingDrivingStyles[1-gameNumber%2];
+          }
+        </script>
+
+        <script src="donutDelivery.js" type="text/javascript"></script>
+    </body>
+</html>

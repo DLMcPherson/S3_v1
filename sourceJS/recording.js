@@ -11,6 +11,13 @@ class Record {
     }
     this.timeTrace = [];
     this.mouseTrace = [];
+    // Mouse clicking events
     this.mouseEvents = [];
+    // Obstacle regeneration events
+    this.regenEvents = [];
+    // Goal resetting events
+    this.goalSetEvents = [];
+    // Final Score
+    this.finalScore = 0;
   }
 }
