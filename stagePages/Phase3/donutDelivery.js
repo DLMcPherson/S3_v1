@@ -218,7 +218,7 @@ window.setInterval(function() {
         recordCounter = 0;
         for(let robotNum = 0; robotNum < robots.length; robotNum++){
           // Record the robot state
-          record.robotTraces[robotNum].push(robots[robotNum].states);
+          record.robotTraces[robotNum].push(robots[robotNum].states.slice());
             // do we want to record other data for each robot, like spinout?
           // Record the current time
           record.timeTrace.push(clock);
@@ -304,18 +304,21 @@ document.addEventListener("mousedown",function(event) {
         ghostObstacleIds.push(obNum);
         ArcadeScore -= 10;
         // Log the mouseclick
-        let clickData = []
-        clickData.mouseState = mouseState;
-        clickData.destroyedObstacleID = obNum;
-        clickData.timestamp = clock;
-        clickData.robots = [];
+        let clickRobots = [];
         for(let robotNum = 0; robotNum < robots.length; robotNum++){
-          clickData.robots[robotNum] = [];
-          clickData.robots[robotNum].state = robots[robotNum].states;
-          clickData.robots[robotNum].blindToObstacle =
-             robotControllers[robotNum].intervening_sets.undetectionscape[obNum];
+          let robotBlinded =
+            robotControllers[robotNum].intervening_sets.undetectionscape[obNum];
+          clickRobots[robotNum] = {
+            "state": robots[robotNum].states.slice(),
+            "blindToObstacle": robotBlinded
+          };
         }
-        record.mouseEvents.push(clickData);
+        record.mouseEvents.push({
+          "mouseState": mouseState,
+          "destroyedObstacleID": obNum,
+          "timestamp": clock,
+          "robots": clickRobots
+        });
       }
     }
   }

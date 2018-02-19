@@ -5,12 +5,6 @@ const SCREEN_HEIGHT = 768;
 const MAXTIME = 123;
 const NUMBER_OF_ROBOTS = 2;
 
-// Recording
-let unsaved = true;
-let record = new Record;
-const RECORDING_PERIOD = 10;
-let recordCounter = 0;
-
 function random() {
     var x = Math.sin(seed++) * 10000;
     return x - Math.floor(x);
@@ -61,7 +55,8 @@ class ScreenXYMap {
 }
 
 /* ===================== SETUP ================== */
-let clock =  0 ;
+let wallClock = 0;
+let clock =  0;
 
 // Setup the PIXI renderer that handles interactive display and input inside the browser
 let renderer = PIXI.autoDetectRenderer(SCREEN_WIDTH, SCREEN_HEIGHT);
@@ -92,36 +87,20 @@ stage.addChild(countdown);
 
 // Obstacles
 let dubinsCircles = new TestTrifectaPalette("dubins");
-let dubinsWalls = new CopiedPalette("dubinsWall");
 let obstacleList = [];
-let carRadius = 0.55;
 for(let ii = 0; ii < 15; ii++){
-  //let pos = graphics.mapper.randomStateXY();
-  let posX = random()*30 - 15;
-  let posY = random()*18 - 9;
-  let blocked = false;
-  do {
-    posX = random()*30 - 15;
-    posY = random()*18 - 9;
-    blocked = false;
-    for(let obNum = 0; obNum < obstacleList.length; obNum++){
-      if( Math.pow((obstacleList[obNum].ObX - posX),2)
-            + Math.pow((obstacleList[obNum].ObY - posY),2)
-                < Math.pow((3 * obstacleList[obNum].ObR),2) ){
-        blocked = true;
-      }
-    }
-  }while(blocked)
-  obstacleList.push(new RoundObstacle(posX,posY,1.8,carRadius,dubinsCircles))
-  record.obstacles.push({position: [posX,posY], radius: 1.8, radiusTrim: carRadius});
+  let obstacleInit = record.obstacles[ii];
+  let posX = obstacleInit.position[0];
+  let posY = obstacleInit.position[1];
+  //obstacleList.push(new RoundObstacle(posX,posY,obstacleInit.radius,obstacleInit.radiumTrim,dubinsCircles));
+  obstacleList.push(new RoundObstacle(posX,posY,1.8,0.55,dubinsCircles));
 }
 //let wall = new RoundObstacle(0,-12.5,0.1,0,dubinsWalls);
 //wall.color = 0xEEEEEE;
 //obstacleList.push(wall )
 let obstacles = new Obstaclescape(obstacleList)
 for(let ii = 0; ii < 15; ii++){
-  if(ii % 2 == 0)
-    obstacles.obstacleUndetected[ii] = true;
+  obstacles.obstacleUndetected[ii] = false;
 }
 // Clear out some obstacles to begin with
 let ghostObstacleIds = [];
@@ -134,7 +113,7 @@ for(let ii = 10; ii < 15; ii++){
 let Umax = 1;
 ///* // Dubins Car Robot
 let robots = [];
-let robotControllers = [];
+let robotGoals = [];
 let robotTints = [0x24EB98, 0xFF745A, 0x6333ed];
 //robots.push(new DubinsRobot([-4,3,0],3,0xFF745A));
 for(let robotNum = 0; robotNum < NUMBER_OF_ROBOTS; robotNum++){
@@ -145,16 +124,8 @@ for(let robotNum = 0; robotNum < NUMBER_OF_ROBOTS; robotNum++){
 
   stage.addChild(robots[robotNum]);
 
-  let goalPoint = graphics.mapper.randomStateXY();
-  goalPoint[0] = 20;
-
-  let intervener = new PaletteIntervention_Contr(robots[robotNum],
-      new maskedObstaclescape(obstacles),0,
-      Umax,0,
-      new Dubins_Contr(robots[robotNum],Umax,goalPoint ));
-  //intervener.trigger_level = robots[robotNum].height/(2*graphics.mapper.Mxx) * Math.SQRT2;
-  robotControllers[robotNum] = intervener;
-  robotControllers[robotNum].setID = drivingStyle;
+  // Set their goals
+  robotGoals[robotNum] = record.goalSetEvents[robotNum].newGoal;
 }
 /*
 robotControllers[0].setID = 0;
@@ -171,6 +142,12 @@ let rightX;
 [leftX,] = graphics.mapper.mapStateToPosition(-20,0);
 [rightX,] = graphics.mapper.mapStateToPosition(20,0);
 
+// Playback management variables
+let curTick = 0;
+let curMouseEvent = 0;
+let curRegenEvent = 0;
+let curGoalSetEvent = 0;
+
 // Main Loop
 let now = Date.now();
 let obstacleDeficit = 0;
@@ -179,60 +156,46 @@ window.setInterval(function() {
   graphics.clear();
   // Time management
   let delT = Date.now() - now;
-  clock += delT;
+  wallClock += delT;
   timerDisplay.text = 'TIME: '+(MAXTIME-Math.floor(clock/1000))+' sec';
   now = Date.now();
-  if(clock > 3000){
-    delT *= 0.0005 * 4;
-    // Robot dynamics
-    for(let robotNum = 0; robotNum < robots.length; robotNum++){
-      if(robots[robotNum].destroyed) continue;
-      robots[robotNum].update(delT,robotControllers[robotNum].u() );
-      // Check if the robot ran into an obstacle
-      if(obstacles.collisionSetValue(robots[robotNum].states) < 0){
-        if(robots[robotNum].spinout == 0){
-          /*
-          obstacles.obstacleDestroyed[obNum] = true;
-          robots[robotNum].destroyed = true;
-          robots[robotNum].speed = 0;
-          */
-          //robots[robotNum].tint = 0x999999;
-
-          ArcadeScore -= 20;
-          console.log('robot mistake!');
-        }
-        robots[robotNum].spinout = 100;
-      }
-      // Draw goal rays
-      graphics.beginFill(0x222222);
-      graphics.lineStyle(2,0xDDEEDD);
-      let robotPos = graphics.mapper.mapStateToPosition(robots[robotNum].states[0],robots[robotNum].states[1]);
-      graphics.moveTo(robotPos[0],robotPos[1]);
-      //let goalPos = graphics.mapper.mapStateToPosition(robotControllers[robotNum].tracker.set);
-      let goalPos = [robotControllers[robotNum].tracker.goal.x,robotControllers[robotNum].tracker.goal.y];
-      graphics.lineTo(goalPos[0],goalPos[1]);
-      graphics.endFill();
-      // Record the robot trajectories
-      recordCounter++;
-      if(recordCounter == RECORDING_PERIOD){
-        recordCounter = 0;
-        for(let robotNum = 0; robotNum < robots.length; robotNum++){
-          // Record the robot state
-          record.robotTraces[robotNum].push(robots[robotNum].states);
-            // do we want to record other data for each robot, like spinout?
-          // Record the current time
-          record.timeTrace.push(clock);
-          // Record the current mouse position
-          let mousePosition = renderer.plugins.interaction.mouse.global;
-          let mouseState = graphics.mapper.mapPositionToState(mousePosition.x,mousePosition.y);
-          record.mouseTrace.push(mouseState);
-        }
-      }
+  delT *= 0.0005 * 4;
+  // Robot dynamics
+  if(wallClock > record.timeTrace[curTick+1]){
+    clock = record.timeTrace[curTick+1];
+    curTick++;
+    if(curTick > record.robotTraces[0].length){
+      curTick = record.robotTraces[0].length;
     }
-    countdown.text = '';
+    for(let robotNum = 0; robotNum < robots.length; robotNum++){
+      // Set the robot state to that from the record
+      robots[robotNum].states = record.robotTraces[robotNum][curTick].slice();
+      robots[robotNum].displayState();
+    }
+    //console.log(curTick,record.robotTraces[0][curTick]);
   }
-  else{
-    countdown.text = Math.ceil( 3+(3 - clock)/1000 );
+  /*
+  for(let robotNum = 0; robotNum < robots.length; robotNum++){
+    // Draw goal rays
+    graphics.beginFill(0x222222);
+    graphics.lineStyle(2,0xDDEEDD);
+    let robotPos = graphics.mapper.mapStateToPosition(robots[robotNum].states[0],robots[robotNum].states[1]);
+    graphics.moveTo(robotPos[0],robotPos[1]);
+    let goalPos = robotGoals[robotNum];
+    graphics.lineTo(goalPos[0],goalPos[1]);
+    graphics.endFill();
+  }
+  */
+  countdown.text = '';
+  // Obstacle destruction (playing back and emulating mouseclicks)
+  if(clock > record.mouseEvents[curMouseEvent].timestamp){
+    let obNum = record.mouseEvents[curMouseEvent].destroyedObstacleID;
+    obstacles.obstacleDestroyed[obNum] = true;
+    console.log('obstacle destroyed')
+    //obstacleDeficit++;
+    ghostObstacleIds.push(obNum);
+    ArcadeScore -= 10;
+    curMouseEvent++;
   }
   // Obstacle regeneration
   if(obstacleDeficit > 0){
@@ -289,38 +252,6 @@ window.setInterval(function() {
   arcadeScore.text = 'SCORE: '+ ArcadeScore;
   renderer.render(stage);
 },10)
-
-// ====================== Mouse Listener Loop ========================= //
-document.addEventListener("mousedown",function(event) {
-  let mousePosition = renderer.plugins.interaction.mouse.global;
-  let mouseState = graphics.mapper.mapPositionToState(mousePosition.x,mousePosition.y);
-  for(let obNum = 0; obNum < obstacles.obstacles.length ; obNum++){
-    let curObstacle = obstacles.obstacles[obNum];
-    if(obstacles.obstacleDestroyed[obNum] == false){
-      if(curObstacle.collisionSetValue([mouseState[0],mouseState[1],0]) < 0){
-        obstacles.obstacleDestroyed[obNum] = true;
-        console.log('obstacle destroyed')
-        obstacleDeficit++;
-        ghostObstacleIds.push(obNum);
-        ArcadeScore -= 10;
-        // Log the mouseclick
-        let clickData = []
-        clickData.mouseState = mouseState;
-        clickData.destroyedObstacleID = obNum;
-        clickData.timestamp = clock;
-        clickData.robots = [];
-        for(let robotNum = 0; robotNum < robots.length; robotNum++){
-          clickData.robots[robotNum] = [];
-          clickData.robots[robotNum].state = robots[robotNum].states;
-          clickData.robots[robotNum].blindToObstacle =
-             robotControllers[robotNum].intervening_sets.undetectionscape[obNum];
-        }
-        record.mouseEvents.push(clickData);
-      }
-    }
-  }
-  // End
-})
 
 
 // Mount the renderer in the website
