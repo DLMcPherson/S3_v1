@@ -164,7 +164,7 @@ document.addEventListener("keydown",function(event) {
     curY0++;
     if(curY0 >= robotY0.length){
       var blob = new Blob([JSON.stringify(flinchData)], {type: "text/plain;charset=utf-8"});
-      saveAs(blob, "supervisorFlinches"+Date.now()+".dat");
+      saveAs(blob, "supervisorFlinches.dat");
       //document.location.href = "http://localhost:3000/stagePages/donutDeliveryTutorial.html";
       document.location.href = "../Phase3/";
       curY0 = 0;

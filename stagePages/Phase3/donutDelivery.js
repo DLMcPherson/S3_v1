@@ -220,13 +220,13 @@ window.setInterval(function() {
           // Record the robot state
           record.robotTraces[robotNum].push(robots[robotNum].states.slice());
             // do we want to record other data for each robot, like spinout?
-          // Record the current time
-          record.timeTrace.push(clock);
-          // Record the current mouse position
-          let mousePosition = renderer.plugins.interaction.mouse.global;
-          let mouseState = graphics.mapper.mapPositionToState(mousePosition.x,mousePosition.y);
-          record.mouseTrace.push(mouseState);
         }
+        // Record the current time
+        record.timeTrace.push(clock);
+        // Record the current mouse position
+        let mousePosition = renderer.plugins.interaction.mouse.global;
+        let mouseState = graphics.mapper.mapPositionToState(mousePosition.x,mousePosition.y);
+        record.mouseTrace.push(mouseState);
       }
     }
     countdown.text = '';

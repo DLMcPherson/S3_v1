@@ -125,7 +125,7 @@ for(let robotNum = 0; robotNum < NUMBER_OF_ROBOTS; robotNum++){
   stage.addChild(robots[robotNum]);
 
   // Set their goals
-  robotGoals[robotNum] = record.goalSetEvents[robotNum].newGoal;
+  robotGoals[robotNum] = [-20,0];
 }
 /*
 robotControllers[0].setID = 0;
@@ -166,77 +166,72 @@ window.setInterval(function() {
     curTick++;
     if(curTick > record.robotTraces[0].length){
       curTick = record.robotTraces[0].length;
+      if(gameNumber<5){
+        document.location.href = "buffer.html#" + gameNumber;
+      }
+      else{
+        document.location.href = "../completed.html";
+      }
     }
     for(let robotNum = 0; robotNum < robots.length; robotNum++){
       // Set the robot state to that from the record
       robots[robotNum].states = record.robotTraces[robotNum][curTick].slice();
-      robots[robotNum].displayState();
     }
     //console.log(curTick,record.robotTraces[0][curTick]);
   }
-  /*
   for(let robotNum = 0; robotNum < robots.length; robotNum++){
+    // Check if the robot ran into an obstacle
+    if(obstacles.collisionSetValue(robots[robotNum].states) < 0){
+      if(robots[robotNum].spinout == 0){
+        /*
+        obstacles.obstacleDestroyed[obNum] = true;
+        robots[robotNum].destroyed = true;
+        robots[robotNum].speed = 0;
+        */
+        //robots[robotNum].tint = 0x999999;
+
+        ArcadeScore -= 20;
+        console.log('robot mistake!');
+      }
+      robots[robotNum].spinout = 100;
+    }
+    robots[robotNum].displayState();
     // Draw goal rays
     graphics.beginFill(0x222222);
     graphics.lineStyle(2,0xDDEEDD);
     let robotPos = graphics.mapper.mapStateToPosition(robots[robotNum].states[0],robots[robotNum].states[1]);
     graphics.moveTo(robotPos[0],robotPos[1]);
-    let goalPos = robotGoals[robotNum];
+    let goalState = robotGoals[robotNum].slice();
+    let goalPos = graphics.mapper.mapStateToPosition(goalState[0],goalState[1]);
     graphics.lineTo(goalPos[0],goalPos[1]);
     graphics.endFill();
   }
-  */
   countdown.text = '';
   // Obstacle destruction (playing back and emulating mouseclicks)
   if(clock > record.mouseEvents[curMouseEvent].timestamp){
     let obNum = record.mouseEvents[curMouseEvent].destroyedObstacleID;
     obstacles.obstacleDestroyed[obNum] = true;
     console.log('obstacle destroyed')
-    //obstacleDeficit++;
+    obstacleDeficit++;
     ghostObstacleIds.push(obNum);
     ArcadeScore -= 10;
     curMouseEvent++;
   }
   // Obstacle regeneration
-  if(obstacleDeficit > 0){
-    //for(let obNum = 0; obNum < obstacles.obstacles.length; obNum++){
-    //  if(obstacles.obstacleDestroyed[obNum]){
-    for(let ii = 0; ii < ghostObstacleIds.length; ii++){
-      let obNum = ghostObstacleIds[ii];
-      {
-        let robotTooClose = false;
-        for(let robotNum = 0; robotNum < robots.length; robotNum++){
-          if(obstacles.obstacles[obNum].collisionSetValue(robots[robotNum].states) < 2){
-            robotTooClose = true;
-          }
-        }
-        if(robotTooClose == false){
-          obstacles.obstacleDestroyed[obNum] = false;
-          record.regenEvents.push({timestamp: clock, regeneratedObstacleID: obNum});
-          obstacleDeficit--;
-          ghostObstacleIds.shift();
-          console.log("obstacle respawned")
-        }
-      }
-      if(obstacleDeficit == 0){
-        break;
-      }
-    }
+  if(clock > record.regenEvents[curRegenEvent].timestamp){
+    let obNum = record.regenEvents[curMouseEvent].regeneratedObstacleID;
+    obstacles.obstacleDestroyed[obNum] = false;
+    console.log('obstacle respawned')
+    obstacleDeficit--;
+    ghostObstacleIds.shift();
+    curRegenEvent++;
   }
-  // Check if Time has Elapsed
-  if(clock > MAXTIME * 1000){
-    if(unsaved){
-      record.finalScore = ArcadeScore;
-      var blob = new Blob([JSON.stringify(record)], {type: "text/plain;charset=utf-8"});
-      saveAs(blob, "Subject"+participantNumber+"Game"+gameNumber+".dat");
-      unsaved = false;
-    }
-    if(gameNumber<5){
-      document.location.href = "buffer.html#" + gameNumber;
-    }
-    else{
-      document.location.href = "../completed.html";
-    }
+  // Goal set resetting
+  if(clock > record.goalSetEvents[curGoalSetEvent].timestamp){
+    robotGoals[record.goalSetEvents[curGoalSetEvent].robotID]
+        = record.goalSetEvents[curGoalSetEvent].goal.slice();
+    curGoalSetEvent++;
+    ArcadeScore += 20;
   }
     // Draw the goal lines
   graphics.beginFill(0xEEEEEE);
