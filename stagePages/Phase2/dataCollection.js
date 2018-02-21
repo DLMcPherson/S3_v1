@@ -107,7 +107,7 @@ window.setInterval(function() {
         if(curY0 >= robotY0.length){
           curY0 = 0;
           var blob = new Blob([JSON.stringify(flinchData)], {type: "text/plain;charset=utf-8"});
-          saveAs(blob, "supervisorFlinches"+Date.now()+".dat");
+          saveAs(blob, "supervisorFlinches.dat");
           document.location.href = "../Phase3/";
         }
         robot.states = [robotX0,robotY0[curY0],0];
@@ -144,7 +144,7 @@ document.addEventListener("keydown",function(event) {
   // 'Z' is the save-to-file key
   if(key == 90){
     var blob = new Blob([JSON.stringify(flinchData)], {type: "text/plain;charset=utf-8"});
-    saveAs(blob, "supervisorFlinches"+Date.now()+".dat");
+    saveAs(blob, "supervisorFlinches.dat");
   }
   else{
     // Save flinch information

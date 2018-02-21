@@ -17,6 +17,7 @@ function random() {
 }
 
 console.log("Driving style for this game is Number "+drivingStyle)
+console.log("Randomization Seed is "+seed)
 
 // Mapper class that scales state space to screen
 class ScreenXYMap {
