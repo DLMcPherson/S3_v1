@@ -101,7 +101,8 @@ class Obstaclescape {
     let curMinValue = 100;
     // Iterate over obstacles and find the lowest value function
     for(let obNum = 0; obNum < this.obstacles.length ; obNum++){
-      if(this.obstacleDestroyed[obNum] == false){
+      if(this.obstacleDestroyed[obNum] == false
+          && this.obstacleUndetected[obNum] == true){
         let obsValue = this.obstacles[obNum].collisionSetValue(states);
         if(obsValue < curMinValue)
           curMinValue = obsValue;
@@ -173,6 +174,11 @@ class maskedObstaclescape {
       this.undetectionscape[obNum] = undetected;
     }
     return ;
+  }
+  // Passing calls to internalized collision set values
+  collisionSetValue(states){
+    this.obstaclescape.obstacleUndetected = this.undetectionscape.slice();
+    return this.obstaclescape.collisionSetValue(states);
   }
   // Passing calls to internalized reachable sets palette
   value(setID,states){
