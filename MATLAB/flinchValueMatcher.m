@@ -1,8 +1,8 @@
 %flinchValueMatcher.m
 %
 % Match a set of flinch data to the most likely value function and level set,
-% based on selecting either the value function that has mean flinch value
-% closest to zero, or which has the minimum variance on any level set.
+% based computing the maximum likelihood level set for each family member,
+% and then selecting the family member with the highest induced likelihood
 
 %% Load the flinch data and the family of value functions
 familyData = load('dubinsFamily.mat');
@@ -36,6 +36,18 @@ for i = 1 : familySize
       familyData.valuesFamily{i}(xCoordinate, yCoordinate, thetaCoordinate);
   end
   
+  % Find the MLE of the mean
+  % (this turns out to simply be the sample mean)
+  meanMLE(i) = mean(values);
+  
+  % Find the MLE of the variance
+  % (a biased estimate of the variance)
+  varianceMLE(i) = (1 / numFlinches) * sum((values - meanMLE(i)) .^ 2);
+  
+  % Find the log-likelihood value for this value function
+  logLikelihoods(i) = -(numFlinches / 2) * log(2 * pi * varianceMLE(i))...
+                     - sum((values - meanMLE(i)) .^ 2) / (2 * varianceMLE(i));
+  
   % Detect minimum values
   if abs(mean(values)) < minAbsMean
     minAbsMean = abs(mean(values));
@@ -45,65 +57,26 @@ for i = 1 : familySize
     minVariance = std(values)^2;
     minVarianceIndex = i;
   end
-  disp(['mean: ', num2str(mean(values)), ', variance: ', num2str(std(values)^2)])
+  disp(['mean: ', num2str(mean(values)), ', variance: ', num2str(std(values)^2), ', log likelihood: ', num2str(logLikelihoods(i))])
 end
+
+[~, maxLikelihoodIndex] = max(logLikelihoods);
 
 %% Plot the best match by mean
 if true
-    % New figure
-    figure;
-    hold on;
-    
     disp(minAbsMeanIndex)
-    
-    % Use the value function data as background
-    gridX = familyData.gridDataFamily{minAbsMeanIndex}.vs{xIndex};
-    gridY = familyData.gridDataFamily{minAbsMeanIndex}.vs{yIndex};
-    plotValues = ...
-      familyData.valuesFamily{minAbsMeanIndex}(:, :, thetaCoordinate);
-    image('XData', gridX, 'YData', gridY, ...
-          'CData', plotValues','CDataMapping','scaled');
-        
-    % Show the contour lines
-    contour(gridX, gridY, plotValues', ...
-            'k', 'LineWidth', 2);
-    
-    % Plot the flinch points
-    plot(flinchData.flinchPoints(1,:), flinchData.flinchPoints(2,:), ...
-         'ro', 'LineWidth', 2)
-    
-    % Label the theta value for this plot
-    title(['\theta = ', num2str(gridData.vs{thetaIndex}(thetaCoordinate))]);
-    axis equal;
-    hold off;
+    plotFlinchesOverValueFromFamily(flinchData, familyData, minAbsMeanIndex, thetaCoordinate);
 end
 
 %% Plot the best match by variance
 if true
-    % New figure
-    figure;
-    hold on;
-    
     disp(minVarianceIndex)
-    
-    % Use the value function data as background
-    gridX = familyData.gridDataFamily{minVarianceIndex}.vs{xIndex};
-    gridY = familyData.gridDataFamily{minVarianceIndex}.vs{yIndex};
-    plotValues = ...
-      familyData.valuesFamily{minVarianceIndex}(:, :, thetaCoordinate);
-    image('XData', gridX, 'YData', gridY, ...
-          'CData', plotValues','CDataMapping','scaled');
-        
-    % Show the contour lines
-    contour(gridX, gridY, plotValues', ...
-            'k', 'LineWidth', 2);
-    
-    % Plot the flinch points
-    plot(flinchData.flinchPoints(1,:), flinchData.flinchPoints(2,:), ...
-         'ro', 'LineWidth', 2)
-    
-    % Label the theta value for this plot
-    title(['\theta = ', num2str(gridData.vs{thetaIndex}(thetaCoordinate))]);
-    axis equal;
-    hold off;
+    plotFlinchesOverValueFromFamily(flinchData, familyData, minVarianceIndex, thetaCoordinate);
+end
+
+%% Plot the maximum likelihood match
+if true
+    disp(maxLikelihoodIndex)
+    disp(meanMLE(maxLikelihoodIndex))
+    plotFlinchesOverValueFromFamily(flinchData, familyData, maxLikelihoodIndex, thetaCoordinate);
 end
