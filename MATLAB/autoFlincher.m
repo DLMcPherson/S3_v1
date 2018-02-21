@@ -12,12 +12,17 @@ rng(seed);
 
 %% Set parameters
 valueMean = 0;
-valueStd = 0.001;
-valueLowerBound = -0.5;
-valueUpperBound = 0.5;
+valueStd = 0.1;
+valueLowerBound = valueMean - 0.5;
+valueUpperBound = valueMean + 0.5;
 
 initialConditions = [-2.25:0.25:2.25, -2.25:0.25:2.25];
 initialConditions = initialConditions(randperm(length(initialConditions)));
+
+familyDataFile = 'dubinsFamily.mat';
+
+saveFlinches = true;
+flinchesDataFile = 'autoFlinches.mat';
 
 %% Create the probability distribution
 normalDistribution = makedist('Normal', 'mu', valueMean, 'sigma', valueStd);
@@ -25,9 +30,9 @@ truncatedNormalDistribution = ...
   truncate(normalDistribution, valueLowerBound, valueUpperBound);
 
 %% Load the level set data
-reachset = load('dubins_reachset.mat');
-gridData = reachset.g;
-values = reachset.data;
+familyData = load(familyDataFile);
+gridData = familyData.gridDataFamily{3};
+values = familyData.valuesFamily{3};
 
 % Dimension indices
 xIndex = 1;
@@ -101,4 +106,9 @@ if true
     title(['\theta = ', num2str(gridData.vs{thetaIndex}(thetaCoordinate))]);
     axis equal;
     hold off;
+end
+
+%% Save the flinch points, if desired
+if saveFlinches
+  save(flinchesDataFile, 'flinchPoints');
 end
