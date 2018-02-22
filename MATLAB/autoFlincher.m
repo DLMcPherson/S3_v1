@@ -20,6 +20,7 @@ initialConditions = [-2.25:0.25:2.25, -2.25:0.25:2.25];
 initialConditions = initialConditions(randperm(length(initialConditions)));
 
 familyDataFile = 'dubinsFamily.mat';
+familyDataIndex = 3;
 
 saveFlinches = true;
 flinchesDataFile = 'autoFlinches.mat';
@@ -31,8 +32,8 @@ truncatedNormalDistribution = ...
 
 %% Load the level set data
 familyData = load(familyDataFile);
-gridData = familyData.gridDataFamily{3};
-values = familyData.valuesFamily{3};
+gridData = familyData.gridDataFamily{familyDataIndex};
+values = familyData.valuesFamily{familyDataIndex};
 
 % Dimension indices
 xIndex = 1;
