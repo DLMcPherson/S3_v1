@@ -20,7 +20,7 @@ initialConditions = [-2.25:0.25:2.25, -2.25:0.25:2.25];
 initialConditions = initialConditions(randperm(length(initialConditions)));
 
 familyDataFile = 'dubinsFamily.mat';
-familyDataIndex = 3;
+familyDataIndex = 6;
 
 saveFlinches = true;
 flinchesDataFile = 'autoFlinches.mat';
@@ -88,25 +88,9 @@ end
 
 %% Plot the results
 if true
-    % New figure
-    figure;
-    hold on;
-    
-    % Use the value function data as background
-    image('XData', gridData.vs{1}, 'YData', gridData.vs{2}, ...
-          'CData',values(:, :, thetaCoordinate)','CDataMapping','scaled');
-        
-    % Show the contour lines
-    contour(gridData.vs{1}, gridData.vs{2}, values(:, :, thetaCoordinate)', ...
-            'k', 'LineWidth', 2);
-    
-    % Plot the flinch points
-    plot(flinchPoints(1,:), flinchPoints(2,:), 'ro', 'LineWidth', 2)
-    
-    % Label the theta value for this plot
-    title(['\theta = ', num2str(gridData.vs{thetaIndex}(thetaCoordinate))]);
-    axis equal;
-    hold off;
+    flinchData.flinchPoints = flinchPoints;
+    plotFlinchesOverValueFromFamily(flinchData, familyData, ...
+                                    familyDataIndex, thetaCoordinate);
 end
 
 %% Save the flinch points, if desired

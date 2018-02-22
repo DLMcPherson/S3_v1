@@ -42,8 +42,8 @@ plot(flinchData.flinchPoints(1,:), flinchData.flinchPoints(2,:), ...
      'ro', 'LineWidth', 2)
 
 % Label the theta value for this plot
-title(['\theta = ', num2str( ...
-  familyData.gridDataFamily{familyIndex}.vs{thetaIndex}(thetaCoordinate))]);
+title(['\omega_{max} = ', num2str( ...
+  familyData.gridDataFamily{familyIndex}.wMax)]);
 axis equal;
 hold off;
     
