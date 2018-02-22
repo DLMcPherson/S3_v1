@@ -36,9 +36,10 @@ for i = 1 : familySize
       familyData.valuesFamily{i}(xCoordinate, yCoordinate, thetaCoordinate);
   end
   
-  % Find the MLE of the mean
-  % (this turns out to simply be the sample mean)
-  meanMLE(i) = mean(values);
+  % Find the MAP of the mean
+  % (with no support for negative means, this is just the max of the sample mean
+  % and zero)
+  meanMLE(i) = max(mean(values), 0);
   
   % Find the MLE of the variance
   % (a biased estimate of the variance)
@@ -57,7 +58,8 @@ for i = 1 : familySize
     minVariance = std(values)^2;
     minVarianceIndex = i;
   end
-  disp(['mean: ', num2str(mean(values)), ', variance: ', num2str(std(values)^2), ', log likelihood: ', num2str(logLikelihoods(i))])
+  %disp(['mean: ', num2str(mean(values)), ', variance: ', num2str(std(values)^2), ', log likelihood: ', num2str(logLikelihoods(i))])
+  disp(['mean: ', num2str(meanMLE(i)), ', variance: ', num2str(varianceMLE(i)), ', log likelihood: ', num2str(logLikelihoods(i))])
 end
 
 [~, maxLikelihoodIndex] = max(logLikelihoods);
