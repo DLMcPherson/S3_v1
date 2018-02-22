@@ -6,11 +6,7 @@ compTraj = false;
 %% Grid
 grid_min = [-8; -8; -pi]; % Lower corner of computation domain
 grid_max = [8; 8; pi];    % Upper corner of computation domain
-<<<<<<< HEAD
-N = [65; 65; 41];         % Number of grid points per dimension
-=======
 N = [65; 65; 42];         % Number of grid points per dimension
->>>>>>> a44ab858f22a97693c871faae329ca2916d908fc
 pdDims = 3;               % 3rd dimension is periodic
 g = createGrid(grid_min, grid_max, N, pdDims);
 % Use "g = createGrid(grid_min, grid_max, N);" if there are no periodic
@@ -64,29 +60,29 @@ HJIextraArgs.deleteLastPlot = true; %delete previous plot as you update
 %% Compute optimal trajectory from some initial state
 if compTraj
   pause
-  
+
   %set the initial state
   xinit = [2, 1, -pi];
-  
+
   %check if this initial state is in the BRS/BRT
   %value = eval_u(g, data, x)
   value = eval_u(g,data(:,:,:,end),xinit);
-  
+
   if value <= 0 %if initial state is in BRS/BRT
     % find optimal trajectory
-    
+
     dCar.x = xinit; %set initial state of the dubins car
 
     TrajextraArgs.uMode = uMode; %set if control wants to min or max
     TrajextraArgs.visualize = true; %show plot
     TrajextraArgs.fig_num = 2; %figure number
-    
+
     %we want to see the first two dimensions (x and y)
-    TrajextraArgs.projDim = [1 1 0]; 
-    
+    TrajextraArgs.projDim = [1 1 0];
+
     %flip data time points so we start from the beginning of time
     dataTraj = flip(data,4);
-    
+
     % [traj, traj_tau] = ...
     % computeOptTraj(g, data, tau, dynSys, extraArgs)
     [traj, traj_tau] = ...
