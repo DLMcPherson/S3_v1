@@ -83,4 +83,6 @@ if true
     plotFlinchesOverValueFromFamily(flinchData, familyData, maxLikelihoodIndex, thetaCoordinate);
 end
 
-json_export_reachset(familyData.valuesFamily{maxLikelihoodIndex},familyData.gridDataFamily{maxLikelihoodIndex},'dubinsMLE',"../reachableSets/");
+offsetReachset = familyData.valuesFamily{maxLikelihoodIndex} - meanMLE(maxLikelihoodIndex);
+
+json_export_reachset(offsetReachset,familyData.gridDataFamily{maxLikelihoodIndex},'dubinsMLE',"../reachableSets/");

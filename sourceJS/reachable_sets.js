@@ -14,6 +14,43 @@ class SafeSet {
   }
 }
 
+class UnionedSafeSet extends SafeSet {
+  constructor(_setA, _setB){
+    super();
+    this.setA = _setA;
+    this.setB = _setB;
+    console.log("unioned two safesets")
+  }
+  // Method that returns the value at the given state
+  value(states){
+    let valueA = this.setA.value(states);
+    let valueB = this.setB.value(states);
+    if(valueA < valueB){
+      return(valueA);
+    }
+    else{
+      return(valueB);
+    }
+  }
+  // Method for calculating the gradient
+  gradV(states){
+    let valueA = this.setA.value(states);
+    let valueB = this.setB.value(states);
+    if(valueA < valueB){
+      return(this.setA.gradV(states));
+    }
+    else{
+      return(this.setB.gradV(states));
+    }
+  }
+  // Method for displaying the value function on a grid
+  displayGrid(graphics,color,currentState,sweptStateX,sweptStateY){
+    this.setA.displayGrid(graphics,color,currentState,sweptStateX,sweptStateY);
+    this.setB.displayGrid(graphics,color,currentState,sweptStateX,sweptStateY);
+    return 0;
+  }
+}
+
 // Safe set palette 'virtual' class
 class SafeSetPalette {
   constructor(safesetArray){
@@ -39,10 +76,12 @@ class SafeSetPalette {
 // learned safe sets modified from one pase safe set
 class LearnedPalette extends SafeSetPalette {
   constructor(filename){
-    super([new loaded_SafeSet(filename),
+    let standard = new loaded_SafeSet(filename);
+    super([standard,
         new loaded_SafeSet(filename+"Pixelwise"),
         new loaded_SafeSet(filename+"LSPicker"),
-        new loaded_SafeSet(filename+"BI")
+        new loaded_SafeSet(filename+"BI"),
+        new UnionedSafeSet(new loaded_SafeSet(filename+"MLE"),standard)
         ]);
   }
 }
@@ -51,8 +90,9 @@ class LearnedPalette extends SafeSetPalette {
 // safe sets used in the team-test
 class TestTrifectaPalette extends SafeSetPalette {
   constructor(filename){
-    super([new loaded_SafeSet(filename),
-        new loaded_SafeSet(filename+"BI"),
+    let standard = new loaded_SafeSet(filename);
+    super([standard,
+        new UnionedSafeSet(new loaded_SafeSet(filename+"MLE"),standard),
         new loaded_SafeSet(filename+"Conservative")
         ]);
   }

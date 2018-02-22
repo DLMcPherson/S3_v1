@@ -87,6 +87,8 @@ let originalSafeset = new loaded_SafeSet("dubins");
 let pixelwiseSafeset = new loaded_SafeSet("dubinsPixelwise");
 let LSPickerSafeset = new loaded_SafeSet("dubinsLSPicker");
 let BellmanIteratedSafeset = new loaded_SafeSet("dubinsBI");
+let MaximumLikelihoodSafeset =
+    new UnionedSafeSet(new loaded_SafeSet("dubinsMLE"),originalSafeset);
 let intervener = new Intervention_Contr(robot,
     originalSafeset,
     Umax,0,
@@ -169,6 +171,9 @@ document.addEventListener("keydown",function(event) {
   if(key == 52){
     intervener.intervening_set = BellmanIteratedSafeset;
     //intervener = intervenerBIt;
+  }
+  if(key == 53){
+    intervener.intervening_set = MaximumLikelihoodSafeset;
   }
   // Debugging report
   if(saveToCloud){
