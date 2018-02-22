@@ -6,7 +6,9 @@
 
 %% Load the flinch data and the family of value functions
 familyData = load('dubinsFamily.mat');
-flinchData = load('autoFlinches.mat');
+%flinchData = load('autoFlinches.mat');
+flinches = loadFlinchData('/Users/david.mcpherson/Downloads/supervisorFlinches.dat');
+flinchData.flinchPoints = matrixifyFlinchData(flinches);
 
 %% Find the best match
 familySize = length(familyData.gridDataFamily);

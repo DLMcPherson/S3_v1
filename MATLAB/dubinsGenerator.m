@@ -4,16 +4,16 @@ function [g,data] = dubinsGenerator(wMax)
 compTraj = false;
 
 %% Grid
-grid_min = [-5; -5; -pi]; % Lower corner of computation domain
-grid_max = [5; 5; pi];    % Upper corner of computation domain
-N = [41; 41; 41];         % Number of grid points per dimension
+grid_min = [-8; -8; -pi]; % Lower corner of computation domain
+grid_max = [8; 8; pi];    % Upper corner of computation domain
+N = [65; 65; 41];         % Number of grid points per dimension
 pdDims = 3;               % 3rd dimension is periodic
 g = createGrid(grid_min, grid_max, N, pdDims);
 % Use "g = createGrid(grid_min, grid_max, N);" if there are no periodic
 % state space dimensions
 
 %% target set
-R = 1;
+R = 1.8;
 % data0 = shapeCylinder(grid,ignoreDims,center,radius)
 data0 = shapeCylinder(g, 3, [0; 0; 0], R);
 % also try shapeRectangleByCorners, shapeSphere, etc.
