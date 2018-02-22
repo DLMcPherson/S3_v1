@@ -92,6 +92,8 @@ if compTraj
   end
 end
 
+% Store the maximum turning rate along with the other data
+g.wMax = wMax;
 % json_export_reachset(data(:,:,:,end),g,'dubins');
 
 end
