@@ -79,12 +79,6 @@ let timerDisplay = new PIXI.Text('TIME: 240 sec',{font : '30px Gill Sans', fill 
 timerDisplay.y = 60;
 stage.addChild(timerDisplay);
 
-// Add the Countdown Timer
-let countdown = new PIXI.Text('3',{font : '80px Gill Sans', fill : 0x555555})
-countdown.x = SCREEN_WIDTH/2;
-countdown.y = SCREEN_HEIGHT/2;
-stage.addChild(countdown);
-
 // Obstacles
 let dubinsCircles = new TestTrifectaPalette("dubins");
 let obstacleList = [];
@@ -147,6 +141,7 @@ let curTick = 0;
 let curMouseEvent = 0;
 let curRegenEvent = 0;
 let curGoalSetEvent = 0;
+let curCollisionEvent = 0;
 
 // Main Loop
 let now = Date.now();
@@ -160,7 +155,7 @@ window.setInterval(function() {
   timerDisplay.text = 'TIME: '+(MAXTIME-Math.floor(clock/1000))+' sec';
   now = Date.now();
   delT *= 0.0005 * 4;
-  // Robot dynamics
+  // Check if the game is over
   if(curTick+1 >= record.robotTraces[0].length){
     if(gameNumber<5){
       document.location.href = "buffer.html#" + gameNumber;
@@ -169,6 +164,7 @@ window.setInterval(function() {
       document.location.href = "../completed.html";
     }
   }
+  // Increment the current tick
   if(wallClock > record.timeTrace[curTick+1]){
     clock = record.timeTrace[curTick+1];
     curTick++;
@@ -178,15 +174,11 @@ window.setInterval(function() {
     }
     //console.log(curTick,record.robotTraces[0][curTick]);
   }
+  // Robot dynamics
   for(let robotNum = 0; robotNum < robots.length; robotNum++){
-    // Check if the robot ran into an obstacle
+    /*/ Check if the robot ran into an obstacle
     if(obstacles.collisionSetValue(robots[robotNum].states) < 0){
       if(robots[robotNum].spinout == 0){
-        /*
-        obstacles.obstacleDestroyed[obNum] = true;
-        robots[robotNum].destroyed = true;
-        robots[robotNum].speed = 0;
-        */
         //robots[robotNum].tint = 0x999999;
 
         ArcadeScore -= 20;
@@ -194,6 +186,7 @@ window.setInterval(function() {
       }
       robots[robotNum].spinout = 100;
     }
+    */
     robots[robotNum].displayState();
     // Draw goal rays
     graphics.beginFill(0x222222);
@@ -205,7 +198,6 @@ window.setInterval(function() {
     graphics.lineTo(goalPos[0],goalPos[1]);
     graphics.endFill();
   }
-  countdown.text = '';
   // Obstacle destruction (playing back and emulating mouseclicks)
   if(curMouseEvent < record.mouseEvents.length){
     if(clock > record.mouseEvents[curMouseEvent].timestamp){
@@ -223,10 +215,20 @@ window.setInterval(function() {
     if(clock > record.regenEvents[curRegenEvent].timestamp){
       let obNum = record.regenEvents[curRegenEvent].regeneratedObstacleID;
       obstacles.obstacleDestroyed[obNum] = false;
-      console.log('obstacle respawned')
+      console.log('obstacle respawned');
       obstacleDeficit--;
       ghostObstacleIds.shift();
       curRegenEvent++;
+    }
+  }
+  // Obstacle collision
+  if(curCollisionEvent < record.collisionEvents.length){
+    if(clock > record.collisionEvents[curCollisionEvent].timestamp){
+      let robotNum = record.collisionEvents[curCollisionEvent].robotID;
+      ArcadeScore -= 20;
+      console.log('robot mistake!');
+      robots[robotNum].spinout = 100;
+      curCollisionEvent++;
     }
   }
   // Goal set resetting

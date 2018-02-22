@@ -17,6 +17,8 @@ class Record {
     this.regenEvents = [];
     // Goal resetting events
     this.goalSetEvents = [];
+    // Obstacle collision events
+    this.collisionEvents = [];
     // Final Score
     this.finalScore = 0;
   }

@@ -199,6 +199,11 @@ window.setInterval(function() {
           */
           //robots[robotNum].tint = 0x999999;
 
+          record.collisionEvents.push({
+            "robotID": robotNum,
+            "robotState": robots[robotNum].states,
+            "timestamp": clock
+          })
           ArcadeScore -= 20;
           console.log('robot mistake!');
         }
@@ -244,7 +249,7 @@ window.setInterval(function() {
       {
         let robotTooClose = false;
         for(let robotNum = 0; robotNum < robots.length; robotNum++){
-          if(obstacles.obstacles[obNum].collisionSetValue(robots[robotNum].states) < 2){
+          if(obstacles.obstacles[obNum].collisionSetValue(robots[robotNum].states) < 4){
             robotTooClose = true;
           }
         }
@@ -252,8 +257,8 @@ window.setInterval(function() {
           obstacles.obstacleDestroyed[obNum] = false;
           record.regenEvents.push({timestamp: clock, regeneratedObstacleID: obNum});
           obstacleDeficit--;
-          ghostObstacleIds.shift();
-          console.log("obstacle respawned")
+          ghostObstacleIds.splice(ii,1);
+          console.log("obstacle respawned. Now deficit at "+obstacleDeficit)
         }
       }
       if(obstacleDeficit == 0){
@@ -300,8 +305,8 @@ document.addEventListener("mousedown",function(event) {
     if(obstacles.obstacleDestroyed[obNum] == false){
       if(curObstacle.collisionSetValue([mouseState[0],mouseState[1],0]) < 0){
         obstacles.obstacleDestroyed[obNum] = true;
-        console.log('obstacle destroyed')
         obstacleDeficit++;
+        console.log("obstacle destroyed. Now deficit at "+obstacleDeficit);
         ghostObstacleIds.push(obNum);
         ArcadeScore -= 10;
         // Log the mouseclick
