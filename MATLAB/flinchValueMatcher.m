@@ -67,19 +67,19 @@ end
 [~, maxLikelihoodIndex] = max(logLikelihoods);
 
 %% Plot the best match by mean
-if true
+if false
     disp(minAbsMeanIndex)
     plotFlinchesOverValueFromFamily(flinchData, familyData, minAbsMeanIndex, thetaCoordinate);
 end
 
 %% Plot the best match by variance
-if true
+if false
     disp(minVarianceIndex)
     plotFlinchesOverValueFromFamily(flinchData, familyData, minVarianceIndex, thetaCoordinate);
 end
 
 %% Plot the maximum likelihood match
-if true
+if false
     disp(maxLikelihoodIndex)
     disp(meanMLE(maxLikelihoodIndex))
     plotFlinchesOverValueFromFamily(flinchData, familyData, maxLikelihoodIndex, thetaCoordinate);

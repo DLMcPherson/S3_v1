@@ -79,6 +79,10 @@ let timerDisplay = new PIXI.Text('TIME: 240 sec',{font : '30px Gill Sans', fill 
 timerDisplay.y = 60;
 stage.addChild(timerDisplay);
 
+// Emulated mouse
+let emulatedMouse = new PIXI.Sprite.fromImage('mouse.png');
+stage.addChild(emulatedMouse);
+
 // Obstacles
 let dubinsCircles = new TestTrifectaPalette("dubins");
 let obstacleList = [];
@@ -172,6 +176,10 @@ window.setInterval(function() {
       // Set the robot state to that from the record
       robots[robotNum].states = record.robotTraces[robotNum][curTick].slice();
     }
+    let mouseState = record.mouseTrace[curTick].slice();
+    let mousePosition = graphics.mapper.mapStateToPosition(mouseState[0],mouseState[1]);
+    emulatedMouse.x = mousePosition[0];
+    emulatedMouse.y = mousePosition[1];
     //console.log(curTick,record.robotTraces[0][curTick]);
   }
   // Robot dynamics
