@@ -190,24 +190,35 @@ window.setInterval(function() {
       if(robots[robotNum].destroyed) continue;
       robots[robotNum].update(delT,robotControllers[robotNum].u() );
       // Check if the robot ran into an obstacle
-      if(obstacles.collisionSetValue(robots[robotNum].states) < 0){
-        if(robots[robotNum].spinout == 0){
-          /*
-          obstacles.obstacleDestroyed[obNum] = true;
-          robots[robotNum].destroyed = true;
-          robots[robotNum].speed = 0;
-          */
-          //robots[robotNum].tint = 0x999999;
-
-          record.collisionEvents.push({
-            "robotID": robotNum,
-            "robotState": robots[robotNum].states,
-            "timestamp": clock
-          })
-          ArcadeScore -= 20;
-          console.log('robot mistake!');
+      let robotCollision = robotControllers[robotNum].intervening_sets.collisionSetValue(robots[robotNum].states);
+      if(robotCollision[0] < 0){
+        let obNum = robotCollision[1];
+        // If the robot really should have dodged the obstacle, hide the collision
+        //if(obstacles.obstacleUndetected[obNum] == false){
+        if(false){
+          let dX = obstacles.obstacles[obNum].ObX - robots[robotNum].states[0];
+          let dY = obstacles.obstacles[obNum].ObY - robots[robotNum].states[1];
+          let radius = Math.sqrt(Math.pow(dX,2)+Math.pow(dY,2));
+          robots[robotNum].states[0] = obstacles.obstacles[obNum].ObX
+              - (dX/radius) * 1.8 * 0.95;
+          robots[robotNum].states[1] = obstacles.obstacles[obNum].ObY
+              - (dY/radius) * 1.8 * 0.95;
         }
-        robots[robotNum].spinout = 100;
+        else{
+          // Crashing
+          if(robots[robotNum].spinout == 0){
+            record.collisionEvents.push({
+              "robotID": robotNum,
+              "robotState": robots[robotNum].states,
+              "timestamp": clock
+            })
+            ArcadeScore -= 20;
+            console.log('robot mistake!');
+            if(obstacles.obstacleUndetected[obNum] == false)
+              console.log('robot was dodging though');
+          }
+          robots[robotNum].spinout = 100;
+        }
       }
       // Draw goal rays
       graphics.beginFill(0x222222);
@@ -294,7 +305,7 @@ window.setInterval(function() {
   //obstacles.displayGrid(0,graphics,robots[0].tint,robots[0].states,0,1);
   arcadeScore.text = 'SCORE: '+ ArcadeScore;
   renderer.render(stage);
-},10)
+},2)
 
 // ====================== Mouse Listener Loop ========================= //
 document.addEventListener("mousedown",function(event) {
@@ -303,7 +314,7 @@ document.addEventListener("mousedown",function(event) {
   for(let obNum = 0; obNum < obstacles.obstacles.length ; obNum++){
     let curObstacle = obstacles.obstacles[obNum];
     if(obstacles.obstacleDestroyed[obNum] == false){
-      if(curObstacle.collisionSetValue([mouseState[0],mouseState[1],0]) < 0){
+      if(curObstacle.collisionSetValue([mouseState[0],mouseState[1],0]) < 0.9){
         obstacles.obstacleDestroyed[obNum] = true;
         obstacleDeficit++;
         console.log("obstacle destroyed. Now deficit at "+obstacleDeficit);

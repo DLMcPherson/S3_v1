@@ -79,7 +79,7 @@ if false
 end
 
 %% Plot the maximum likelihood match
-if false
+if true
     disp(maxLikelihoodIndex)
     disp(meanMLE(maxLikelihoodIndex))
     plotFlinchesOverValueFromFamily(flinchData, familyData, maxLikelihoodIndex, thetaCoordinate);

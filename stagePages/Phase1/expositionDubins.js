@@ -60,7 +60,7 @@ stage.addChild(graphics);
 // Robot Object
 let Umax = 1
 ///* // Dubins Car Robot
-let robot = new DubinsRobot([-4,3,0],3,0x24EB98);
+let robot = new DubinsRobot([-8,-1,0],3,0x24EB98);
 stage.addChild(robot);
 let originalSafeset = new loaded_SafeSet("dubins");
 let pixelwiseSafeset = new loaded_SafeSet("dubinsPixelwise");
@@ -96,7 +96,7 @@ window.setInterval(function() {
   robot.update(delT,u);
   let robotScreenPosition = graphics.mapper.mapStateToPosition(robot.states[0],robot.states[1]);
   if(robotScreenPosition[0] > SCREEN_WIDTH || robotScreenPosition[0] < 0 || robotScreenPosition[1] > SCREEN_HEIGHT || robotScreenPosition[1] < 0){
-    robot.states = [-4,3,0];
+    robot.states = [-8,-1,0];
   }
   // End this phase after 1 Minute
   if(clock > 60*1000){

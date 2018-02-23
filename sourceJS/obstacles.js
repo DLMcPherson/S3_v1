@@ -99,17 +99,21 @@ class Obstaclescape {
   collisionSetValue(states){
     // Running minimum value (initialized to preposterouly large number... 100)
     let curMinValue = 100;
+    let curMinOb = 0;
     // Iterate over obstacles and find the lowest value function
     for(let obNum = 0; obNum < this.obstacles.length ; obNum++){
       if(this.obstacleDestroyed[obNum] == false
-          && this.obstacleUndetected[obNum] == true){
+          && this.obstacleUndetected[obNum] == true
+          ){
         let obsValue = this.obstacles[obNum].collisionSetValue(states);
-        if(obsValue < curMinValue)
+        if(obsValue < curMinValue){
           curMinValue = obsValue;
+          curMinOb = obNum;
+        }
       }
     }
     // Return the lowest reachset value amongst all obstacles
-    return curMinValue;
+    return [curMinValue,curMinOb];
   }
   // Return the gradient corresponding to whichever obstacle currently dominates
   // the union by having the worst safety-value function
@@ -267,7 +271,7 @@ class RoundObstacle extends Obstacle{
     // coordinates and obstacle-relative coordinates for safeset
     this.offset = [_ObX,_ObY,0]; // TODO: Make obstacles system agnostic
     // Define a (loose) collision set for determining crashes and clicks
-    this.collisionSet = new dubinsCircle_Set(_ObR*0.89);
+    this.collisionSet = new dubinsCircle_Set(_ObR*0.95);
   }
   // Rendering standard obstacle
   render(){

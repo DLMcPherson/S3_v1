@@ -139,10 +139,10 @@ class Safe_Contr extends Controller {
     // For each control output...
     for(var curU=0;curU<this.robot.controlCoefficient().length;curU++){
       // maximize the Hamiltonian (f^T p) within the maximum output afforded
-      if(this.dotProduct(this.robot.controlCoefficient()[curU], momentum)  > 0.1){
+      if(this.dotProduct(this.robot.controlCoefficient()[curU], momentum)  > 0){
         u_out[curU] = this.maxU;
       }
-      if(this.dotProduct(this.robot.controlCoefficient()[curU], momentum)  < -0.1){
+      if(this.dotProduct(this.robot.controlCoefficient()[curU], momentum)  < 0){
         u_out[curU] = -this.maxU;
       }
     }
