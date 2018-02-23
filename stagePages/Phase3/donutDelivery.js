@@ -210,7 +210,9 @@ window.setInterval(function() {
             record.collisionEvents.push({
               "robotID": robotNum,
               "robotState": robots[robotNum].states,
-              "timestamp": clock
+              "timestamp": clock,
+              "obstacle": obNum,
+              "obstacleUndetected": obstacles.obstacleUndetected[obNum]
             })
             ArcadeScore -= 20;
             console.log('robot mistake!');
