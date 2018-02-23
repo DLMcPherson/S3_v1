@@ -210,12 +210,14 @@ window.setInterval(function() {
   if(curMouseEvent < record.mouseEvents.length){
     if(clock > record.mouseEvents[curMouseEvent].timestamp){
       let obNum = record.mouseEvents[curMouseEvent].destroyedObstacleID;
-      obstacles.obstacleDestroyed[obNum] = true;
-      console.log('obstacle destroyed')
-      obstacleDeficit++;
-      ghostObstacleIds.push(obNum);
-      ArcadeScore -= 10;
-      curMouseEvent++;
+      if(obNum > -1){
+        obstacles.obstacleDestroyed[obNum] = true;
+        console.log('obstacle destroyed')
+        obstacleDeficit++;
+        ghostObstacleIds.push(obNum);
+        ArcadeScore -= 10;
+        curMouseEvent++;
+      }
     }
   }
   // Obstacle regeneration

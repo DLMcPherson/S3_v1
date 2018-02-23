@@ -313,6 +313,7 @@ window.setInterval(function() {
 document.addEventListener("mousedown",function(event) {
   let mousePosition = renderer.plugins.interaction.mouse.global;
   let mouseState = graphics.mapper.mapPositionToState(mousePosition.x,mousePosition.y);
+  let obstacleClicked = false;
   for(let obNum = 0; obNum < obstacles.obstacles.length ; obNum++){
     let curObstacle = obstacles.obstacles[obNum];
     if(obstacles.obstacleDestroyed[obNum] == false){
@@ -323,6 +324,7 @@ document.addEventListener("mousedown",function(event) {
         ghostObstacleIds.push(obNum);
         ArcadeScore -= 10;
         // Log the mouseclick
+        obstacleClicked = true;
         let clickRobots = [];
         for(let robotNum = 0; robotNum < robots.length; robotNum++){
           let robotBlinded =
@@ -340,6 +342,24 @@ document.addEventListener("mousedown",function(event) {
         });
       }
     }
+  }
+  // If the click missed, still record that it happened
+  if(obstacleClicked == false){
+    let clickRobots = [];
+    for(let robotNum = 0; robotNum < robots.length; robotNum++){
+      let robotBlinded =
+        robotControllers[robotNum].intervening_sets.undetectionscape[obNum];
+      clickRobots[robotNum] = {
+        "state": robots[robotNum].states.slice(),
+        "blindToObstacle": robotBlinded
+      };
+    }
+    record.mouseEvents.push({
+      "mouseState": mouseState,
+      "destroyedObstacleID": -1,
+      "timestamp": clock,
+      "robots": clickRobots
+    });
   }
   // End
 })
