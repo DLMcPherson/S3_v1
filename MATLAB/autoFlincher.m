@@ -44,7 +44,7 @@ thetaIndex = 3;
 dt = 0.01; % s
 t_stop = 2; % s
 v = 3; % m/s (constant Dubins velocity)
-x_0 = -5; % m (inital distance from obstacle)
+x_0 = -8; % m (inital distance from obstacle)
 y_0 = 0; % m (this will vary for every run)
 theta_0 = 0; % rad (this will be constant)
 
