@@ -4,10 +4,16 @@
 % based computing the maximum likelihood level set for each family member,
 % and then selecting the family member with the highest induced likelihood
 
+%% Specify parameters
+familyDataFile = 'dubinsFamily.mat';
+% flinchDataFile = 'autoFlinches.mat';
+flinchDataFile = '/Users/david.mcpherson/Downloads/supervisorFlinches.dat';
+mleSaveFile = 'mleData.mat';
+
 %% Load the flinch data and the family of value functions
-familyData = load('dubinsFamily.mat');
-%flinchData = load('autoFlinches.mat');
-flinches = loadFlinchData('/Users/david.mcpherson/Downloads/supervisorFlinches.dat');
+familyData = load(familyDataFile);
+% flinchData = load(flinchDataFile);
+flinches = loadFlinchData(flinchDataFile);
 flinchData.flinchPoints = matrixifyFlinchData(flinches);
 
 %% Find the best match
@@ -88,3 +94,10 @@ end
 offsetReachset = familyData.valuesFamily{maxLikelihoodIndex} - meanMLE(maxLikelihoodIndex);
 
 json_export_reachset(offsetReachset,familyData.gridDataFamily{maxLikelihoodIndex},'dubinsMLE',"../reachableSets/");
+
+%% Save MLE data
+mu = meanMLE(maxLikelihoodIndex);
+sigma2 = varianceMLE(maxLikelihoodIndex);
+mleLogLikelihood = logLikelihoods(maxLikelihoodIndex);
+omegaMax = familyData.gridDataFamily{maxLikelihoodIndex}.wMax;
+save(mleSaveFile, 'mu', 'sigma2', 'mleLogLikelihood', 'omegaMax');
