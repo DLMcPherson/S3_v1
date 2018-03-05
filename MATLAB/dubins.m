@@ -6,7 +6,7 @@ compTraj = false;
 %% Grid
 grid_min = [-8; -8; -pi]; % Lower corner of computation domain
 grid_max = [8; 8; pi];    % Upper corner of computation domain
-N = [65; 65; 41];         % Number of grid points per dimension
+N = [65; 65; 42];         % Number of grid points per dimension
 pdDims = 3;               % 3rd dimension is periodic
 g = createGrid(grid_min, grid_max, N, pdDims);
 % Use "g = createGrid(grid_min, grid_max, N);" if there are no periodic

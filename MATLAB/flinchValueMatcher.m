@@ -7,13 +7,13 @@
 %% Specify parameters
 familyDataFile = 'dubinsFamily.mat';
 % flinchDataFile = 'autoFlinches.mat';
-flinchDataFile = '/Users/david.mcpherson/Downloads/supervisorFlinches.dat';
-mleSaveFile = 'mleData.mat';
+%flinchDataFile = '/Users/david.mcpherson/Downloads/supervisorFlinches.dat';
+participantID = 8;
+flinches = loadFlinchData("../../Experiments/"+participantID+"/supervisorFlinches.dat");
+mleSaveFile = "../../Experiments/"+participantID+"/mleData.mat";
 
 %% Load the flinch data and the family of value functions
 familyData = load(familyDataFile);
-% flinchData = load(flinchDataFile);
-flinches = loadFlinchData(flinchDataFile);
 flinchData.flinchPoints = matrixifyFlinchData(flinches);
 
 %% Find the best match
@@ -24,7 +24,7 @@ minVariance = inf;
 minVarianceIndex = 1;
 minAbsMean = inf;
 minAbsMeanIndex = 1;
-for i = 1 : familySize
+for i = 1 : familySize-4
   % Determine value of each flinch point for this value function
   values = [];
   for j = 1 : numFlinches
@@ -89,6 +89,7 @@ if true
     disp(maxLikelihoodIndex)
     disp(meanMLE(maxLikelihoodIndex))
     plotFlinchesOverValueFromFamily(flinchData, familyData, maxLikelihoodIndex, thetaCoordinate);
+    savefig(gcf,"MLESubject"+participantID+".fig")
 end
 
 offsetReachset = familyData.valuesFamily{maxLikelihoodIndex} - meanMLE(maxLikelihoodIndex);
@@ -101,3 +102,7 @@ sigma2 = varianceMLE(maxLikelihoodIndex);
 mleLogLikelihood = logLikelihoods(maxLikelihoodIndex);
 omegaMax = familyData.gridDataFamily{maxLikelihoodIndex}.wMax;
 save(mleSaveFile, 'mu', 'sigma2', 'mleLogLikelihood', 'omegaMax');
+
+%% Check if the fitted set is less conservative anywhere than the physics-based safe set
+physics_set = load('../reachableSets/dubins_reachset.mat');
+less_conservative = any(any(any( (physics_set.data < 0) & (offsetReachset > 0) )))
