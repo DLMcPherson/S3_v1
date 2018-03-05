@@ -82,7 +82,8 @@ class LearnedPalette extends SafeSetPalette {
         new loaded_SafeSet(filename+"LSPicker"),
         new loaded_SafeSet(filename+"BI"),
         //new UnionedSafeSet(new loaded_SafeSet(filename+"MLE"),standard)
-        new loaded_SafeSet(filename+"MLE")
+        new loaded_SafeSet(filename+"MLE"),
+        new loaded_SafeSet(filename+"Conservative")
         ]);
   }
 }

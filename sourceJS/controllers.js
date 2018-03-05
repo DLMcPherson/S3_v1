@@ -189,7 +189,7 @@ class Intervention_Contr extends Controller {
 // Intervention controller that swaps between PD and Safe controls
 // interfaces with palettes of safesets
 class PaletteIntervention_Contr extends Controller {
-  constructor(_robot,_safesetPalette,_mySetID,_maxU,_maxD,_tracker){
+  constructor(_robot,_safesetPalette,_mySetID,_maxU,_maxD,_tracker,_record){
     super(_robot);
     // Default controller for when the system is not in danger
     this.tracker = _tracker;
@@ -202,12 +202,15 @@ class PaletteIntervention_Contr extends Controller {
     // Added padding to the safeset for factoring in robot width
     this.trigger_level = 0;
     // Record the initialization in goal and undetection
-    record.goalSetEvents.push({
-      robotID: this.robot.ID,
-      undetection: this.intervening_sets.undetectionscape.slice(),
-      goal: this.tracker.set,
-      timestamp: clock
-    });
+    if(_record){
+      this.record = _record;
+      record.goalSetEvents.push({
+        robotID: this.robot.ID,
+        undetection: this.intervening_sets.undetectionscape.slice(),
+        goal: this.tracker.set,
+        timestamp: clock
+      });
+    }
   }
   // Method that returns the current input responding to the current state
   u(){
@@ -219,18 +222,20 @@ class PaletteIntervention_Contr extends Controller {
       let newGoal = graphics.mapper.randomStateXY();
       newGoal[0] = swapX;
       this.tracker.updateSetpoint(newGoal);
-      if(ArcadeScore != undefined){
+      if(ArcadeScore){
         ArcadeScore += 20;
         console.log(ArcadeScore);
       }
       this.intervening_sets.rerandomizeUndetection();
       // Record this change in goal and undetection
-      record.goalSetEvents.push({
-        robotID: this.robot.ID,
-        undetection: this.intervening_sets.undetectionscape.slice(),
-        goal: newGoal,
-        timestamp: clock
-      });
+      if(this.record){
+        record.goalSetEvents.push({
+          robotID: this.robot.ID,
+          undetection: this.intervening_sets.undetectionscape.slice(),
+          goal: newGoal,
+          timestamp: clock
+        });
+      }
     }
     // Check if the reachset value function is below the triggering level set
     if( this.intervening_sets.value(this.setID,this.robot.states) < this.trigger_level ){

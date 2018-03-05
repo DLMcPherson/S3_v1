@@ -8,7 +8,7 @@
 familyDataFile = 'dubinsFamily.mat';
 % flinchDataFile = 'autoFlinches.mat';
 %flinchDataFile = '/Users/david.mcpherson/Downloads/supervisorFlinches.dat';
-participantID = 8;
+participantID = 9;
 flinches = loadFlinchData("../../Experiments/"+participantID+"/supervisorFlinches.dat");
 mleSaveFile = "../../Experiments/"+participantID+"/mleData.mat";
 
@@ -89,7 +89,7 @@ if true
     disp(maxLikelihoodIndex)
     disp(meanMLE(maxLikelihoodIndex))
     plotFlinchesOverValueFromFamily(flinchData, familyData, maxLikelihoodIndex, thetaCoordinate);
-    savefig(gcf,"MLESubject"+participantID+".fig")
+    %savefig(gcf,"MLESubject"+participantID+".fig")
 end
 
 offsetReachset = familyData.valuesFamily{maxLikelihoodIndex} - meanMLE(maxLikelihoodIndex);

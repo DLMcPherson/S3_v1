@@ -80,6 +80,10 @@ let intervener = new Intervention_Contr(robot,
     new Concat_Contr(robot,[new PD_Contr(robot,goalX,0),new PD_Contr(robot,goalY,2)]) );
 intervener.trigger_level = robot.width/(2*graphics.mapper.Myy);
 */
+let dubinsCircles = new LearnedPalette("dubins");
+let carRadius = 0.55;
+let obstacle = new RoundObstacle(0,0,1.8,carRadius,dubinsCircles);
+
 ///* // Dubins Car Robot
 // red = 0xFF745A
 let robot = new DubinsRobot([-4,3,0],3,0x24EB98);
@@ -91,13 +95,19 @@ let BellmanIteratedSafeset = new loaded_SafeSet("dubinsBI");
 let MaximumLikelihoodSafeset =
     new UnionedSafeSet(new loaded_SafeSet("dubinsMLE"),originalSafeset);
 let conservativeSafeset = new loaded_SafeSet("dubinsConservative");
+/*
 let intervener = new Intervention_Contr(robot,
     originalSafeset,
     Umax,0,
     new Dubins_Contr(robot,Umax,[goalX,goalY]));
+    */
+///*
+let intervener = new PaletteIntervention_Contr(robot,
+    dubinsCircles,0,
+    Umax,0,
+    new Dubins_Contr(robot,Umax,[goalX,goalY] ));
+    //*/
 //intervener.trigger_level = robot.height/(2*graphics.mapper.Mxx) * Math.SQRT2;
-let carRadius = 0.55;
-let obstacle = new RoundObstacle(0,0,1.8,carRadius);
 
 let robot2 = new DubinsRobot([4,3,0],3,0x24EB98);
 //stage.addChild(robot2);
@@ -135,12 +145,13 @@ window.setInterval(function() {
   let u2 = intervener2.u();
   //console.log(clock,u)
   robot.update(delT,u);
-  robot.states = [-5,0,0];
+  //robot.states = [-5,0,0];
   //robot2.update(delT,u2);
   // Rendering the stage
   graphics.clear();
   obstacle.render();
-  intervener.intervening_set.displayGrid(graphics,0xFF745A,robot.states,0,1);
+  intervener.intervening_sets.displayGrid(intervener.setID,graphics,0xFF745A,robot.states,0,1);
+  //intervener.intervening_set.displayGrid(graphics,0xFF745A,robot.states,0,1);
   //intervener2.intervening_set.displayGrid(graphics,robot2.tint,robot2.states,0,1);
   renderer.render(stage);
 },10)
@@ -160,26 +171,32 @@ document.addEventListener("keydown",function(event) {
   */
   console.log(key);
   if(key == 49){
-    intervener.intervening_set = originalSafeset;
+    intervener.setID = 0;
+    //intervener.intervening_set = originalSafeset;
     //intervener = intervenerOri;
   }
   if(key == 50){
-    intervener.intervening_set = pixelwiseSafeset;
+    intervener.setID = 1;
+    //intervener.intervening_set = pixelwiseSafeset;
     //intervener = intervenerPix;
   }
   if(key == 51){
-    intervener.intervening_set = LSPickerSafeset;
+    intervener.setID = 2;
+    //intervener.intervening_set = LSPickerSafeset;
     //intervener = intervenerLSP;
   }
   if(key == 52){
-    intervener.intervening_set = BellmanIteratedSafeset;
+    intervener.setID = 3;
+    //intervener.intervening_set = BellmanIteratedSafeset;
     //intervener = intervenerBIt;
   }
   if(key == 53){
-    intervener.intervening_set = MaximumLikelihoodSafeset;
+    intervener.setID = 4;
+    //intervener.intervening_set = MaximumLikelihoodSafeset;
   }
   if(key == 54){
-    intervener.intervening_set = conservativeSafeset;
+    intervener.setID = 5;
+    //intervener.intervening_set = conservativeSafeset;
   }
   // Debugging report
   if(saveToCloud){

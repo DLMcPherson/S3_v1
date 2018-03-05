@@ -258,7 +258,7 @@ window.setInterval(function() {
   graphics.endFill();
     // Render the obstacles
   obstacles.render();
-  //intervener.intervening_sets.displayGrid(intervener.setID,graphics,robot.tint,robot.states,0,1);
+  intervener.intervening_sets.displayGrid(intervener.setID,graphics,robot.tint,robot.states,0,1);
   //intervener2.intervening_sets.displayGrid(intervener2.setID,graphics,robot2.tint,robot2.states,0,1);
   //obstacles.displayGrid(0,graphics,robots[0].tint,robots[0].states,0,1);
   arcadeScore.text = 'SCORE: '+ ArcadeScore;
