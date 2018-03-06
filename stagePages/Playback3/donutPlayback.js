@@ -11,26 +11,6 @@ function random() {
 }
 
 let record = -1;
-/*
-function loadJSON(callback) {
-
-   var xobj = new XMLHttpRequest();
-       xobj.overrideMimeType("application/json");
-   xobj.open('GET', "http://localhost:3000/Experiments/2/Subject2Game0.dat", false);
-   xobj.onreadystatechange = function () {
-         if (xobj.readyState == 4 && xobj.status == "200") {
-           // Required use of an anonymous callback as .open will NOT return a value but simply returns undefined in asynchronous mode
-           callback(xobj.responseText);
-         }
-   };
-   xobj.send(null);
-}
-
-loadJSON(function(response) {
-  // Parse JSON string into object
-    var record = JSON.parse(response);
- });
- */
 
 console.log("Driving style for this game is Number "+drivingStyle)
 
