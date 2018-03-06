@@ -10,6 +10,28 @@ function random() {
     return x - Math.floor(x);
 }
 
+let record = -1;
+/*
+function loadJSON(callback) {
+
+   var xobj = new XMLHttpRequest();
+       xobj.overrideMimeType("application/json");
+   xobj.open('GET', "http://localhost:3000/Experiments/2/Subject2Game0.dat", false);
+   xobj.onreadystatechange = function () {
+         if (xobj.readyState == 4 && xobj.status == "200") {
+           // Required use of an anonymous callback as .open will NOT return a value but simply returns undefined in asynchronous mode
+           callback(xobj.responseText);
+         }
+   };
+   xobj.send(null);
+}
+
+loadJSON(function(response) {
+  // Parse JSON string into object
+    var record = JSON.parse(response);
+ });
+ */
+
 console.log("Driving style for this game is Number "+drivingStyle)
 
 // Mapper class that scales state space to screen
@@ -83,56 +105,68 @@ stage.addChild(timerDisplay);
 let emulatedMouse = new PIXI.Sprite.fromImage('mouse.png');
 stage.addChild(emulatedMouse);
 
-// Obstacles
 let dubinsCircles = new TestTrifectaPalette("dubins");
-let obstacleList = [];
-for(let ii = 0; ii < 15; ii++){
-  let obstacleInit = record.obstacles[ii];
-  let posX = obstacleInit.position[0];
-  let posY = obstacleInit.position[1];
-  //obstacleList.push(new RoundObstacle(posX,posY,obstacleInit.radius,obstacleInit.radiumTrim,dubinsCircles));
-  obstacleList.push(new RoundObstacle(posX,posY,1.8,0.55,dubinsCircles));
-}
-//let wall = new RoundObstacle(0,-12.5,0.1,0,dubinsWalls);
-//wall.color = 0xEEEEEE;
-//obstacleList.push(wall )
-let obstacles = new Obstaclescape(obstacleList)
-for(let ii = 0; ii < 15; ii++){
-  obstacles.obstacleUndetected[ii] = false;
-}
-// Clear out some obstacles to begin with
 let ghostObstacleIds = [];
-for(let ii = 10; ii < 15; ii++){
-  obstacles.obstacleDestroyed[ii] = true;
-  ghostObstacleIds.push(ii);
-}
-
-// Robot Object
-let Umax = 1;
-///* // Dubins Car Robot
+let obstacleList = [];
+let obstacles = {};
 let robots = [];
 let robotGoals = [];
 let robotTints = [0x24EB98, 0xFF745A, 0x6333ed];
-//robots.push(new DubinsRobot([-4,3,0],3,0xFF745A));
-for(let robotNum = 0; robotNum < NUMBER_OF_ROBOTS; robotNum++){
-  //let pos = graphics.mapper.randomStateXY();
-  //robots[robotNum] = new DubinsRobot([-20,robotNum*5-5,0],3,robotTints[robotNum]);
-  robots[robotNum] = new DubinsRobot([-20,robotNum*5-5,0],3,0x24EB98);
-  robots[robotNum].ID = robotNum;
 
-  stage.addChild(robots[robotNum]);
+fetch("http://localhost:3000/Experiments/"+participantNumber+"/Subject"+participantNumber+"Game"+gameNumber+".dat").then((response) => {
+       return response.json();
+   }).then((json) => {
+       // Load the JSON into a local data member
+       console.log("loaded http://localhost:3000/Experiments/"+participantNumber+"/Subject"+participantNumber+"Game"+gameNumber+".dat")
+       console.log(json);
+       record = json;
 
-  // Set their goals
-  robotGoals[robotNum] = [-20,0];
-}
-/*
-robotControllers[0].setID = 0;
-//robotControllers[3].setID = 0; robots[3].tint = 0x24EB98;
-robotControllers[1].setID = 1;
-//robotControllers[4].setID = 2; robots[4].tint = 0xFF745A;
-robotControllers[2].setID = 2;
-//robotControllers[5].setID = 3; robots[5].tint = 0x6333ed;
-*/
+      // Obstacles
+      for(let ii = 0; ii < 15; ii++){
+        let obstacleInit = record.obstacles[ii];
+        let posX = obstacleInit.position[0];
+        let posY = obstacleInit.position[1];
+        //obstacleList.push(new RoundObstacle(posX,posY,obstacleInit.radius,obstacleInit.radiumTrim,dubinsCircles));
+        obstacleList.push(new RoundObstacle(posX,posY,1.8,0.55,dubinsCircles));
+      }
+      obstacles = new Obstaclescape(obstacleList);
+      //let wall = new RoundObstacle(0,-12.5,0.1,0,dubinsWalls);
+      //wall.color = 0xEEEEEE;
+      //obstacleList.push(wall )
+      for(let ii = 0; ii < 15; ii++){
+        obstacles.obstacleUndetected[ii] = false;
+      }
+      // Clear out some obstacles to begin with
+      for(let ii = 10; ii < 15; ii++){
+        obstacles.obstacleDestroyed[ii] = true;
+        ghostObstacleIds.push(ii);
+      }
+
+      // Robot Object
+      let Umax = 1;
+      ///* // Dubins Car Robot
+      //robots.push(new DubinsRobot([-4,3,0],3,0xFF745A));
+      for(let robotNum = 0; robotNum < NUMBER_OF_ROBOTS; robotNum++){
+        //let pos = graphics.mapper.randomStateXY();
+        //robots[robotNum] = new DubinsRobot([-20,robotNum*5-5,0],3,robotTints[robotNum]);
+        robots[robotNum] = new DubinsRobot([-20,robotNum*5-5,0],3,0x24EB98);
+        robots[robotNum].ID = robotNum;
+
+        stage.addChild(robots[robotNum]);
+
+        // Set their goals
+        robotGoals[robotNum] = [-20,0];
+      }
+      /*
+      robotControllers[0].setID = 0;
+      //robotControllers[3].setID = 0; robots[3].tint = 0x24EB98;
+      robotControllers[1].setID = 1;
+      //robotControllers[4].setID = 2; robots[4].tint = 0xFF745A;
+      robotControllers[2].setID = 2;
+      //robotControllers[5].setID = 3; robots[5].tint = 0x6333ed;
+      */
+
+  })
 
 // ===================== THE MAIN EVENT ================== // 3
 let leftX;
@@ -258,7 +292,7 @@ window.setInterval(function() {
   graphics.endFill();
     // Render the obstacles
   obstacles.render();
-  intervener.intervening_sets.displayGrid(intervener.setID,graphics,robot.tint,robot.states,0,1);
+  //intervener.intervening_sets.displayGrid(intervener.setID,graphics,robot.tint,robot.states,0,1);
   //intervener2.intervening_sets.displayGrid(intervener2.setID,graphics,robot2.tint,robot2.states,0,1);
   //obstacles.displayGrid(0,graphics,robots[0].tint,robots[0].states,0,1);
   arcadeScore.text = 'SCORE: '+ ArcadeScore;
