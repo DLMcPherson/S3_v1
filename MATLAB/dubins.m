@@ -18,6 +18,12 @@ R = 1.8;
 data0 = shapeCylinder(g, 3, [0; 0; 0], R);
 % also try shapeRectangleByCorners, shapeSphere, etc.
 
+%% change to Stochastic Reachability
+%data0 = 0.5 * (1 + sign(data0));
+data0 = tanh(5*data0)
+HJIextraArgs.RS_level = 0.5; % visualize the 50%-probability safe set
+HJIextraArgs.addGaussianNoiseStandardDeviation = [0;0;0.3];
+
 %% time vector
 t0 = 0;
 tMax = 2;

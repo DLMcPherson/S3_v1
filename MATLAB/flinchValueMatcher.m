@@ -24,7 +24,7 @@ minVariance = inf;
 minVarianceIndex = 1;
 minAbsMean = inf;
 minAbsMeanIndex = 1;
-for i = 1 : familySize-4
+for i = 1 : familySize
   % Determine value of each flinch point for this value function
   values = [];
   for j = 1 : numFlinches

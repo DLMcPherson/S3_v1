@@ -6,7 +6,11 @@
 
 %% Set the parameters for this family
 % Omega values
-wFamily = [0, 0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875, 1, 1.5, 2, 2.5, 3];
+wFamily = [0, 0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875, 1];
+sigFamily = [0, 0.25, 0.5, 0.75, 1.0];
+
+wFamily = [0.7];
+sigFamily = [0, 0.5, 1];
 
 % Save the results
 saveFamily = true;
@@ -15,10 +19,12 @@ saveFamily = true;
 gridDataFamily = {};
 valuesFamily = {};
 for i = 1 : length(wFamily)
-  [gridData, values] = dubinsGenerator(wFamily(i));
-  
-  gridDataFamily(end + 1) = {gridData};
-  valuesFamily(end + 1) = {values(:,:,:,end)};
+    for jj = 1 : length(sigFamily)
+      [gridData, values] = dubinsGenerator(wFamily(i),sigFamily(jj));
+
+      gridDataFamily(end + 1) = {gridData};
+      valuesFamily(end + 1) = {values(:,:,:,end)};
+    end
 end
 
 %% Save the family data, if desired

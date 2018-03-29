@@ -10,6 +10,8 @@ familyData = load(familyDataFile);
 xIndex = 1;
 yIndex = 2;
 thetaIndex = 3;
+thetaCoordinate = 22;
+%thetaCoordinate = 42;
 
 % New figure
 figure;
@@ -30,11 +32,12 @@ for familyIndex = [1:length(familyData.valuesFamily)]
 %   image('XData', gridX, 'YData', gridY, ...
 %         'CData', plotValues','CDataMapping','scaled');
 
-  % Show the contour lines
-  contour(gridX, gridY, plotValues', [0, 0], ...
+  % Show the contour lines [0.2, 0.5, 0.8]
+  contour(gridX, gridY, plotValues', [0.7, 0.7], ...
           'color', colorMapping(length(familyData.valuesFamily) - familyIndex + 1, :), 'LineWidth', 2);
   
-  wMax{familyIndex} = ['$$\omega_{max} = ', num2str(familyData.gridDataFamily{familyIndex}.wMax), '$$'];
+  %familyData.gridDataFamily{familyIndex}.sigma = mod(familyIndex-1,5)*0.25;
+  wMax{familyIndex} = ['$$\omega_{max} = ', num2str(familyData.gridDataFamily{familyIndex}.wMax), ', \sigma = ', num2str(familyData.gridDataFamily{familyIndex}.sigma),'$$'];
 %   % Plot the flinch points
 %   plot(flinchData.flinchPoints(1,:), flinchData.flinchPoints(2,:), ...
 %        'ro', 'LineWidth', 2)
