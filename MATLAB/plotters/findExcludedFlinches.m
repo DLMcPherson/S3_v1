@@ -1,6 +1,6 @@
 %findExcludedFlinches.m
 
-flinchDataFile = 'flinchDataAggregate.mat';
+flinchDataFile = '../../../Experiments/flinchDataAggregate.mat';
 
 flinchData = load(flinchDataFile);
 flinchData.flinchPoints = flinchData.flinchPoints([1:6, 8:12]);

@@ -4,7 +4,8 @@ function [g,data] = dubinsGenerator(wMax,sigma)
 compTraj = false;
 
 %% Grid
-%{ % Grid used in IROS Experiment's Family
+%{ 
+% Grid used in IROS Experiment's Family
 grid_min = [-8; -8; -pi]; % Lower corner of computation domain
 grid_max = [8; 8; pi];    % Upper corner of computation domain
 N = [65; 65; 42];         % Number of grid points per dimension

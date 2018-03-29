@@ -5,12 +5,12 @@
 % and then selecting the family member with the highest induced likelihood
 
 %% Specify parameters
-familyDataFile = 'dubinsFamily.mat';
+familyDataFile = "../generators/dubinsFamily.mat";
 % flinchDataFile = 'autoFlinches.mat';
 %flinchDataFile = '/Users/david.mcpherson/Downloads/supervisorFlinches.dat';
 participantID = 9;
-flinches = loadFlinchData("../../Experiments/"+participantID+"/supervisorFlinches.dat");
-mleSaveFile = "../../Experiments/"+participantID+"/mleData.mat";
+flinches = loadFlinchData("../../../Experiments/"+participantID+"/supervisorFlinches.dat");
+mleSaveFile = "../../../Experiments/"+participantID+"/mleData.mat";
 
 %% Load the flinch data and the family of value functions
 familyData = load(familyDataFile);
@@ -94,7 +94,7 @@ end
 
 offsetReachset = familyData.valuesFamily{maxLikelihoodIndex} - meanMLE(maxLikelihoodIndex);
 
-json_export_reachset(offsetReachset,familyData.gridDataFamily{maxLikelihoodIndex},'dubinsMLE',"../reachableSets/");
+json_export_reachset(offsetReachset,familyData.gridDataFamily{maxLikelihoodIndex},'dubinsMLE',"../../reachableSets/");
 
 %% Save MLE data
 mu = meanMLE(maxLikelihoodIndex);
@@ -104,5 +104,5 @@ omegaMax = familyData.gridDataFamily{maxLikelihoodIndex}.wMax;
 save(mleSaveFile, 'mu', 'sigma2', 'mleLogLikelihood', 'omegaMax');
 
 %% Check if the fitted set is less conservative anywhere than the physics-based safe set
-physics_set = load('../reachableSets/dubins_reachset.mat');
+physics_set = load('../../reachableSets/dubins_reachset.mat');
 less_conservative = any(any(any( (physics_set.data < 0) & (offsetReachset > 0) )))

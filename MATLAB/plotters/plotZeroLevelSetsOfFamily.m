@@ -1,7 +1,7 @@
 %plotZeroLevelSetsOfFamily
 
 %% Specify parameters
-familyDataFile = 'dubinsFamily.mat';
+familyDataFile = '../generators/dubinsFamily.mat';
 
 %% Load the flinch data and the family of value functions
 familyData = load(familyDataFile);

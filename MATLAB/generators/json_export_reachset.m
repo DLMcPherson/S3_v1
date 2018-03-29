@@ -4,7 +4,7 @@ function json_export_reachset(data,g,filename,infoldername)
     if(nargin > 3)
         foldername = infoldername;
     else
-        foldername = "../reachableSets/";
+        foldername = "../../reachableSets/";
     end
     
     % Identify which axes are periodic
