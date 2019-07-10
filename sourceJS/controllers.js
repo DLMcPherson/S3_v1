@@ -89,16 +89,15 @@ class Dubins_Contr extends Controller {
     // Create the marker that designates the robots current goalpoint
     this.goal = new PIXI.Text('X',{font : '24px Gill Sans', fill : this.robot.tint});
     this.goal.pivot.x = 10; this.goal.pivot.y = 12;
-    this.goal.x = graphics.mapper.mapStateToPosition(this.set[0],this.set[1])[0];
-    this.goal.y = graphics.mapper.mapStateToPosition(this.set[0],this.set[1])[1];
-    stage.addChild(this.goal);
+    this.goal.x = map1.mapStateToPosition(this.set[0],this.set[1])[0];
+    this.goal.y = map1.mapStateToPosition(this.set[0],this.set[1])[1];
   }
   // Method for updating the setpoint to be tracked
   updateSetpoint(_set){
     this.set = _set;
     // Move the marker to match the new setpoint
-    this.goal.x = graphics.mapper.mapStateToPosition(this.set[0],this.set[1])[0];
-    this.goal.y = graphics.mapper.mapStateToPosition(this.set[0],this.set[1])[1];
+    this.goal.x = map1.mapStateToPosition(this.set[0],this.set[1])[0];
+    this.goal.y = map1.mapStateToPosition(this.set[0],this.set[1])[1];
   }
   // Returns the current control value responding to the robot's state
   u(){
@@ -219,7 +218,7 @@ class PaletteIntervention_Contr extends Controller {
     let deltaY = this.tracker.set[1] - this.robot.states[1];
     if(Math.abs(deltaX) < 0.5 && Math.abs(deltaY) < 0.5){
       let swapX = this.tracker.set[0] * -1;
-      let newGoal = graphics.mapper.randomStateXY();
+      let newGoal = map1.randomStateXY();
       newGoal[0] = swapX;
       this.tracker.updateSetpoint(newGoal);
       if(ArcadeScore){
@@ -283,7 +282,7 @@ class PaletteLegibilization_Contr extends Controller {
     let deltaY = this.tracker.set[1] - this.robot.states[1];
     if(Math.abs(deltaX) < 0.5 && Math.abs(deltaY) < 0.5){
       let swapX = this.tracker.set[0] * -1;
-      let newGoal = graphics.mapper.randomStateXY();
+      let newGoal = map1.randomStateXY();
       newGoal[0] = swapX;
       this.tracker.updateSetpoint(newGoal);
       if(ArcadeScore){

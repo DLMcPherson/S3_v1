@@ -22,9 +22,9 @@ canvas {
 
   /* Optional stuff for positioning */
   top:50%;
-  left:75%;
-  width: 40%;
-  height: 75%;
+  left:50%;
+  width: 90%;
+  height: 90%;
   transform: translate(-50%, -50%);
   -webkit-transform: translate(-50%, -50%);
 }

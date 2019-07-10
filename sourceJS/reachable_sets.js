@@ -9,7 +9,7 @@ class SafeSet {
     return 0;
   }
   // Method for displaying the value function on a grid
-  displayGrid(graphics,color,currentState,sweptStateX,sweptStateY){
+  displayGrid(_map,color,currentState,sweptStateX,sweptStateY){
     return 0;
   }
 }
@@ -44,9 +44,9 @@ class UnionedSafeSet extends SafeSet {
     }
   }
   // Method for displaying the value function on a grid
-  displayGrid(graphics,color,currentState,sweptStateX,sweptStateY){
-    this.setA.displayGrid(graphics,color,currentState,sweptStateX,sweptStateY);
-    this.setB.displayGrid(graphics,color,currentState,sweptStateX,sweptStateY);
+  displayGrid(_map,color,currentState,sweptStateX,sweptStateY){
+    this.setA.displayGrid(_map,color,currentState,sweptStateX,sweptStateY);
+    this.setB.displayGrid(_map,color,currentState,sweptStateX,sweptStateY);
     return 0;
   }
 }
@@ -65,8 +65,8 @@ class SafeSetPalette {
     return this.safesets[setID].gradV(states);
   }
   // Display the sampled value function
-  displayGrid(setID,graphics,color,currentState,sweptStateX,sweptStateY,offset){
-    this.safesets[setID].displayGrid(graphics,color,currentState,
+  displayGrid(setID,_map,color,currentState,sweptStateX,sweptStateY,offset){
+    this.safesets[setID].displayGrid(_map,color,currentState,
         sweptStateX,sweptStateY,offset);
     return 0;
   }
@@ -228,7 +228,7 @@ class twoTwo extends SafeSet{
   }
   // Method for displaying the value function
   // HACK: This assumes the system is a double integrator with a square obstacle
-  displayGrid(graphics,color,currentState,sweptStateX,sweptStateY){
+  displayGrid(_map,color,currentState,sweptStateX,sweptStateY){
     let states = currentState;
     let collideBoxX = 0; let collideBoxY = 0; let collideBoxW = 1; let collideBoxH = 1;
     let left = collideBoxX-collideBoxW;
@@ -256,11 +256,11 @@ class twoTwo extends SafeSet{
     else{
       bottom += padY;
     }
-    obstacle.drawFromState(graphics,0,left,top,right,bottom)
+    obstacle.drawFromState(_map,0,left,top,right,bottom)
     obstacle.render();
   }
   /*
-  displayGrid(graphics,currentState,sweptStateX,sweptStateY){
+  displayGrid(_map,currentState,sweptStateX,sweptStateY){
     let [lowEdgeIndex,highEdgeIndex] = this.nearIndices(currentState,true);
     let index = lowEdgeIndex;
     graphics.lineStyle(0, 0x000000);
@@ -271,7 +271,7 @@ class twoTwo extends SafeSet{
         let valuation = this.griddedValue(index);
         // Display this gridpoint
         let mappedState =
-          graphics.mapper.mapStateToPosition(this.setA.indexToState(indexX,0),this.setB.indexToState(indexY,0) );
+          map1.mapStateToPosition(this.setA.indexToState(indexX,0),this.setB.indexToState(indexY,0) );
           // Choose the correct color
         if(valuation > 0){
         }
@@ -305,18 +305,18 @@ class dubinsCircle_Set extends SafeSet {
     return [states[0]/norm,states[1]/norm,0];
   }
   // Method for displaying the value function on a grid
-  displayGrid(graphics,color,currentState,sweptStateX,sweptStateY){
-    this.drawFromState(graphics,2,color, 0, 0, this.radius)
+  displayGrid(_map,color,currentState,sweptStateX,sweptStateY){
+    this.drawFromState(_map,2,color, 0, 0, this.radius)
     return 0;
   }
   // Draw a circle given the state coordinates of its center and radius
-  drawFromState(graphics,linewidth,color, _x,_y,radius){
-    let center = graphics.mapper.mapStateToPosition(_x,_y);
-    this.drawCircle(graphics,linewidth,color, center[0],center[1],radius*graphics.mapper.Mxx);
+  drawFromState(_map,linewidth,color, _x,_y,radius){
+    let center = map1.mapStateToPosition(_x,_y);
+    this.drawCircle(_map,linewidth,color, center[0],center[1],radius*map1.Mxx);
     return;
   }
   // Draw a circle using PIXI.graphics
-  drawCircle(graphics,linewidth,color,left,top,radius){
+  drawCircle(_map,linewidth,color,left,top,radius){
     // Set a fill and line style
     graphics.beginFill(color);
     graphics.lineStyle(linewidth, 0x000000);
@@ -345,7 +345,7 @@ class dubIntInterval_Set extends SafeSet {
     return [states[0]/norm,0];
   }
   // Method for displaying the value function on a grid
-  displayGrid(graphics,color,currentState,sweptStateX,sweptStateY){
+  displayGrid(_map,color,currentState,sweptStateX,sweptStateY){
     return 0;
   }
 }
@@ -364,7 +364,7 @@ class loaded_SafeSet extends SafeSet {
         })
   }
   // Method for displaying the value function
-  displayGrid(graphics,color,currentState,sweptStateX,sweptStateY,stateOffset){
+  displayGrid(_map,color,currentState,sweptStateX,sweptStateY,stateOffset){
     graphics.lineStyle(0, 0x000000);
     // Determine which slice of the reachable set to display
     let reachableSet = this.reachset;
@@ -386,7 +386,7 @@ class loaded_SafeSet extends SafeSet {
           gY += stateOffset[1];
           console.log('grid shifted')
         }
-        let mappedState = graphics.mapper.mapStateToPosition(gX, gY);
+        let mappedState = _map.mapStateToPosition(gX, gY);
         // Display the gridpoint according to the value at this gridpoint
         if(valuation > 0){
           // optional case for displaying safe zone
@@ -395,7 +395,7 @@ class loaded_SafeSet extends SafeSet {
           // display the unsafe zone
           graphics.beginFill(color);
             // Draw the circle
-          graphics.drawCircle(mappedState[0],mappedState[1],8);
+          graphics.drawCircle(mappedState[0],mappedState[1],4);
           graphics.endFill();
         }
       }

@@ -215,6 +215,7 @@ class BoxObstacle extends Obstacle{
   constructor(_ObX,_ObY,_ObW,_ObH,avoidSets){
     super(_ObX,_ObY,avoidSets);
     this.grapher = graphics
+    this.map = _graphics.mapper
     this.ObW = _ObW;
     this.ObH = _ObH;
     // Offset vector (in the state space) that translates between global
@@ -241,8 +242,8 @@ class BoxObstacle extends Obstacle{
   // Draw a quadrilateral given the state coordinates of the edges
   drawFromState(linewidth,color, left,top,right,bottom){
     // Scale from state coordinates to screen coordinates
-    let topleft = this.grapher.mapper.mapStateToPosition(left,top);
-    let bottomright = this.grapher.mapper.mapStateToPosition(right,bottom);
+    let topleft = this.map.mapStateToPosition(left,top);
+    let bottomright = this.map.mapStateToPosition(right,bottom);
     // Draw teh filled rectangle
     this.drawQuadrilateral(this.grapher,linewidth,color,
         topleft[0],topleft[1],bottomright[0],bottomright[1]);
@@ -266,9 +267,10 @@ class BoxObstacle extends Obstacle{
 
 // Circular obstacle designed for Dubins-Car system
 class RoundObstacle extends Obstacle{
-  constructor(_ObX,_ObY,_ObR,radiusTrim,avoidSets,_graphics){
+  constructor(_ObX,_ObY,_ObR,radiusTrim,avoidSets,_map){
     super(_ObX,_ObY,avoidSets);
-    this.grapher = _graphics
+    this.grapher = graphics
+    this.map = _map
     this.ObR = _ObR;
     this.trimmedObR = _ObR - radiusTrim;
     this.color = 0x000000;
@@ -292,9 +294,9 @@ class RoundObstacle extends Obstacle{
   }
   // Draw a circle given the state coordinates of its center and radius
   drawFromState(linewidth,color, _x,_y,radius){
-    let center = this.grapher.mapper.mapStateToPosition(_x,_y);
+    let center = this.map.mapStateToPosition(_x,_y);
     this.drawCircle(linewidth,color,
-        center[0],center[1],radius*this.grapher.mapper.Mxx);
+        center[0],center[1],radius*this.map.Mxx);
     return;
   }
   // Draw a circle using PIXI.graphics

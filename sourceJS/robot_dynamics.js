@@ -47,7 +47,7 @@ class Robot extends PIXI.Sprite {
     // State Vector
     this.states = [0,0,0];
     // Display State
-    this.displayState();
+    //this.displayState();
   }
   // Method to be called each loop
   update(delT,u){
@@ -80,7 +80,7 @@ class QuadrotorRobot extends Robot {
   // position for rendering in the JS
   displayState(){
     let mappedState =
-      graphics.mapper.mapStateToPosition(this.states[0],this.states[2]);
+      this.map.mapStateToPosition(this.states[0],this.states[2]);
     this.x =  mappedState[0];
     this.y =  mappedState[1];
     //this.rotation = this.states[1]/15.0
@@ -91,6 +91,7 @@ class QuadrotorRobot extends Robot {
   constructor(initial_state){
     // Image
     super(PIXI.Texture.from("http://localhost:3000/S3_v1/QuadcopterSide.png"));
+    this.map = map1
     this.pivot.x = 100 ; this.pivot.y = 50;
     this.width = 100 ; this.height = 100;
     // State Vector
@@ -118,7 +119,7 @@ class VerticalQuadrotorRobot extends Robot {
   // Method that translates states from the state vector into the corresponding
   // position for rendering in the JS
   displayState(){
-    let mappedState = graphics.mapper.mapStateToPosition(0,this.states[0]);
+    let mappedState = this.map.mapStateToPosition(0,this.states[0]);
     this.x =  mappedState[0];
     this.y =  mappedState[1];
     //this.rotation = this.states[1]/15.0
@@ -129,6 +130,7 @@ class VerticalQuadrotorRobot extends Robot {
   constructor(initial_state){
     // Image
     super(PIXI.Texture.from("http://localhost:3000/S3_v1/QuadcopterSide.png"));
+    this.map = map1
     this.pivot.x = 100 ; this.pivot.y = 50;
     this.width = 100 ; this.height = 50;
     // State Vector
@@ -182,7 +184,7 @@ class DubinsRobot extends Robot {
   // position for rendering in the JS
   displayState(){
     let mappedState =
-        graphics.mapper.mapStateToPosition(this.states[0],this.states[1]);
+        this.map.mapStateToPosition(this.states[0],this.states[1]);
     this.x =  mappedState[0];
     this.y =  mappedState[1];
     if(this.spinout > 0){
@@ -195,11 +197,12 @@ class DubinsRobot extends Robot {
   }
   // Constructor initializes PIXI.Sprite members fitting the quadrotor Texture
   // and sets initial state data
-  constructor(initial_state,velocity,tint){
+  constructor(initial_state,velocity,tint,_map){
     // Image
     super(PIXI.Texture.from("http://localhost:3000/S3_v1/DubinsCarV2.png"));
-    this.width = 1.1 * graphics.mapper.Mxx;
-    this.height = 1.1 * graphics.mapper.Mxx;
+    this.map = _map
+    this.width = 1.1 * this.map.Mxx;
+    this.height = 1.1 * this.map.Mxx;
 //    this.width = 80 * 3/7; this.height = 80 * 3/7;
     this.pivot.x = 100 ; this.pivot.y = 100;
     this.tint = tint;

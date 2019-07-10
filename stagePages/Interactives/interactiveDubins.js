@@ -3,20 +3,38 @@
 const FRAME_WIDTH = 700;
 const FRAME_HEIGHT = 700;
 
-class MirrorSprite extends PIXI.Sprite {
+class MirrorRobot extends PIXI.Sprite {
   // Constructor initializes PIXI.Sprite members and sets initial state
-  constructor(mirroree){
+  constructor(mirroree,map){
     // Image
     super(mirroree.texture);
     this.mirroree = mirroree
+    this.map = map
     this.pivot.x = mirroree.pivot.x ; this.pivot.y = mirroree.pivot.y;
     this.width = mirroree.width ; this.height = mirroree.height;
+
+    this.states = this.mirroree.states
+  }
+  displayState(){
+    let mappedState =
+        this.map.mapStateToPosition(this.states[0],this.states[1]);
+    this.x =  mappedState[0];
+    this.y =  mappedState[1];
+    if(this.spinout > 0){
+      this.rotation += 6.2830/100;
+      this.spinout -= 1;
+    }
+    else{
+      this.rotation = this.states[2] + 3.1415/2;
+    }
   }
   // Method to be called each loop
   update(){
-    this.x = this.mirroree.x
-    this.y = this.mirroree.y
-    this.rotation = this.mirroree.rotation
+    //this.x = this.mirroree.x
+    //this.y = this.mirroree.y
+    //this.rotation = this.mirroree.rotation
+    this.states = this.mirroree.states;
+    this.displayState();
   }
 }
 
@@ -67,10 +85,6 @@ let renderer = new PIXI.Renderer({ width: FRAME_WIDTH, height: FRAME_HEIGHT, bac
 renderer.autoResize = true
 renderer.roundPixels = true;
 
-let renderer2 = new PIXI.Renderer({ width: FRAME_WIDTH, height: FRAME_HEIGHT, backgroundColor: 0xffffff })
-renderer2.autoResize = true
-renderer2.roundPixels = true;
-
 /*
 const app = new PIXI.Application({
     width: FRAME_WIDTH, height: FRAME_HEIGHT, backgroundColor: 0xffffff, resolution: window.devicePixelRatio || 1,
@@ -87,99 +101,89 @@ if(saveToCloud){
 
 // Standard Frame
 let stage = new PIXI.Container();
-let headWorld = new PIXI.Container();
   // Graphics object for lines and squares and such...
 let graphics = new PIXI.Graphics();
-graphics.mapper = new FrameXYMap(70,0,0,70,FRAME_WIDTH/2,FRAME_HEIGHT/2);
-stage.addChild(graphics);
-// Graphics object for lines and squares and such...
-let graphics2 = new PIXI.Graphics();
-graphics2.mapper = new FrameXYMap(70,0,0,70,FRAME_WIDTH/2,FRAME_HEIGHT/2);
-headWorld.addChild(graphics2);
+let map1 = new FrameXYMap(30,0,0,30,FRAME_WIDTH*3/4,FRAME_HEIGHT/2);
+let map2 = new FrameXYMap(30,0,0,30,FRAME_WIDTH*1/4,FRAME_HEIGHT/2);
+graphics.mapper = map1
 
 // Goal point Marker
 const goalX = 1 ; const goalY = -4;
 
 // Robot Object
 let Umax = 1
-/* // 2D Quadrotor Robot
-let obstacle = new BoxObstacle(0,0,1,1);
-let robot = new QuadrotorRobot([-6,0,3,0]);
-stage.addChild(robot);
-let intervener = new Intervention_Contr(robot,
-    new twoTwo(new loaded_SafeSet("dubInt"),new loaded_SafeSet("dubIntV2") ),
-    Umax,0,
-    new Concat_Contr(robot,[new PD_Contr(robot,goalX,0),new PD_Contr(robot,goalY,2)]) );
-intervener.trigger_level = robot.width/(2*graphics.mapper.Myy);
-*/
 // let dubinsCircles = new LearnedPalette("dubins");
 let dubinsCircles = new SweptPalette("DubinsSafesetFullFamily/dubins",[0,125,250,375,500,625,750,875,1000,2000,3000],[0])
 let carRadius = 0.55;
-let obstacle = new RoundObstacle(0,0,1.8,carRadius,dubinsCircles,graphics);
-//let obstacle2 = new RoundObstacle(0,0,1.8,carRadius,dubinsCircles,graphics2);
+let obstacle = new RoundObstacle(0,0,1.8,carRadius,dubinsCircles,map1);
+let obstacle2 = new RoundObstacle(0,0,1.8,carRadius,dubinsCircles,map2);
 let ArcadeScore = 0
 
 ///* // Dubins Car Robot
 // red = 0xFF745A
-let robot = new DubinsRobot([-4,3,0],3,0x24EB98);
-stage.addChild(robot);
-let mirrorRobot = new MirrorSprite(robot)
-headWorld.addChild(mirrorRobot);
+let robot = new DubinsRobot([-4,3,0],3,0x24EB98,map1);
+let mirrorRobot = new MirrorRobot(robot,map2)
 let intervener = new PaletteIntervention_Contr(robot,
-    dubinsCircles,0,
+    dubinsCircles,8,
     Umax,0,
     new Dubins_Contr(robot,Umax,[goalX,goalY] ));
     //*/
-//intervener.trigger_level = robot.height/(2*graphics.mapper.Mxx) * Math.SQRT2;
-
-/*
-let robot2 = new DubinsRobot([4,3,0],3,0x24EB98);
-//stage.addChild(robot2);
-let intervener2 = new PaletteIntervention_Contr(robot2,
-    dubinsCircles,0,
-    Umax,0,
-    new Dubins_Contr(robot2,Umax,[goalX,goalY]));
-*/
-//intervener2.trigger_level = robot2.height/(2*graphics.mapper.Mxx) * Math.SQRT2;
 
 // Render the Obstacle
 obstacle.renderAugmented(intervener.trigger_level);
 
 // Supervisor overlay
+let headPosition = map2.mapStateToPosition(0,0)
 let supervisor = new PIXI.Sprite(PIXI.Texture.from("http://localhost:3000/S3_v1/HappyHead.png"))
-supervisor.x = -100
-supervisor.y = -50
-supervisor.scale.x = 0.8
-supervisor.scale.y = 0.8
+supervisor.x = headPosition[0]
+supervisor.y = headPosition[1]
+supervisor.anchor.x = 0.5
+supervisor.anchor.y = 0.5
+supervisor.scale.x = 0.5
+supervisor.scale.y = 0.5
 supervisor.alpha = 0.5
-headWorld.addChild(supervisor)
 let supervisorNegative = new PIXI.Sprite(PIXI.Texture.from("http://localhost:3000/S3_v1/NegativeHead.png"))
-supervisorNegative.x = -100
-supervisorNegative.y = -50
-supervisorNegative.scale.x = 0.8
-supervisorNegative.scale.y = 0.8
-headWorld.addChild(supervisorNegative)
-
+supervisorNegative.x = headPosition[0]
+supervisorNegative.y = headPosition[1]
+supervisorNegative.anchor.x = 0.5
+supervisorNegative.anchor.y = 0.5
+supervisorNegative.scale.x = 0.5
+supervisorNegative.scale.y = 0.5
+//supervisorNegative.tint = 0xEEEEEE
+let supervisorSetID = 3
 
 // Place a slider for interacting with simulation parameters
-let sliderBar = new PIXI.Sprite(PIXI.Texture.from("http://localhost:3000/S3_v1/SliderBar.png"))
+let sliderBar = new PIXI.Sprite(PIXI.Texture.from("http://localhost:3000/S3_v1/SliderBar_v2.png"))
 sliderBar.x = 30
-sliderBar.y = FRAME_HEIGHT - 150
+sliderBar.y = FRAME_HEIGHT - 50
 sliderBar.width = 600
-headWorld.addChild(sliderBar)
+sliderBar.height = 211 * 600/1076
+sliderBar.anchor.y = 0.7
 let slider = new PIXI.Sprite(PIXI.Texture.from("http://localhost:3000/S3_v1/Slider.png"))
 slider.interactive = true
 slider.buttonMode = true
 slider.height = 100
-slider.anchor.set(0.5)
-slider.x = 30
+slider.anchor.y = 0.5
+slider.x = intervener.setID*56 + 35
 slider.y = FRAME_HEIGHT - 50
 slider.on('pointerdown', onDragStart)
 slider.on('pointerup', onDragEnd)
 slider.on('pointerupoutside', onDragEnd)
 slider.on('pointermove', onDragMove);
-headWorld.addChild(slider)
+
 //stage.addChild()
+
+// Arrange everything on stage
+// Head world
+stage.addChild(mirrorRobot);
+stage.addChild(graphics);
+stage.addChild(supervisorNegative)
+stage.addChild(supervisor)
+// Real world
+stage.addChild(robot);
+stage.addChild(sliderBar)
+stage.addChild(slider)
+stage.addChild(intervener.tracker.goal);
 
 // ===================== THE MAIN EVENT ================== // 3
 
@@ -203,13 +207,20 @@ window.setInterval(function() {
 
   // Rendering the stage
   graphics.clear();
+  intervener.intervening_sets.displayGrid(supervisorSetID,map2,0x40120A,robot.states,0,1);
+  obstacle2.render();
+  graphics.lineStyle(0, 0x000000);
+  graphics.beginFill(0xFFFFFF)
+  graphics.drawRect(supervisorNegative.x+supervisorNegative.width*supervisorNegative.scale.x,0,FRAME_WIDTH+100,FRAME_HEIGHT)
+  graphics.drawRect(0,supervisorNegative.y+supervisorNegative.height*supervisorNegative.scale.y,FRAME_WIDTH+100,FRAME_HEIGHT)
+  graphics.drawRect(0,supervisorNegative.y-supervisorNegative.height*supervisorNegative.scale.y-FRAME_HEIGHT,FRAME_WIDTH+100,FRAME_HEIGHT)
+  graphics.endFill()
   obstacle.render();
-  //obstacle2.render();
-  intervener.intervening_sets.displayGrid(intervener.setID,graphics,0xFF745A,robot.states,0,1);
+  intervener.intervening_sets.displayGrid(supervisorSetID,map1,0x40120A,robot.states,0,1);
+  intervener.intervening_sets.displayGrid(intervener.setID,map1,0xFF745A,robot.states,0,1);
   //intervener.intervening_set.displayGrid(graphics,0xFF745A,robot.states,0,1);
   //intervener2.intervening_set.displayGrid(graphics,robot2.tint,robot2.states,0,1);
   renderer.render(stage);
-  renderer2.render(headWorld);
 },10)
 
 // ====================== Keyboard Listener Loop ========================= //
@@ -268,8 +279,8 @@ document.addEventListener("keydown",function(event) {
 // ====================== Mouse Listener Loop ========================= //
 document.addEventListener("mousedown",function(event) {
   let mousePosition = renderer.plugins.interaction.mouse.global;
-  if (mousePosition.x > 0) {
-    let mouseState = graphics.mapper.mapPositionToState(mousePosition.x/stage.scale.x,mousePosition.y/stage.scale.x)
+  let mouseState = map1.mapPositionToState(mousePosition.x/stage.scale.x,mousePosition.y/stage.scale.x)
+  if (mouseState[0] > -10) {
     intervener.tracker.updateSetpoint([mouseState[0],mouseState[1]]);
   }
   // End
@@ -295,24 +306,20 @@ function onDragEnd() {
 function onDragMove() {
   if(this.dragging) {
     // Pulling the slider
-    let mousePosition = renderer2.plugins.interaction.mouse.global;
-    let sliderTick = Math.round( (mousePosition.x/headWorld.scale.x - 30)/60)
+    let mousePosition = renderer.plugins.interaction.mouse.global;
+    let sliderTick = Math.round( (mousePosition.x/stage.scale.x - 30)/60)
     if (sliderTick < 0)
       sliderTick = 0
     if (sliderTick > dubinsCircles.safesets.length-1)
       sliderTick = dubinsCircles.safesets.length-1
     intervener.setID = sliderTick
-    this.x = sliderTick*60 + 30
+    this.x = intervener.setID*56 + 35
   }
 }
 
 // Mount the renderer in the website
 let mount = document.getElementById("frame");
 mount.insertBefore(renderer.view, mount.firstChild);
-
-// Mount the renderer in the website
-let mount2 = document.getElementById("frame2");
-mount2.insertBefore(renderer2.view, mount2.firstChild);
 resize()
 
 // Listen for window resize events
@@ -340,12 +347,10 @@ function resize() {
   */
   renderer.resize(newWidth, newHeight);
   console.log(newWidth, newHeight)
-  graphics.mapper.bx = newWidth/2
-  graphics.mapper.by = newHeight/2
-  sliderBar.y = newHeight - 50
-  slider.y = newHeight - 50
-
-  renderer2.resize(renderer2.view.parentNode.clientWidth, renderer2.view.parentNode.clientHeight);
+  map1.bx = newWidth*3/4
+  map1.by = newHeight/2
+  map2.bx = newWidth*1/4
+  map2.by = newHeight/2
 
   let scale = newWidth/FRAME_WIDTH
   if(scale > newHeight/FRAME_HEIGHT)
@@ -353,8 +358,16 @@ function resize() {
 
   stage.scale.x = scale
   stage.scale.y = scale
-  headWorld.scale.x = scale
-  headWorld.scale.y = scale
-  graphics.mapper.bx /= scale
-  graphics.mapper.by /= scale
+  map1.bx /= scale
+  map1.by /= scale
+  map2.bx /= scale
+  map2.by /= scale
+  sliderBar.y = newHeight/scale - 40
+  slider.y = newHeight/scale - 40
+
+  let headPosition = map2.mapStateToPosition(0,0)
+  supervisor.x = headPosition[0]
+  supervisor.y = headPosition[1]
+  supervisorNegative.x = headPosition[0]
+  supervisorNegative.y = headPosition[1]
 }
