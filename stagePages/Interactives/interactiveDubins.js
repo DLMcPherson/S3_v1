@@ -134,7 +134,9 @@ obstacle.renderAugmented(intervener.trigger_level);
 
 // Supervisor overlay
 let headPosition = map2.mapStateToPosition(0,0)
-let supervisor = new PIXI.Sprite(PIXI.Texture.from("http://localhost:3000/S3_v1/HappyHead.png"))
+let happyHead = PIXI.Texture.from("http://localhost:3000/S3_v1/HappyHead.png")
+let sadHead = PIXI.Texture.from("http://localhost:3000/S3_v1/SadHead.png")
+let supervisor = new PIXI.Sprite(happyHead)
 supervisor.x = headPosition[0]
 supervisor.y = headPosition[1]
 supervisor.anchor.x = 0.5
@@ -189,6 +191,7 @@ stage.addChild(intervener.tracker.goal);
 
 // Main Loop
 let clock =  0 ;
+let supervisorCountdown = 0;
 let now = Date.now();
 window.setInterval(function() {
   // Time management
@@ -215,11 +218,26 @@ window.setInterval(function() {
   graphics.drawRect(0,supervisorNegative.y+supervisorNegative.height*supervisorNegative.scale.y,FRAME_WIDTH+100,FRAME_HEIGHT)
   graphics.drawRect(0,supervisorNegative.y-supervisorNegative.height*supervisorNegative.scale.y-FRAME_HEIGHT,FRAME_WIDTH+100,FRAME_HEIGHT)
   graphics.endFill()
-  obstacle.render();
   intervener.intervening_sets.displayGrid(supervisorSetID,map1,0x40120A,robot.states,0,1);
   intervener.intervening_sets.displayGrid(intervener.setID,map1,0xFF745A,robot.states,0,1);
-  //intervener.intervening_set.displayGrid(graphics,0xFF745A,robot.states,0,1);
-  //intervener2.intervening_set.displayGrid(graphics,robot2.tint,robot2.states,0,1);
+  obstacle.render();
+
+  if(obstacle.collisionSetValue(robot.states) < 0) {
+    robot.spinout = 100
+  }
+
+  if (intervener.intervening_sets.value(supervisorSetID,robot.states) < 0) {
+    supervisor.texture = sadHead
+    supervisorCountdown = 150
+    console.log("OHNO")
+  }
+  if (supervisorCountdown > 0) {
+    supervisorCountdown--
+    if (supervisorCountdown < 1) {
+      supervisor.texture = happyHead
+    }
+  }
+
   renderer.render(stage);
 },10)
 
@@ -348,9 +366,9 @@ function resize() {
   renderer.resize(newWidth, newHeight);
   console.log(newWidth, newHeight)
   map1.bx = newWidth*3/4
-  map1.by = newHeight/2
+  map1.by = newHeight/3
   map2.bx = newWidth*1/4
-  map2.by = newHeight/2
+  map2.by = newHeight/3
 
   let scale = newWidth/FRAME_WIDTH
   if(scale > newHeight/FRAME_HEIGHT)

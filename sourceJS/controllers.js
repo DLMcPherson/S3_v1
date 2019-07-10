@@ -258,7 +258,7 @@ class PaletteLegibilization_Contr extends Controller {
     this.tracker = _tracker;
     // Safety controller that will always steer the system out of danger
     this.safer   = new Safe_Contr(_robot,_maxU);
-    // Safeset for determining danger status and deciding which control to use
+    // Array of safesets for determining danger status and deciding which control to use
     this.intervening_sets = _safesetPalette;
     // Which safeset to act on inside the palette
     this.setID = _mySetID;
