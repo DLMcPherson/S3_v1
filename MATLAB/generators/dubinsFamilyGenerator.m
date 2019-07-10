@@ -6,11 +6,11 @@
 
 %% Set the parameters for this family
 % Omega values
-wFamily = [0, 0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875, 1];
+wFamily = [0, 0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875, 1, 2, 3];
 sigFamily = [0, 0.25, 0.5, 0.75, 1.0];
 
-wFamily = [0.7];
-sigFamily = [0, 0.5, 1];
+%wFamily = [0.7];
+%sigFamily = [0, 0.5, 1];
 
 % Save the results
 saveFamily = true;

@@ -249,3 +249,69 @@ class PaletteIntervention_Contr extends Controller {
     }
   }
 }
+
+// Intervention controller that swaps between PD and Safe controls
+// interfaces with palettes of safesets
+class PaletteLegibilization_Contr extends Controller {
+  constructor(_robot,_safesetPalette,_mySetID,_maxU,_maxD,_tracker,_record){
+    super(_robot);
+    // Default controller for when the system is not in danger
+    this.tracker = _tracker;
+    // Safety controller that will always steer the system out of danger
+    this.safer   = new Safe_Contr(_robot,_maxU);
+    // Safeset for determining danger status and deciding which control to use
+    this.intervening_sets = _safesetPalette;
+    // Which safeset to act on inside the palette
+    this.setID = _mySetID;
+    // Added padding to the safeset for factoring in robot width
+    this.trigger_level = 0;
+    // Record the initialization in goal and undetection
+    if(_record){
+      this.record = _record;
+      record.goalSetEvents.push({
+        robotID: this.robot.ID,
+        undetection: this.intervening_sets.undetectionscape.slice(),
+        goal: this.tracker.set,
+        timestamp: clock
+      });
+    }
+  }
+  // Method that returns the current input responding to the current state
+  u(){
+    // Reset the tracker's goal if the goal has been reached
+    let deltaX = this.tracker.set[0] - this.robot.states[0];
+    let deltaY = this.tracker.set[1] - this.robot.states[1];
+    if(Math.abs(deltaX) < 0.5 && Math.abs(deltaY) < 0.5){
+      let swapX = this.tracker.set[0] * -1;
+      let newGoal = graphics.mapper.randomStateXY();
+      newGoal[0] = swapX;
+      this.tracker.updateSetpoint(newGoal);
+      if(ArcadeScore){
+        ArcadeScore += 20;
+        console.log(ArcadeScore);
+      }
+      this.intervening_sets.rerandomizeUndetection();
+      // Record this change in goal and undetection
+      if(this.record){
+        record.goalSetEvents.push({
+          robotID: this.robot.ID,
+          undetection: this.intervening_sets.undetectionscape.slice(),
+          goal: newGoal,
+          timestamp: clock
+        });
+      }
+    }
+    // Return the legible control
+    console.log(this.setID)
+    let gradJ_robotSafe = this.intervening_sets.gradV(0,this.robot.states);
+    console.log(gradJ_robotSafe);
+    let gradJ_humanSafe = this.intervening_sets.gradV(4,this.robot.states);
+    console.log(gradJ_humanSafe);
+    let gradLegible = []
+    let mu1 = 10; let mu2 = 1;
+    for(var i = 0; i < gradJ_humanSafe.length; i++) {
+        gradLegible[i] = mu1*gradJ_humanSafe[i] - mu2*gradJ_robotSafe[i];
+    }
+    return this.safer.u(gradLegible);
+  }
+}

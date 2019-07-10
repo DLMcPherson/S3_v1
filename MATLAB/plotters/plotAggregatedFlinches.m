@@ -63,7 +63,7 @@ contour(gridX, gridY, plotValues',[0 0], ...
 % Label the theta value for this plot
 xlabel('X','interpreter','latex')
 ylabel('Y','interpreter','latex')
-title('Intervention Data Set covered by Baseline Safe Sets','interpreter','latex')
+title('Empirical Distribution of Supervisor Interventions','interpreter','latex')
 axis equal;
 axis([-8 4 -4 4])
 hold off;

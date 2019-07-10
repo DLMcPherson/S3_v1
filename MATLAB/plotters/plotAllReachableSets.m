@@ -8,6 +8,7 @@ conservativeIndex = 2;
 % Data Indices
 omegaIndex = 29;
 muIndex = 30;
+thetaCoordinate = 22;
 
 wFamily = [0, 0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875, 1, 1.5, 2, 2.5, 3];
 

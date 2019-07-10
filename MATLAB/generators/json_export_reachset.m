@@ -23,6 +23,8 @@ function json_export_reachset(data,g,filename,infoldername)
     fprintf(fileID,',"gN" : %s \n',jsonencode(g.N));
     fprintf(fileID,',"gdx" : %s \n',jsonencode(g.dx));
     fprintf(fileID,',"gperiodicity" : %s \n',jsonencode(periodicityVec));
+    fprintf(fileID,',"g_maxturn" : %s \n',jsonencode(g.wMax));
+    fprintf(fileID,',"g_noise" : %s \n',jsonencode(g.sigma));
     fprintf(fileID,',"data" : %s \n',TEXT);
     fprintf(fileID,'}');
     fclose(fileID);

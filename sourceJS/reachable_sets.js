@@ -88,6 +88,20 @@ class LearnedPalette extends SafeSetPalette {
   }
 }
 
+// Particular palette that loads safesets corresponding to swept instances of
+// two dynamical parameters
+class SweptPalette extends SafeSetPalette {
+  constructor(filename,firstParameters,secondParameters) {
+    let array = []
+    for(var ii = 0; ii < firstParameters.length ; ii++) {
+      for(var jj = 0; jj < secondParameters.length ; jj++) {
+        array[jj+secondParameters.length*ii] = new loaded_SafeSet(filename+"_w"+firstParameters[ii]+"_s"+secondParameters[jj])
+      }
+    }
+    super(array);
+  }
+}
+
 // Particular palette that automatically searches for the extensions for the
 // safe sets used in the team-test
 class TestTrifectaPalette extends SafeSetPalette {
@@ -395,7 +409,7 @@ class loaded_SafeSet extends SafeSet {
       // unwrap another layer of referencing the value function
       indexedValue = indexedValue[index[xDim]];
     }
-    return indexedValue;
+    return indexedValue - 0.5;
   }
   // Method for calculating the gradient at the given state
   gradV(states){
@@ -616,6 +630,6 @@ class loaded_SafeSet extends SafeSet {
       value = value/total_volume;
     }
     // Return
-    return value;
+    return value-0.5;
   }
 }

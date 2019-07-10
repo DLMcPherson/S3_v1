@@ -32,7 +32,7 @@ errorbar([0, 1, 2], meanArray, semArray, 'k.', 'LineWidth', 1.5)
 set(gca, 'FontSize', 14)
 set(gca, 'Xtick', [0, 1, 2]);
 set(gca,'TickLabelInterpreter', 'latex');
-set(gca, 'XtickLabel', {'Physics', 'Learned', 'Conservative'});
+set(gca, 'XtickLabel', {'Standard', 'Learned', 'Conservative'});
 xlabel(plotXLabel, 'interpreter', 'latex', 'FontSize', 16)
 ylabel(plotYLabel, 'interpreter', 'latex', 'FontSize', 16)
 title(plotTitle, 'interpreter', 'latex', 'FontSize', 18)

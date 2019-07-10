@@ -6,11 +6,14 @@
 
 %% Specify parameters
 familyDataFile = "../generators/dubinsFamily.mat";
+familyDataFile = "../dubinsFamily.mat";
 % flinchDataFile = 'autoFlinches.mat';
-%flinchDataFile = '/Users/david.mcpherson/Downloads/supervisorFlinches.dat';
-participantID = 9;
-flinches = loadFlinchData("../../../Experiments/"+participantID+"/supervisorFlinches.dat");
-mleSaveFile = "../../../Experiments/"+participantID+"/mleData.mat";
+flinchDataFile = '/Users/david.mcpherson/Downloads/supervisorFlinches.dat';
+flinches = loadFlinchData(flinchDataFile)
+%participantID = 9;
+%flinches = loadFlinchData("../../../Experiments/"+participantID+"/supervisorFlinches.dat");
+%mleSaveFile = "../../../Experiments/"+participantID+"/mleData.mat";
+mleSaveFile = "../../../Experiments/Demo/mleData.mat"
 
 %% Load the flinch data and the family of value functions
 familyData = load(familyDataFile);

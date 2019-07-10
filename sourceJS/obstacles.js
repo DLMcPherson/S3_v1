@@ -1,6 +1,7 @@
 // Virtual class defining the interface for obstacle objects
 class Obstacle {
   constructor(_ObX,_ObY,avoidSets){
+    this.grapher = graphics
     // save a reference to the reachable set conforming to this shaped obstacle
     // the reachable set's state space is relative to the obstacle's position
     this.avoidSets = avoidSets;
@@ -50,6 +51,7 @@ class Obstacle {
 // This is effectively a wrapper class for an array of Obstacle objects
 class Obstaclescape {
   constructor(_obstacles){
+    this.grapher = graphics
     // create the lists of obstacles and their access modifiers
     this.obstacles = _obstacles;
     this.obstacleDestroyed = [];
@@ -138,11 +140,11 @@ class Obstaclescape {
   }
   // Display the grid for every listed obstacle that hasn't been destroyed and
   // doesn't have a suppressed value function ((WARNING: slows down the app))
-  displayGrid(setID,graphics,color,currentState,sweptStateX,sweptStateY){
+  displayGrid(setID,color,currentState,sweptStateX,sweptStateY){
     for(let obNum = 0; obNum < this.obstacles.length ; obNum++){
       if(this.obstacleDestroyed[obNum] == false
             && this.obstacleUndetected[obNum] == false){
-        this.obstacles[obNum].displayGrid(setID,graphics,color,currentState
+        this.obstacles[obNum].displayGrid(setID,this.grapher,color,currentState
                                                       ,sweptStateX,sweptStateY);
       }
     }
@@ -152,6 +154,7 @@ class Obstaclescape {
 
 class maskedObstaclescape {
   constructor(_obstaclescape){
+    this.grapher = graphics
     // save a reference to the reachable set conforming to this shaped obstacle
     // the reachable set's state space is relative to the obstacle's position
     this.obstaclescape = _obstaclescape;
@@ -201,7 +204,7 @@ class maskedObstaclescape {
   }
   // Method for displaying the value function on a grid
   displayGrid(setID,graphics,color,currentState,sweptStateX,sweptStateY){
-    this.obstaclescape.displayGrid(setID,graphics,color,
+    this.obstaclescape.displayGrid(setID,this.grapher,color,
         currentState,sweptStateX,sweptStateY);
     return 0;
   }
@@ -211,6 +214,7 @@ class maskedObstaclescape {
 class BoxObstacle extends Obstacle{
   constructor(_ObX,_ObY,_ObW,_ObH,avoidSets){
     super(_ObX,_ObY,avoidSets);
+    this.grapher = graphics
     this.ObW = _ObW;
     this.ObH = _ObH;
     // Offset vector (in the state space) that translates between global
@@ -222,25 +226,25 @@ class BoxObstacle extends Obstacle{
   }
   // Rendering standard obstacle
   render(){
-    this.drawFromState(graphics,5,0x4C1C13,
+    this.drawFromState(5,0x4C1C13,
         this.ObX-this.ObW,this.ObY-this.ObH,this.ObX+this.ObW,this.ObY+this.ObH);
     return;
   }
   // Rendering an obstacle with extra buffer distance added to all sides
   renderAugmented(pad){
-    this.drawFromState(graphics,0,0xcf4c34,
+    this.drawFromState(0,0xcf4c34,
         this.ObX-this.ObW-pad,this.ObY-this.ObH-pad,
         this.ObX+this.ObW+pad,this.ObY+this.ObH+pad);
     this.render();
     return;
   }
   // Draw a quadrilateral given the state coordinates of the edges
-  drawFromState(graphics,linewidth,color, left,top,right,bottom){
+  drawFromState(linewidth,color, left,top,right,bottom){
     // Scale from state coordinates to screen coordinates
-    let topleft = graphics.mapper.mapStateToPosition(left,top);
-    let bottomright = graphics.mapper.mapStateToPosition(right,bottom);
+    let topleft = this.grapher.mapper.mapStateToPosition(left,top);
+    let bottomright = this.grapher.mapper.mapStateToPosition(right,bottom);
     // Draw teh filled rectangle
-    this.drawQuadrilateral(graphics,linewidth,color,
+    this.drawQuadrilateral(this.grapher,linewidth,color,
         topleft[0],topleft[1],bottomright[0],bottomright[1]);
     return;
   }
@@ -262,8 +266,9 @@ class BoxObstacle extends Obstacle{
 
 // Circular obstacle designed for Dubins-Car system
 class RoundObstacle extends Obstacle{
-  constructor(_ObX,_ObY,_ObR,radiusTrim,avoidSets){
+  constructor(_ObX,_ObY,_ObR,radiusTrim,avoidSets,_graphics){
     super(_ObX,_ObY,avoidSets);
+    this.grapher = _graphics
     this.ObR = _ObR;
     this.trimmedObR = _ObR - radiusTrim;
     this.color = 0x000000;
@@ -276,31 +281,31 @@ class RoundObstacle extends Obstacle{
   // Rendering standard obstacle
   render(){
     // Color used to be 0x4C1C13
-    this.drawFromState(graphics,5,this.color, this.ObX,this.ObY,this.trimmedObR);
+    this.drawFromState(5,this.color, this.ObX,this.ObY,this.trimmedObR);
     return;
   }
   // Rendering an obstacle with extra buffer distance added to all sides
   renderAugmented(pad){
-    this.drawFromState(graphics,0,0xcf4c34, this.ObX,this.ObY,this.trimmedObR+pad);
+    this.drawFromState(0,0xcf4c34, this.ObX,this.ObY,this.trimmedObR+pad);
     this.render();
     return;
   }
   // Draw a circle given the state coordinates of its center and radius
-  drawFromState(graphics,linewidth,color, _x,_y,radius){
-    let center = graphics.mapper.mapStateToPosition(_x,_y);
-    this.drawCircle(graphics,linewidth,color,
-        center[0],center[1],radius*graphics.mapper.Mxx);
+  drawFromState(linewidth,color, _x,_y,radius){
+    let center = this.grapher.mapper.mapStateToPosition(_x,_y);
+    this.drawCircle(linewidth,color,
+        center[0],center[1],radius*this.grapher.mapper.Mxx);
     return;
   }
   // Draw a circle using PIXI.graphics
-  drawCircle(graphics,linewidth,color,left,top,radius){
+  drawCircle(linewidth,color,left,top,radius){
     // Set a fill and line style
-    graphics.beginFill(color);
-    graphics.lineStyle(linewidth, 0x000000);
+    this.grapher.beginFill(color);
+    this.grapher.lineStyle(linewidth, 0x000000);
 
     // Draw the circle
-    graphics.drawCircle(left,top,radius);
-    graphics.endFill();
+    this.grapher.drawCircle(left,top,radius);
+    this.grapher.endFill();
     return;
   }
 }
