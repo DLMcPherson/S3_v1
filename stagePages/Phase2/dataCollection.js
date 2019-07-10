@@ -3,37 +3,6 @@
 //var filesaver = require('file-saver');
 //var pixies = require('PIXI');
 
-// Mapper class that scales state space to screen
-class ScreenXYMap {
-  constructor(_Mxx,_Mxy,_Myx,_Myy,_bx,_by){
-    // Scaling Matrix
-    this.Mxx = _Mxx;
-    this.Mxy = _Mxy;
-    this.Myx = _Myx;
-    this.Myy = _Myy;
-    // Origin-defining affine term
-    this.bx  = _bx;
-    this.by  = _by;
-  }
-  // Return a 2-tuple of the screen coordinates given x-y coordinates on the
-  // state space scale (can be a subset of the state space)
-  mapStateToPosition(x,y){
-    let x_screen = this.Mxx * x + this.Mxy * y + this.bx;
-    let y_screen = this.Myx * x + this.Myy * y + this.by;
-    return([x_screen,y_screen]);
-  }
-  // Returns the equivalent state-space scale coordinates
-  // given the screen coordinates
-  mapPositionToState(x_screen,y_screen){
-    let x = (x_screen - this.bx);
-    let y = (y_screen - this.by);
-    let determinant = this.Mxx*this.Myy - this.Mxy*this.Myx;
-    let x_state = ( this.Myy * x - this.Mxy * y)/determinant;
-    let y_state = (-this.Myx * x + this.Mxx * y)/determinant;
-    return([x_state,y_state]);
-  }
-}
-
 /* ===================== SETUP ================== */
 
 // Setup the PIXI renderer that handles interactive display and input
@@ -54,10 +23,11 @@ if(saveToCloud){
 let stage = new PIXI.Container();
   // Graphics object for lines and squares and such...
 let graphics = new PIXI.Graphics();
-//graphics.mapper = new ScreenXYMap(70,0,0,70,1030,350);
+//graphics.mapper = new FrameXYMap(70,0,0,70,1030,350);
 const SCREEN_WIDTH = 1400;
 const SCREEN_HEIGHT = 768;
-graphics.mapper = new ScreenXYMap(30,0,0,30,SCREEN_WIDTH/2,SCREEN_HEIGHT/2);
+let map = new FrameXYMap(30,0,0,30,SCREEN_WIDTH/2,SCREEN_HEIGHT/2)
+graphics.mapper = map;
 stage.addChild(graphics);
 
 // Add the Countdown Timer
@@ -74,11 +44,11 @@ let robotY0 = [-2,1.75,	0.25,	0.50,0, 1.50,	-0.750,	-1.75, 1.75, 1.25,	-1.25,
     -0.25,	2.25];
 let robotX0 = -8;
 let curY0 = 0;
-let robot = new DubinsRobot([robotX0,robotY0[curY0],0],3,0x24EB98);
+let robot = new DubinsRobot([robotX0,robotY0[curY0],0],3,0x24EB98,map);
 stage.addChild(robot);
 let trigger_level = robot.height/(2*graphics.mapper.Mxx);
 let carRadius = 0.55;
-let obstacle = new RoundObstacle(0,0,1.8,carRadius);
+let obstacle = new RoundObstacle(0,0,1.8,carRadius,NaN,map);
 //obstacle.color = 0xA62F27;
 
 // Render the Obstacle

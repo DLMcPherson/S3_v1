@@ -1,7 +1,7 @@
 "use strict"
 
-const SCREEN_WIDTH = 1400;
-const SCREEN_HEIGHT = 768;
+const FRAME_WIDTH = 1400;
+const FRAME_HEIGHT = 768;
 const MAXTIME = 123;
 const NUMBER_OF_ROBOTS = 2;
 
@@ -19,53 +19,11 @@ function random() {
 console.log("Driving style for this game is Number "+drivingStyle)
 console.log("Randomization Seed is "+seed)
 
-// Mapper class that scales state space to screen
-class ScreenXYMap {
-  constructor(_Mxx,_Mxy,_Myx,_Myy,_bx,_by){
-    // Scaling Matrix
-    this.Mxx = _Mxx;
-    this.Mxy = _Mxy;
-    this.Myx = _Myx;
-    this.Myy = _Myy;
-    // Origin-defining affine term
-    this.bx  = _bx;
-    this.by  = _by;
-  }
-  // Return a 2-tuple of the screen coordinates given x-y coordinates on the
-  // state space scale (can be a subset of the state space)
-  mapStateToPosition(x,y){
-    let x_screen = this.Mxx * x + this.Mxy * y + this.bx;
-    let y_screen = this.Myx * x + this.Myy * y + this.by;
-    return([x_screen,y_screen]);
-  }
-  // Returns the equivalent state-space scale coordinates
-  // given the screen coordinates
-  mapPositionToState(x_screen,y_screen){
-    let x = (x_screen - this.bx);
-    let y = (y_screen - this.by);
-    let determinant = this.Mxx*this.Myy - this.Mxy*this.Myx;
-    let x_state = ( this.Myy * x - this.Mxy * y)/determinant;
-    let y_state = (-this.Myx * x + this.Mxx * y)/determinant;
-    return([x_state,y_state]);
-  }
-  // Returns a random point on the screen as a X-Y tuple
-  randomScreenXY(){
-    return [random()*SCREEN_WIDTH,random()*(SCREEN_HEIGHT-120)+60];
-  }
-  randomStateXY(){
-    let pos = this.randomScreenXY();
-    //return this.mapPositionToState(pos[0],pos[1]);
-    let posX = random()*30 - 15;
-    let posY = random()*20 - 10;
-    return [posX,posY];
-  }
-}
-
 /* ===================== SETUP ================== */
 let clock =  0 ;
 
 // Setup the PIXI renderer that handles interactive display and input inside the browser
-let renderer = PIXI.autoDetectRenderer(SCREEN_WIDTH, SCREEN_HEIGHT);
+let renderer = PIXI.autoDetectRenderer(FRAME_WIDTH, FRAME_HEIGHT);
 renderer.backgroundColor = 0xffffff;
 renderer.roundPixels = true;
 
@@ -73,7 +31,8 @@ renderer.roundPixels = true;
 let stage = new PIXI.Container();
   // Graphics object for lines and squares and such...
 let graphics = new PIXI.Graphics();
-graphics.mapper = new ScreenXYMap(30,0,0,30,SCREEN_WIDTH/2,SCREEN_HEIGHT/2);
+let map1 = new FrameXYMap(30,0,0,30,FRAME_WIDTH/2,FRAME_HEIGHT/2);
+graphics.mapper = map1
 stage.addChild(graphics);
 
 // Scoreboard
@@ -87,8 +46,8 @@ stage.addChild(timerDisplay);
 
 // Add the Countdown Timer
 let countdown = new PIXI.Text('3',{font : '80px Gill Sans', fill : 0x555555})
-countdown.x = SCREEN_WIDTH/2;
-countdown.y = SCREEN_HEIGHT/2;
+countdown.x = FRAME_WIDTH/2;
+countdown.y = FRAME_HEIGHT/2;
 stage.addChild(countdown);
 
 // Obstacles
@@ -113,7 +72,7 @@ for(let ii = 0; ii < 15; ii++){
       }
     }
   }while(blocked)
-  obstacleList.push(new RoundObstacle(posX,posY,1.8,carRadius,dubinsCircles))
+  obstacleList.push(new RoundObstacle(posX,posY,1.8,carRadius,dubinsCircles,map1))
   record.obstacles.push({position: [posX,posY], radius: 1.8, radiusTrim: carRadius});
 }
 //let wall = new RoundObstacle(0,-12.5,0.1,0,dubinsWalls);
@@ -141,7 +100,7 @@ let robotTints = [0x24EB98, 0xFF745A, 0x6333ed];
 for(let robotNum = 0; robotNum < NUMBER_OF_ROBOTS; robotNum++){
   //let pos = graphics.mapper.randomStateXY();
   //robots[robotNum] = new DubinsRobot([-20,robotNum*5-5,0],3,robotTints[robotNum]);
-  robots[robotNum] = new DubinsRobot([-20,robotNum*5-5,0],3,0x24EB98);
+  robots[robotNum] = new DubinsRobot([-20,robotNum*5-5,0],3,0x24EB98,map1);
   robots[robotNum].ID = robotNum;
 
   stage.addChild(robots[robotNum]);
@@ -297,8 +256,8 @@ window.setInterval(function() {
     // Draw the goal lines
   graphics.beginFill(0xEEEEEE);
   graphics.lineStyle(0,0x000000);
-  graphics.drawRect(0,0,leftX,SCREEN_HEIGHT);
-  graphics.drawRect(rightX,0,SCREEN_WIDTH-rightX,SCREEN_HEIGHT);
+  graphics.drawRect(0,0,leftX,FRAME_HEIGHT);
+  graphics.drawRect(rightX,0,FRAME_WIDTH-rightX,FRAME_HEIGHT);
   graphics.endFill();
     // Render the obstacles
   obstacles.render();
@@ -366,5 +325,34 @@ document.addEventListener("mousedown",function(event) {
 
 
 // Mount the renderer in the website
-let mount = document.getElementById("mount");
+let mount = document.getElementById("mountee");
 mount.insertBefore(renderer.view, mount.firstChild);
+resize()
+
+// Listen for window resize events
+window.addEventListener('resize', resize);
+resize()
+
+// Resize function window
+function resize() {
+  const parent = renderer.view.parentNode;
+	// Resize the renderer
+  let newWidth = window.innerWidth - 100
+  let newHeight = window.innerHeight - 100
+  //let newWidth = parent.clientWidth
+  //let newHeight = parent.clientHeight
+
+  renderer.resize(newWidth, newHeight);
+  console.log(newWidth, newHeight)
+  map.bx = newWidth/2
+  map.by = newHeight/2
+
+  let scale = newWidth/FRAME_WIDTH
+  if(scale > newHeight/FRAME_HEIGHT)
+    scale = newHeight/FRAME_HEIGHT
+
+  stage.scale.x = scale
+  stage.scale.y = scale
+  map.bx /= scale
+  map.by /= scale
+}

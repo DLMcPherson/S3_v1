@@ -82,12 +82,19 @@ intervener.trigger_level = 1.0
 
 runners.push(intervener)
 
+let button = new PIXI.Text("Reveal the Answer",{font : '24px Gill Sans', fill : 0xAD3129})
+button.interactive = true;
+button.buttonMode = true;
+button.x = 700
+button.y = 700 - 40
+button.on('mousedown', onButtonDown)
+
 //stage.addChild()
 
 // Arrange everything on stage
 stage.addChild(graphics);
 stage.addChild(robot);
-stage.addChild(intervener.tracker.goal);
+stage.addChild(button);
 
 // ===================== THE MAIN EVENT ================== // 3
 
@@ -211,9 +218,22 @@ document.addEventListener("mousedown",function(event) {
 //document.addEventListener("pointermove",onDragMove)
 
 // Mount the renderer in the website
-let mount = document.getElementById("frame");
+let mount = document.getElementById("partialframe");
 mount.insertBefore(renderer.view, mount.firstChild);
 resize()
+
+function onButtonDown(event) {
+    // store a reference to the data
+    // the reason for this is because of multitouch
+    // we want to track the movement of this particular touch
+    if(button.text == "Continue exploring...") {
+      document.location.href = "dubinsReachsetExaminer.html";
+    } else {
+      revealAnswer = true
+      button.text = "Continue exploring..."
+    }
+}
+
 
 // Resize function window
 function resize() {
@@ -247,4 +267,7 @@ function resize() {
   stage.scale.y = scale
   map1.bx /= scale
   map1.by /= scale
+
+  button.x = newWidth/scale - 300
+  button.y = newHeight/scale - 40
 }

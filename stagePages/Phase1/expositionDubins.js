@@ -54,28 +54,21 @@ let stage = new PIXI.Container();
   // Graphics object for lines and squares and such...
 let graphics = new PIXI.Graphics();
 //graphics.mapper = new ScreenXYMap(70,0,0,70,630,350);
-graphics.mapper = new ScreenXYMap(30,0,0,30,SCREEN_WIDTH/2,SCREEN_HEIGHT/2);
+let map = new ScreenXYMap(30,0,0,30,SCREEN_WIDTH/2,SCREEN_HEIGHT/2)
+graphics.mapper = map;
 stage.addChild(graphics);
 
 // Robot Object
 let Umax = 1
 ///* // Dubins Car Robot
-let robot = new DubinsRobot([-8,-1,0],3,0x24EB98);
+let robot = new DubinsRobot([-8,-1,0],3,0x24EB98,map);
+let dubinsCircles = new SweptPalette("DubinsSafesetFullFamily/dubins",[0,125,250,375,500,625,750,875,1000,2000,3000],[0])
 stage.addChild(robot);
-let originalSafeset = new loaded_SafeSet("dubins");
-let pixelwiseSafeset = new loaded_SafeSet("dubinsPixelwise");
-let LSPickerSafeset = new loaded_SafeSet("dubinsLSPicker");
-let BellmanIteratedSafeset = new loaded_SafeSet("dubinsBI");
-let intervener = new Intervention_Contr(robot,
-    originalSafeset,
-    Umax,0,
-    new Zero_Contr());
-intervener.trigger_level = robot.height/(2*graphics.mapper.Mxx);
 let carRadius = 0.55;
-let obstacle = new RoundObstacle(0,0,1.8,carRadius);
+let obstacle = new RoundObstacle(0,0,1.8,carRadius,dubinsCircles,map);
 
 // Render the Obstacle
-obstacle.renderAugmented(intervener.trigger_level);
+obstacle.render();
 
 // ===================== THE MAIN EVENT ================== //
 
@@ -104,8 +97,7 @@ window.setInterval(function() {
   }
   // Rendering the stage
   graphics.clear();
-  obstacle.render(intervener.trigger_level);
-  //intervener.intervening_set.displayGrid(graphics,robot.states,0,1);
+  obstacle.render(0);
   renderer.render(stage);
 },2)
 
@@ -114,14 +106,6 @@ let key = null;
 document.addEventListener("keydown",function(event) {
   // Log time and key
   key = event.keyCode;
-  /*
-  // Update level set
-  if(intervener.trigger_level < intervener.intervening_set.value(robot.states)){
-    intervener.trigger_level = intervener.intervening_set.value(robot.states);
-  }
-  // Draw level set
-  obstacle.renderAugmented(intervener.trigger_level);
-  */
   console.log(key);
   if(key == 37 || key == 65){
     control = [-1];
@@ -165,3 +149,32 @@ document.addEventListener("keyup",function(event) {
 // Mount the renderer in the website
 let mount = document.getElementById("mount");
 mount.insertBefore(renderer.view, mount.firstChild);
+resize()
+
+// Listen for window resize events
+window.addEventListener('resize', resize);
+resize()
+
+// Resize function window
+function resize() {
+  const parent = renderer.view.parentNode;
+	// Resize the renderer
+  let newWidth = window.innerWidth - 100
+  let newHeight = window.innerHeight - 100
+  //let newWidth = parent.clientWidth
+  //let newHeight = parent.clientHeight
+
+  renderer.resize(newWidth, newHeight);
+  console.log(newWidth, newHeight)
+  map.bx = newWidth/2
+  map.by = newHeight/2
+
+  let scale = newWidth/FRAME_WIDTH
+  if(scale > newHeight/FRAME_HEIGHT)
+    scale = newHeight/FRAME_HEIGHT
+
+  stage.scale.x = scale
+  stage.scale.y = scale
+  map.bx /= scale
+  map.by /= scale
+}

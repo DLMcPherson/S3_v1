@@ -215,7 +215,7 @@ class BoxObstacle extends Obstacle{
   constructor(_ObX,_ObY,_ObW,_ObH,avoidSets){
     super(_ObX,_ObY,avoidSets);
     this.grapher = graphics
-    this.map = _graphics.mapper
+    this.map = graphics.mapper
     this.ObW = _ObW;
     this.ObH = _ObH;
     // Offset vector (in the state space) that translates between global
