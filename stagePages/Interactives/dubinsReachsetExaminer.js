@@ -74,7 +74,7 @@ obstacle.render();
 let currentSetID = 5
 
 // Place a slider for interacting with simulation parameters
-let sliderBar = new PIXI.Sprite(PIXI.Texture.from("http://localhost:3000/S3_v1/SliderBar_v2.png"))
+let sliderBar = new PIXI.Sprite(PIXI.Texture.from("http://localhost:3000/S3_v1/SliderBar_v2Basic.png"))
 sliderBar.x = 30
 sliderBar.y = FRAME_HEIGHT - 50
 sliderBar.width = 600
@@ -102,7 +102,7 @@ stage.addChild(slider)
 let robot = new DubinsRobot([0,0,0],3,0xFF745A,map1);
 robot.width = 1.1 * map1.Mxx;
 robot.height = 1.1 * map1.Mxx;
-let arcTexture = PIXI.Texture.from("http://localhost:3000/S3_v1/ArcsFunnel.png")
+let arcTexture = PIXI.Texture.from("http://localhost:3000/S3_v1/Arcs.png")
 let pathArcs = new PIXI.Sprite(arcTexture)
 pathArcs.x = robot.x
 pathArcs.y = robot.y
@@ -112,7 +112,7 @@ pathArcs.anchor.x = 0.5
 pathArcs.anchor.y = 1.0
 pathArcs.rotation = 3.1415/2
 pathArcs.tint = 0xFF745A
-pathArcs.alpha = 0.9
+pathArcs.alpha = 1
 
 let maxMarker = 40
 let marker = []
@@ -130,7 +130,7 @@ for(let ii=0; ii<maxMarker+1; ii++){
   pathmArcs[ii].anchor.y = 1.0
   pathmArcs[ii].rotation = 3.1415/2
   pathmArcs[ii].tint = 0xFF745A
-  pathmArcs[ii].alpha = 0.5
+  pathmArcs[ii].alpha = 1
   stage.addChild(marker[ii])
   stage.addChild(pathmArcs[ii])
 }
@@ -187,7 +187,7 @@ window.setInterval(function() {
         graphics.beginFill(0x400C09);
         graphics.drawCircle(mappedState[0],mappedState[1],6);
         graphics.endFill();
-        if(valuation > -0.2 && gX < -2) {
+        if(valuation > -0.2 && indexX%2 == 0 && indexY%2 == 0) {
           marker[curMarker].states = [gX,gY,0]
           marker[curMarker].displayState()
           pathmArcs[curMarker].x = marker[curMarker].x
